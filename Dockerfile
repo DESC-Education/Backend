@@ -16,7 +16,7 @@ RUN pip install -r requirements.txt
 
 
 
-COPY app /usr/src/app/
+COPY DESC_Education /usr/src/app/
 
 
 
