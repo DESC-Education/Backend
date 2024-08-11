@@ -30,4 +30,4 @@ CMD python manage.py makemigrations \
 
 
 
-EXPOSE 8000
+EXPOSE 4000
