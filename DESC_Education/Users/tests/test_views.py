@@ -62,7 +62,7 @@ class RegisterViewTest(APITestCase):
                                data=json.dumps({"email": "test@mail.com", "password": "test123"}),
                                content_type="application/json")
 
-        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.status_code, 406)
         self.assertEqual(res.data, {'message': 'Email already registered'})
 
 
