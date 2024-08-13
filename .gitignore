@@ -1,3 +1,5 @@
 *.idea
 *.env
 DESC_Education/.env
+/DESC_Education/db.sqlite3
+/DESC_Education/Users/migrations/

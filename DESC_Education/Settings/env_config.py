@@ -7,11 +7,11 @@ class Settings(BaseSettings):
     # для конфиденциальных данных, например, токена бота
     SECRET_KEY: SecretStr
     DEBUG: bool
-    # DB_PORT: str
-    # DB_NAME: str
-    # DB_HOST: str
-    # DB_USER: SecretStr
-    # DB_PASSWORD: SecretStr
+    DB_PORT: str
+    DB_NAME: str
+    DB_HOST: str
+    DB_USER: SecretStr
+    DB_PASSWORD: SecretStr
     EMAIL_USER: SecretStr
     EMAIL_PASSWORD: SecretStr
 

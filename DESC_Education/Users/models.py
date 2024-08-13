@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 # Create your models here.
@@ -17,6 +18,7 @@ class CustomUserManager(BaseUserManager):
 
     def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault("email_auth", True)
         extra_fields.setdefault('is_superuser', True)
 
         return self.create_user(email, password, **extra_fields)
@@ -24,9 +26,14 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser):
+    id = models.UUIDField(primary_key=True,
+                          default=uuid.uuid4,
+                          editable=False,
+                          unique=True)
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50, blank=True)
+    email_auth = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
