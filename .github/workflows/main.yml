@@ -1,0 +1,79 @@
+name: "CI/CD"
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+
+jobs:
+  tests:
+    env:
+      DEBUG: True
+      SECRET_KEY: asldkjflkas-dfsajkdf-#e(a)%sdal-*7(wz-cjg+bf!e5*_5lio0x_sr#&+_#6ew7l
+      DB_HOST: 127.0.0.1
+      DB_NAME: test
+      DB_USER: test
+      DB_PASSWORD: testpassword
+      DB_PORT: 5432
+      BROKER_HOST: 127.0.0.1
+      BROKER_USER: rmuser
+      BROKER_PASSWORD: rmpassword
+      EMAIL_USER: ${{ secrets.TEST_EMAIL_USER }}
+      EMAIL_PASSWORD: ${{ secrets.TEST_EMAIL_PASSWORD}}
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.10.11]
+
+    services:
+      test-db:
+        image: postgres:16.1-alpine3.18
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Run tests
+      run: |
+        cd DESC_Education
+        python manage.py makemigrations
+        python manage.py test --noinput 
+  
+#  deploy:
+#    needs: tests
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#      - name: Run command on remote server
+#        uses: appleboy/ssh-action@v1.0.3
+#        with:
+#          host: ${{secrets.SSH_HOST}}
+#          username: ${{secrets.SSH_USER}}
+#          key: ${{secrets.SSH_PRIVATE_KEY}}
+#          port: 22
+#          script: |
+#            cd ${{ secrets.PROJECT_FOLDER }}
+#            ./init_script.sh
+#
