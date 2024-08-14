@@ -61,20 +61,20 @@ jobs:
         python manage.py migrate
         python manage.py test --noinput 
   
-#  deploy:
-#    needs: tests
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#      - name: Run command on remote server
-#        uses: appleboy/ssh-action@v1.0.3
-#        with:
-#          host: ${{secrets.SSH_HOST}}
-#          username: ${{secrets.SSH_USER}}
-#          key: ${{secrets.SSH_PRIVATE_KEY}}
-#          port: 22
-#          script: |
-#            cd ${{ secrets.PROJECT_FOLDER }}
-#            ./init_script.sh
-#
+  deploy:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Run command on remote server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{secrets.SSH_HOST}}
+          username: ${{secrets.SSH_USER}}
+          key: ${{secrets.SSH_PRIVATE_KEY}}
+          port: 22
+          script: |
+            cd ${{ secrets.PROJECT_FOLDER }}
+            ./init_script.sh
+
