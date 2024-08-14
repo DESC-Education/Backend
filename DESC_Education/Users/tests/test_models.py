@@ -33,22 +33,22 @@ class CustomUserTest(TestCase):
 
 class VerificationCodeTest(TestCase):
     def setUp(self):
-        user = CustomUser.objects.create_user(email="testemail@example.com", first_name="Test_First_Name",
+        self.user = CustomUser.objects.create_user(email="testemail@example.com", first_name="Test_First_Name",
             last_name="Test_Last_Name", password="testpassword")
 
         VerificationCode.objects.create(
-            user=user, code="1234", type=VerificationCode.REGISTRATION_TYPE,
+            user=self.user, code="1234", type=VerificationCode.REGISTRATION_TYPE,
         )
 
 
     def test_verification_code(self):
-        code: VerificationCode = VerificationCode.objects.get(id=1)
+        code: VerificationCode = VerificationCode.objects.get(user=self.user)
 
         self.assertEqual(code.is_valid(), True)
         self.assertEqual(code.REGISTRATION_TYPE, "RG")
 
     def test_expired_verification_code(self):
-        code: VerificationCode = VerificationCode.objects.get(id=1)
+        code: VerificationCode = VerificationCode.objects.get(user=self.user)
 
         code.created_at = timezone.now() - timezone.timedelta(minutes=35)
         code.save()
