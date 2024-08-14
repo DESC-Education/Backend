@@ -50,9 +50,11 @@ class LoginViewTest(APITestCase):
                                data=json.dumps({"email": "test@mail.com", "password": "test123"}),
                                content_type="application/json")
 
+        tokens = res.data.get("data").get("tokens")
+
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(type(res.data.get("access_token")), str)
-        self.assertEqual(type(res.data.get("refresh_token")), str)
+        self.assertEqual(type(tokens.get("accessToken")), str)
+        self.assertEqual(type(tokens.get("refreshToken")), str)
 
 
 class RegistrationViewTest(APITestCase):
@@ -96,7 +98,7 @@ class CustomTokenRefreshViewTest(APITestCase):
                                data=json.dumps({"email": "test@mail.com", "password": "test123"}),
                                content_type="application/json")
 
-        self.refresh_token = res.data.get("refresh_token")
+        self.refresh_token = res.data.get("data").get("tokens").get("refreshToken")
 
 
 

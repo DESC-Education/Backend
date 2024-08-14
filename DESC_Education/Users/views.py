@@ -24,7 +24,8 @@ from drf_spectacular.types import OpenApiTypes
 from Users.serializers import (
     LoginSerializer,
     RegistrationSerializer,
-    VerifyRegistrationSerializer
+    VerifyRegistrationSerializer,
+    CustomUserSerializer
 )
 from Users.smtp import send_auth_registration_code
 
@@ -61,8 +62,20 @@ class LoginView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                            'access_token': "string",
-                            'refresh_token': "string",
+                            "data": {
+                                "user": {
+                                    "id": "uuid",
+                                    "email": "str",
+                                    "first_name": "str",
+                                    "last_name": "str"
+                                }
+                                ,
+                                "tokens": {
+                                    "accessToken": "str",
+                                    "refreshToken": "str"
+                                }
+                            },
+                            "message": "Successfull"
                         },
                     )
                 ]
@@ -120,12 +133,17 @@ class LoginView(generics.GenericAPIView):
             if not user.email_auth:
                 return Response({'message': 'Need to verify email'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-            access_token = AccessToken.for_user(user)
-            refresh_token = RefreshToken.for_user(user)
+            tokens = user.get_token()
+
 
             return Response({
-                'access_token': str(access_token),
-                'refresh_token': str(refresh_token),
+                "data": {
+                    "user": {
+                        CustomUserSerializer(data=user)
+                    },
+                    "tokens": tokens
+                },
+                "message": "Successfull"
             },
                 status=status.HTTP_200_OK)
         except Exception as e:

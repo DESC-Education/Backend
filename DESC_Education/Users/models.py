@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from django.utils import timezone
 
 # Create your models here.
@@ -27,10 +28,10 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser):
-    # id = models.UUIDField(primary_key=True,
-    #                       default=uuid.uuid4,
-    #                       editable=False,
-    #                       unique=True)
+    id = models.UUIDField(primary_key=True,
+                          default=uuid.uuid4,
+                          editable=False,
+                          unique=True)
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50, blank=True)
@@ -51,6 +52,16 @@ class CustomUser(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return True
+
+
+    def get_token(self):
+        access_token = AccessToken.for_user(self)
+        refresh_token = RefreshToken.for_user(self)
+
+        return {
+            'accessToken': str(access_token),
+            'refreshToken': str(refresh_token),
+        }
 
     @property
     def token_payload(self):
