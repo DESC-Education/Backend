@@ -1,15 +1,15 @@
 from django.test import TestCase
-from Users.models import CustomUser
-
+from Users.models import CustomUser, VerificationCode
+from django.utils import timezone
 
 
 class CustomUserTest(TestCase):
     def setUp(self):
-        CustomUser.objects.create(
+        CustomUser.objects.create_user(
             email="testemail@example.com", first_name="Test_First_Name",
             last_name="Test_Last_Name",
             )
-        CustomUser.objects.create(
+        CustomUser.objects.create_user(
             email="testemail2@example.com", first_name="Test_First_Name2",
             last_name="Test_Last_Name2",
         )
@@ -30,5 +30,29 @@ class CustomUserTest(TestCase):
             })
 
 
+
+class VerificationCodeTest(TestCase):
+    def setUp(self):
+        user = CustomUser.objects.create_user(email="testemail@example.com", first_name="Test_First_Name",
+            last_name="Test_Last_Name", password="testpassword")
+
+        VerificationCode.objects.create(
+            user=user, code="1234", type=VerificationCode.REGISTRATION_TYPE,
+        )
+
+
+    def test_verification_code(self):
+        code: VerificationCode = VerificationCode.objects.get(id=1)
+
+        self.assertEqual(code.is_valid(), True)
+        self.assertEqual(code.REGISTRATION_TYPE, "RG")
+
+    def test_expired_verification_code(self):
+        code: VerificationCode = VerificationCode.objects.get(id=1)
+
+        code.created_at = timezone.now() - timezone.timedelta(minutes=35)
+        code.save()
+
+        self.assertEqual(code.is_valid(), False)
 
 

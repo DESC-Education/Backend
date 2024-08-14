@@ -157,13 +157,14 @@ STATIC_URL = 'static/'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
-EMAIL_HOST = 'smtp.mail.ru'
-EMAIL_PORT = 2525
+EMAIL_HOST = 'smtp.yandex.ru'
+EMAIL_PORT = 465
 EMAIL_HOST_USER = config.EMAIL_USER.get_secret_value()
 EMAIL_HOST_PASSWORD = config.EMAIL_PASSWORD.get_secret_value()
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
+EMAIL_USE_SSL = True
 
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+SERVER_EMAIL = EMAIL_HOST_USER
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

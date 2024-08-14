@@ -11,5 +11,11 @@ class RegistrationSerializer(serializers.Serializer):
     password = serializers.CharField(max_length=128, write_only=True)
 
 
+class VerifyRegistrationSerializer(serializers.Serializer):
+
+    code = serializers.CharField(max_length=4)
+    email = serializers.EmailField()
+
+
 class RefreshTokenSerializer(serializers.Serializer):
     refresh_token = serializers.CharField()

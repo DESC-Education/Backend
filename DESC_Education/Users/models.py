@@ -1,6 +1,8 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.utils import timezone
+
 # Create your models here.
 
 
@@ -24,12 +26,11 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
-
 class CustomUser(AbstractBaseUser):
-    id = models.UUIDField(primary_key=True,
-                          default=uuid.uuid4,
-                          editable=False,
-                          unique=True)
+    # id = models.UUIDField(primary_key=True,
+    #                       default=uuid.uuid4,
+    #                       editable=False,
+    #                       unique=True)
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50, blank=True)
@@ -58,3 +59,28 @@ class CustomUser(AbstractBaseUser):
             'first_name': self.first_name,
             'last_name': self.last_name,
         }
+
+
+class VerificationCode(models.Model):
+    REGISTRATION_TYPE = "RG"
+    PASSWORD_TYPE = "PW"
+    EMAIL_TYPE = "EM"
+
+    TYPE_CHOISES = [
+        (REGISTRATION_TYPE, "Registration Code"),
+        (PASSWORD_TYPE, "Password Code"),
+        (EMAIL_TYPE, "Email Code")
+    ]
+
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    code = models.CharField(max_length=4)
+    type = models.CharField(max_length=2, choices=TYPE_CHOISES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+    def is_valid(self):
+
+        return (timezone.now() - self.created_at).total_seconds() < 60 * 30 and not self.is_used
+
+
+

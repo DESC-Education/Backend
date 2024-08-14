@@ -1,11 +1,12 @@
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 
 
 
-
-
-def auth_register_mail(mail):
-
-    send_mail('Тема', 'Тело письма', settings.EMAIL_HOST_USER, [mail])
+def send_auth_registration_code(email, code):
+    msg = EmailMessage(
+        'Подтверждение регистрации',
+        f'Ваш код для подтверждения регистрации: {code}',
+        to=[email]
+    )
 
