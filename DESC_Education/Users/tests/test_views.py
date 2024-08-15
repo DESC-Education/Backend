@@ -361,3 +361,88 @@ class SendVerifyCodeViewTest(APITestCase):
 
         self.assertEqual(res.data, {'message': "Code type incorrect"})
         self.assertEqual(res.status_code, 406)
+
+
+class ChangePasswordViewTest(APITestCase):
+    def setUp(self):
+        self.user: CustomUser = CustomUser.objects.create_user(
+            email="test@mail.com",
+            first_name="first_name",
+            last_name="last_name",
+            password="test123",
+            email_auth=True
+        )
+
+        tokens = self.user.get_token()
+        self.access_token = tokens.get("accessToken")
+
+
+        self.Vcode: VerificationCode = VerificationCode.objects.create(
+            user=self.user, code=1234, type=VerificationCode.PASSWORD_CHANGE_TYPE,
+        )
+
+
+    def test_change_password_200(self):
+
+        res = self.client.post(reverse('change_password'),
+                               data=json.dumps({
+                                   "code": 1234,
+                                   "new_password": "new_password",
+                               }),
+                               headers={"Authorization": f"Bearer {self.access_token}"},
+                               content_type="application/json")
+
+        user = CustomUser.objects.get(email="test@mail.com")
+
+
+        self.assertEqual(res.data, {'message': 'Password has been changed'})
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(user.check_password("new_password"))
+
+    def test_code_not_found_404(self):
+        self.Vcode.is_used = True
+        self.Vcode.save()
+
+
+        res = self.client.post(reverse('change_password'),
+                               data=json.dumps({
+                                   "code": 1234,
+                                   "new_password": "new_password",
+                               }),
+                               headers={"Authorization": f"Bearer {self.access_token}"},
+                               content_type="application/json")
+
+        self.assertEqual(res.data, {'message': 'Verification code not found or expired'})
+        self.assertEqual(res.status_code, 404)
+
+    def test_code_not_valid_404(self):
+        self.Vcode.created_at = timezone.now() - timezone.timedelta(days=2)
+        self.Vcode.save()
+
+
+        res = self.client.post(reverse('change_password'),
+                               data=json.dumps({
+                                   "code": 1234,
+                                   "new_password": "new_password",
+                               }),
+                               headers={"Authorization": f"Bearer {self.access_token}"},
+                               content_type="application/json")
+
+        self.assertEqual(res.data, {'message': 'Verification code not found or expired'})
+        self.assertEqual(res.status_code, 404)
+
+    def test_code_incorrect_406(self):
+
+
+        res = self.client.post(reverse('change_password'),
+                               data=json.dumps({
+                                   "code": 1235,
+                                   "new_password": "new_password",
+                               }),
+                               headers={"Authorization": f"Bearer {self.access_token}"},
+                               content_type="application/json")
+
+        self.assertEqual(res.data, {'message': 'Verification code is incorrect'})
+        self.assertEqual(res.status_code, 406)
+
+

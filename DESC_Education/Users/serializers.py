@@ -51,3 +51,8 @@ class VerifyCodeSerializer(serializers.Serializer):
 
     type = serializers.CharField(max_length=2)
     email = serializers.EmailField(required=False)
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    code = serializers.IntegerField()
+    new_password = serializers.CharField(max_length=128, write_only=True)

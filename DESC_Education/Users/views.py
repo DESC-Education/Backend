@@ -30,7 +30,7 @@ from Users.serializers import (
     CustomUserSerializer,
     EmptySerializer,
     VerifyCodeSerializer,
-
+    ChangePasswordSerializer
 )
 from Users.smtp import (
     send_auth_registration_code,
@@ -565,7 +565,6 @@ class SendVerifyCodeView(generics.GenericAPIView):
 
             type = serializer.validated_data['type']
 
-
             match type:
                 case self.serializer_class.REGISTRATION_TYPE:
                     email = serializer.validated_data['email']
@@ -628,4 +627,90 @@ class SendVerifyCodeView(generics.GenericAPIView):
             return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# class ChangePasswordView(generics.GenericAPIView):
+class ChangePasswordView(generics.GenericAPIView):
+    serializer_class = ChangePasswordSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        tags=["Users"],
+        summary="Смена пароля",
+        responses={
+            200: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Успешно",
+                        value={
+                            "message": "Password has been changed"
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Прочие ошибки",
+                        value={
+                            "message": "Other error message"
+                        },
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Код не найден или истек",
+                        value={
+                            "message": "Verification code not found or expired"
+                        },
+                    )
+                ]
+            ),
+            406: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Неверный код",
+                        value={
+                            "message": "Verification code is incorrect"
+                        },
+                    )
+                ]
+            ),
+
+        }
+
+    )
+    def post(self, request):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            user: CustomUser = request.user
+
+            try:
+                Vcode = VerificationCode.objects.get(user=user,
+                                                     type=VerificationCode.PASSWORD_CHANGE_TYPE,
+                                                     is_used=False)
+            except VerificationCode.DoesNotExist:
+                return Response({"message": "Verification code not found or expired"},
+                                status=status.HTTP_404_NOT_FOUND)
+
+            if not Vcode.is_valid():
+                return Response({"message": "Verification code not found or expired"},
+                                status=status.HTTP_404_NOT_FOUND)
+
+            if Vcode.code != serializer.validated_data["code"]:
+                return Response({"message": "Verification code is incorrect"},
+                                status=status.HTTP_406_NOT_ACCEPTABLE)
+
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+
+            return Response({"message": "Password has been changed"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
