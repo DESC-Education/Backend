@@ -8,7 +8,7 @@ from Users.models import (
 )
 from django.urls import reverse
 import json
-
+from django.utils import timezone
 
 
 class LoginViewTest(APITestCase):
@@ -22,7 +22,6 @@ class LoginViewTest(APITestCase):
             last_name="last_name",
             password="test123",
             email_auth=True)
-
 
     def test_invalid_login_401(self):
         res = self.client.post(reverse('login'),
@@ -61,17 +60,25 @@ class LoginViewTest(APITestCase):
         tokens = res.data.get("data").get("tokens")
 
         self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data.get("data").get("user"),
+                         {
+                             "id": str(self.user.id),
+                             "email": self.user.email,
+                             "firstName": self.user.first_name,
+                             "lastName": self.user.last_name,
+                             "isActive": self.user.is_active,
+                             "isStaff": self.user.is_staff,
+                             "isSuperuser": self.user.is_superuser,
+                         }
+                         )
         self.assertEqual(type(tokens.get("accessToken")), str)
         self.assertEqual(type(tokens.get("refreshToken")), str)
 
 
 class RegistrationViewTest(APITestCase):
 
-
     def test_exist_registration_406(self):
-
         CustomUser.objects.create_user(email="test@mail.com", password="test123")
-
 
         res = self.client.post(reverse('registration'),
                                data=json.dumps({"email": "test@mail.com", "password": "test123"}),
@@ -79,8 +86,6 @@ class RegistrationViewTest(APITestCase):
 
         self.assertEqual(res.status_code, 406)
         self.assertEqual(res.data, {'message': 'Email already registered'})
-
-
 
     def test_registration_200(self):
         res = self.client.post(reverse('registration'),
@@ -108,8 +113,6 @@ class CustomTokenRefreshViewTest(APITestCase):
 
         self.refresh_token = res.data.get("data").get("tokens").get("refreshToken")
 
-
-
     def test_token_refresh_200(self):
         res = self.client.post(reverse('token_refresh'),
                                data=json.dumps({"refresh": self.refresh_token}),
@@ -127,24 +130,26 @@ class CustomTokenRefreshViewTest(APITestCase):
         self.assertEqual(res.status_code, 401)
 
 
-
-
 class VerifyRegistrationViewTest(APITestCase):
 
     def setUp(self):
         # Set up data for the whole TestCase
-        user: CustomUser = CustomUser.objects.create_user(
+        self.user: CustomUser = CustomUser.objects.create_user(
             email="test@mail.com",
             first_name="first_name",
             last_name="last_name",
             password="test123",
-            )
-
-        VerificationCode.objects.create(
-            user=user, code="1234", type=VerificationCode.REGISTRATION_TYPE,
+        )
+        CustomUser.objects.create_user(
+            email="test2@mail.com",
+            first_name="first_name",
+            last_name="last_name",
+            password="test123",
         )
 
-
+        VerificationCode.objects.create(
+            user=self.user, code="1234", type=VerificationCode.REGISTRATION_TYPE,
+        )
 
     def test_verify_registration_200(self):
         res = self.client.post(reverse('verify_registration'),
@@ -152,16 +157,97 @@ class VerifyRegistrationViewTest(APITestCase):
                                                 "code": "1234"}),
                                content_type="application/json")
 
-
         user: CustomUser = CustomUser.objects.get(email="test@mail.com")
-
+        code: VerificationCode = VerificationCode.objects.get(user=user)
 
         self.assertEqual(res.status_code, 200)
         self.assertTrue(user.email_auth)
+        self.assertTrue(code.is_used)
+
+    def test_invalid_user_404(self):
+        res = self.client.post(reverse('verify_registration'),
+                               data=json.dumps({"email": "wrong_email@mail.com",
+                                                "code": "1234"}),
+                               content_type="application/json")
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.data, {"message": "The user was not found"})
+
+    def test_invalid_code_DoesNotExist_406(self):
+        res = self.client.post(reverse('verify_registration'),
+                               data=json.dumps({"email": "test2@mail.com",
+                                                "code": "1234"}),
+                               content_type="application/json")
+        self.assertEqual(res.status_code, 406)
+        self.assertEqual(res.data, {"message": "The verification code does not exist or did not match"})
+
+    def test_incorrect_code_406(self):
+        res = self.client.post(reverse('verify_registration'),
+                               data=json.dumps({"email": "test@mail.com",
+                                                "code": "1224"}),
+                               content_type="application/json")
+
+        self.assertEqual(res.status_code, 406)
+        self.assertEqual(res.data, {"message": "The verification code does not exist or did not match"})
+
+
+    def test_expired_code_403(self):
+
+        code: VerificationCode = VerificationCode.objects.get(user=self.user)
+        code.created_at = timezone.now() - timezone.timedelta(days=2)
+        code.save()
+        res = self.client.post(reverse('verify_registration'),
+                               data=json.dumps({"email": "test@mail.com",
+                                                "code": "1234"}),
+                               content_type="application/json")
+
+
+        self.assertEqual(res.status_code, 403)
+        self.assertEqual(res.data, {"message": "The verification code has expired, request a new one"})
 
 
 
+class AuthViewTest(APITestCase):
+    def setUp(self):
+        self.user: CustomUser = CustomUser.objects.create_user(
+            email="test@mail.com",
+            first_name="first_name",
+            last_name="last_name",
+            password="test123",
+            email_auth=True,
+        )
 
+    def test_auth_200(self):
+        tokens = self.user.get_token()
+        res = self.client.get(reverse('auth'), headers={"Authorization": f"Bearer {tokens.get('accessToken')}"},
+                              content_type="application/json")
 
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data, {
+            "data": {
+                "user": {
+                    "id": str(self.user.id),
+                    "email": self.user.email,
+                    "firstName": self.user.first_name,
+                    "lastName": self.user.last_name,
+                    "isActive": self.user.is_active,
+                    "isStaff": self.user.is_staff,
+                    "isSuperuser": self.user.is_superuser,
+                }
+            },
+            "message": "Success"
+        })
 
+    def test_invalid_auth_401(self):
+        res = self.client.get(reverse('auth'), content_type="application/json")
+
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(res.data, {'detail': 'Учетные данные не были предоставлены.'})
+
+    def test_invalid_token_auth_401_2(self):
+        tokens = self.user.get_token()
+        res = self.client.get(reverse('auth'), headers={"Authorization": f"Bearer {tokens.get('accessToken')[::-1]}"},
+                              content_type="application/json")
+
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(res.data.get("detail"), 'Данный токен недействителен для любого типа токена')
 

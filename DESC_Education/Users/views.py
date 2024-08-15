@@ -28,6 +28,7 @@ from Users.serializers import (
     RegistrationSerializer,
     VerifyRegistrationSerializer,
     CustomUserSerializer,
+    EmptySerializer
 
 )
 from Users.smtp import send_auth_registration_code
@@ -335,13 +336,13 @@ class VerifyRegistrationView(generics.GenericAPIView):
 
 
 class CustomTokenRefreshView(TokenRefreshView):
-
+    # serializer_class = EmptySerializer
     @extend_schema(
         tags=["Users"],
         summary="Обновление access токена",
         responses={
             200: OpenApiResponse(
-                "123",
+                EmptySerializer,
                 examples=[
                     OpenApiExample(
                         "Успешно",
@@ -352,7 +353,7 @@ class CustomTokenRefreshView(TokenRefreshView):
                 ]
             ),
             401: OpenApiResponse(
-                "123",
+                EmptySerializer,
                 examples=[
                     OpenApiExample(
                         "Успешно",
@@ -376,17 +377,68 @@ class AuthView(generics.GenericAPIView):
     @extend_schema(
         tags=["Users"],
         summary="Получение user",
+        examples=None,
+        responses={
+            200: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Успешно",
+                        value={
+                            "data": {
+                                "user": {
+                                    "id": "uuid",
+                                    "email": "str",
+                                    "firstName": "str",
+                                    "lastName": "str",
+                                    "isActive": "bool",
+                                    "isStaff": "bool",
+                                    "isSuperuser": "bool"
+                                }
+                            },
+                            "message": "Success"
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Прочие ошибки",
+                        value={
+                            "message": "Other error message"
+                        },
+                    )
+                ]
+            ),
+            401: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Ошибка",
+                        value={
+                            "detail": "Учетные данные не были предоставлены."
+                        },
+                    )
+                ]
+            ),
 
+        }
 
     )
-    def post(self, request):
-        user = request.user
-        serializer = CustomUserSerializer(user)
+    def get(self, request):
+        try:
+            user = request.user
+            serializer = CustomUserSerializer(user)
 
 
-        return Response({
-            "data": {
-                "user": serializer.data
-            },
-            "message": "Success"},
-            status=status.HTTP_200_OK)
+            return Response({
+                "data": {
+                    "user": serializer.data
+                },
+                "message": "Success"},
+                status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
