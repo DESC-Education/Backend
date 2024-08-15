@@ -19,11 +19,13 @@ class CustomUserTest(TestCase):
         SecondUser: CustomUser = CustomUser.objects.get(email='testemail2@example.com')
         self.assertEqual(
             FirstUser.token_payload, {
+                'id': FirstUser.id,
                 'email': "testemail@example.com",
                 'first_name': "Test_First_Name",
                 'last_name': "Test_Last_Name"})
         self.assertEqual(
             SecondUser.token_payload, {
+                "id": SecondUser.id,
                 'email': "testemail2@example.com",
                 'first_name': "Test_First_Name2",
                 'last_name': "Test_Last_Name2"

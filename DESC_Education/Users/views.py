@@ -3,7 +3,9 @@ import random
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+
 from django.contrib.auth.models import User
 from Users.models import (
     CustomUser,
@@ -25,25 +27,21 @@ from Users.serializers import (
     LoginSerializer,
     RegistrationSerializer,
     VerifyRegistrationSerializer,
-    CustomUserSerializer
+    CustomUserSerializer,
+
 )
 from Users.smtp import send_auth_registration_code
-
 
 # Create your views here.
 
 
-class HelloView(generics.GenericAPIView):
-    serializer_class = None
-    permission_classes = (IsAuthenticated,)
 
-    def get(self, request, *args, **kwargs):
-        return Response({'message': 'Hello, world!'})
 
 
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
-    permission_classes = (AllowAny,)
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]
 
     @extend_schema(
         tags=["Users"],
@@ -66,8 +64,11 @@ class LoginView(generics.GenericAPIView):
                                 "user": {
                                     "id": "uuid",
                                     "email": "str",
-                                    "first_name": "str",
-                                    "last_name": "str"
+                                    "firstName": "str",
+                                    "lastName": "str",
+                                    "isActive": "bool",
+                                    "isStaff": "bool",
+                                    "isSuperuser": "bool"
                                 }
                                 ,
                                 "tokens": {
@@ -124,7 +125,7 @@ class LoginView(generics.GenericAPIView):
 
             try:
                 user: CustomUser = CustomUser.objects.get(email=email)
-            except User.DoesNotExist:
+            except CustomUser.DoesNotExist:
                 return Response({'message': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
 
             if not user.check_password(serializer.validated_data['password']):
@@ -135,12 +136,10 @@ class LoginView(generics.GenericAPIView):
 
             tokens = user.get_token()
 
-
+            user_serializer = CustomUserSerializer(user)
             return Response({
                 "data": {
-                    "user": {
-                        CustomUserSerializer(data=user)
-                    },
+                    "user": user_serializer.data,
                     "tokens": tokens
                 },
                 "message": "Successfull"
@@ -153,7 +152,8 @@ class LoginView(generics.GenericAPIView):
 
 class RegistrationView(generics.GenericAPIView):
     serializer_class = RegistrationSerializer
-    permission_classes = (AllowAny,)
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]
 
     @extend_schema(
         tags=["Users"],
@@ -165,7 +165,7 @@ class RegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                            "message": "Need to verify email"
+                            "message": "Authorization code sent to email"
                         },
                     )
                 ]
@@ -230,7 +230,8 @@ class RegistrationView(generics.GenericAPIView):
 
 class VerifyRegistrationView(generics.GenericAPIView):
     serializer_class = VerifyRegistrationSerializer
-    permission_classes = (AllowAny,)
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]
 
     @extend_schema(
         tags=["Users"],
@@ -242,7 +243,7 @@ class VerifyRegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                            "message": "Пользователь подтвержден"
+                            "message": "User verified registration"
                         },
                     )
                 ]
@@ -253,7 +254,7 @@ class VerifyRegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Код истек",
                         value={
-                            "message": "Код верификации истек, запросите новый"
+                            "message": "The verification code has expired, request a new one"
                         },
                     )
                 ]
@@ -264,7 +265,7 @@ class VerifyRegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Пользователь не найден",
                         value={
-                            "message": "Пользователь не найден"
+                            "message": "The user was not found"
                         },
                     )
                 ]
@@ -275,7 +276,7 @@ class VerifyRegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Неверный код",
                         value={
-                            "message": "Код верификации не существует или не совпал"
+                            "message": "The verification code does not exist or did not match"
                         },
                     )
                 ]
@@ -304,20 +305,20 @@ class VerifyRegistrationView(generics.GenericAPIView):
             try:
                 user: CustomUser = CustomUser.objects.get(email=email)
             except CustomUser.DoesNotExist:
-                return Response({"message": "Пользователь не найден"},
+                return Response({"message": "The user was not found"},
                                 status=status.HTTP_404_NOT_FOUND)
             try:
                 Vcode: VerificationCode = VerificationCode.objects.get(user=user)
             except VerificationCode.DoesNotExist:
-                return Response({"message": "Код верификации не существует или не совпал"},
+                return Response({"message": "The verification code does not exist or did not match"},
                                 status=status.HTTP_406_NOT_ACCEPTABLE)
 
             if Vcode.code != code:
-                return Response({"message": "Код верификации не существует или не совпал"},
+                return Response({"message": "The verification code does not exist or did not match"},
                                 status=status.HTTP_406_NOT_ACCEPTABLE)
 
             if not Vcode.is_valid():
-                return Response({"message": "Код верификации истек, запросите новый"},
+                return Response({"message": "The verification code has expired, request a new one"},
                                 status=status.HTTP_403_FORBIDDEN)
 
             user.email_auth = True
@@ -325,7 +326,7 @@ class VerifyRegistrationView(generics.GenericAPIView):
             Vcode.is_used = True
             Vcode.save()
 
-            return Response({"message": "Пользователь подтвержден"},
+            return Response({"message": "User verified registration"},
                             status=status.HTTP_200_OK)
 
 
@@ -338,7 +339,54 @@ class CustomTokenRefreshView(TokenRefreshView):
     @extend_schema(
         tags=["Users"],
         summary="Обновление access токена",
-
+        responses={
+            200: OpenApiResponse(
+                "123",
+                examples=[
+                    OpenApiExample(
+                        "Успешно",
+                        value={
+                            "access": "str"
+                        },
+                    )
+                ]
+            ),
+            401: OpenApiResponse(
+                "123",
+                examples=[
+                    OpenApiExample(
+                        "Успешно",
+                        value={
+                            "detail": "Токен недействителен или просрочен"
+                        },
+                    )
+                ]
+            ),
+        }
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
+
+
+class AuthView(generics.GenericAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = CustomUserSerializer
+
+    @extend_schema(
+        tags=["Users"],
+        summary="Получение user",
+
+
+    )
+    def post(self, request):
+        user = request.user
+        serializer = CustomUserSerializer(user)
+
+
+        return Response({
+            "data": {
+                "user": serializer.data
+            },
+            "message": "Success"},
+            status=status.HTTP_200_OK)

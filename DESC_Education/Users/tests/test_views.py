@@ -24,7 +24,7 @@ class LoginViewTest(APITestCase):
             email_auth=True)
 
 
-    def test_invalid_login(self):
+    def test_invalid_login_401(self):
         res = self.client.post(reverse('login'),
                                data=json.dumps({"email": "test@mail.com", "password": "wrong_password"}),
                                content_type="application/json")
@@ -32,7 +32,15 @@ class LoginViewTest(APITestCase):
         self.assertEqual(res.status_code, 401)
         self.assertEqual(res.data.get("message"), "Invalid email or password")
 
-    def test_invalid_auth_mail(self):
+    def test_invalid_login_401_2(self):
+        res = self.client.post(reverse('login'),
+                               data=json.dumps({"email": "wrong@mail.com", "password": "test123"}),
+                               content_type="application/json")
+
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(res.data.get("message"), "Invalid email or password")
+
+    def test_invalid_auth_mail_406(self):
         self.user.email_auth = False
         self.user.save()
 
@@ -43,7 +51,7 @@ class LoginViewTest(APITestCase):
         self.assertEqual(res.status_code, 406)
         self.assertEqual(res.data.get("message"), "Need to verify email")
 
-    def test_login(self):
+    def test_login_200(self):
         CustomUser.objects.get(email="test@mail.com")
 
         res = self.client.post(reverse('login'),
@@ -60,7 +68,7 @@ class LoginViewTest(APITestCase):
 class RegistrationViewTest(APITestCase):
 
 
-    def test_exist_registration(self):
+    def test_exist_registration_406(self):
 
         CustomUser.objects.create_user(email="test@mail.com", password="test123")
 
@@ -74,7 +82,7 @@ class RegistrationViewTest(APITestCase):
 
 
 
-    def test_registration(self):
+    def test_registration_200(self):
         res = self.client.post(reverse('registration'),
                                data=json.dumps({"email": "test@mail.com", "password": "test123"}),
                                content_type="application/json")
@@ -102,7 +110,7 @@ class CustomTokenRefreshViewTest(APITestCase):
 
 
 
-    def test_token_refresh(self):
+    def test_token_refresh_200(self):
         res = self.client.post(reverse('token_refresh'),
                                data=json.dumps({"refresh": self.refresh_token}),
                                content_type="application/json")
@@ -110,7 +118,7 @@ class CustomTokenRefreshViewTest(APITestCase):
         self.assertEqual(type(res.data.get("access")), str)
         self.assertEqual(res.status_code, 200)
 
-    def test_invalid_token_refresh(self):
+    def test_invalid_token_refresh_401(self):
         res = self.client.post(reverse('token_refresh'),
                                data=json.dumps({"refresh": self.refresh_token[::-1]}),
                                content_type="application/json")
@@ -138,7 +146,7 @@ class VerifyRegistrationViewTest(APITestCase):
 
 
 
-    def test_verify_registration(self):
+    def test_verify_registration_200(self):
         res = self.client.post(reverse('verify_registration'),
                                data=json.dumps({"email": "test@mail.com",
                                                 "code": "1234"}),
