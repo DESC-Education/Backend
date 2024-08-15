@@ -30,7 +30,7 @@ class RegistrationSerializer(serializers.Serializer):
 
 
 class VerifyRegistrationSerializer(serializers.Serializer):
-    code = serializers.CharField(max_length=4)
+    code = serializers.IntegerField()
     email = serializers.EmailField()
 
 

@@ -148,13 +148,13 @@ class VerifyRegistrationViewTest(APITestCase):
         )
 
         VerificationCode.objects.create(
-            user=self.user, code="1234", type=VerificationCode.REGISTRATION_TYPE,
+            user=self.user, code=1234, type=VerificationCode.REGISTRATION_TYPE,
         )
 
     def test_verify_registration_200(self):
         res = self.client.post(reverse('verify_registration'),
                                data=json.dumps({"email": "test@mail.com",
-                                                "code": "1234"}),
+                                                "code": 1234}),
                                content_type="application/json")
 
         user: CustomUser = CustomUser.objects.get(email="test@mail.com")
@@ -167,7 +167,7 @@ class VerifyRegistrationViewTest(APITestCase):
     def test_invalid_user_404(self):
         res = self.client.post(reverse('verify_registration'),
                                data=json.dumps({"email": "wrong_email@mail.com",
-                                                "code": "1234"}),
+                                                "code": 1234}),
                                content_type="application/json")
         self.assertEqual(res.status_code, 404)
         self.assertEqual(res.data, {"message": "The user was not found"})
@@ -175,7 +175,7 @@ class VerifyRegistrationViewTest(APITestCase):
     def test_invalid_code_DoesNotExist_406(self):
         res = self.client.post(reverse('verify_registration'),
                                data=json.dumps({"email": "test2@mail.com",
-                                                "code": "1234"}),
+                                                "code": 1234}),
                                content_type="application/json")
         self.assertEqual(res.status_code, 406)
         self.assertEqual(res.data, {"message": "The verification code does not exist or did not match"})
@@ -183,7 +183,7 @@ class VerifyRegistrationViewTest(APITestCase):
     def test_incorrect_code_406(self):
         res = self.client.post(reverse('verify_registration'),
                                data=json.dumps({"email": "test@mail.com",
-                                                "code": "1224"}),
+                                                "code": 1224}),
                                content_type="application/json")
 
         self.assertEqual(res.status_code, 406)
@@ -195,7 +195,7 @@ class VerifyRegistrationViewTest(APITestCase):
         code.save()
         res = self.client.post(reverse('verify_registration'),
                                data=json.dumps({"email": "test@mail.com",
-                                                "code": "1234"}),
+                                                "code": 1234}),
                                content_type="application/json")
 
         self.assertEqual(res.status_code, 403)
@@ -276,7 +276,7 @@ class SendVerifyCodeViewTest(APITestCase):
 
         VerificationCode.objects.create(
             user=self.active_code_user,
-            code="1234",
+            code=1234,
             type=VerificationCode.REGISTRATION_TYPE,
         )
 
