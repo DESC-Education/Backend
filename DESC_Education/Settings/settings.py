@@ -29,6 +29,7 @@ DEBUG = config.DEBUG
 ALLOWED_HOSTS = ["*"]
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
+    'http://193.233.20.226:3000'
 ]
 # Application definition
 
@@ -87,6 +88,8 @@ REST_FRAMEWORK = {
     # 'TEST_REQUEST_DEFAULT_FORMAT': 'json'
 
 }
+
+# CORS_ALLOW_ALL_ORIGINS = True
 
 AUTH_USER_MODEL = "Users.CustomUser"
 
