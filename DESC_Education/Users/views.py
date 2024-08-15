@@ -30,7 +30,8 @@ from Users.serializers import (
     CustomUserSerializer,
     EmptySerializer,
     VerifyCodeSerializer,
-    ChangePasswordSerializer
+    ChangePasswordSerializer,
+    ChangeEmailSerializer
 )
 from Users.smtp import (
     send_auth_registration_code,
@@ -603,7 +604,8 @@ class SendVerifyCodeView(generics.GenericAPIView):
 
                     Vcode_email = VerificationCode.objects.create(user=request.user,
                                                                   code=str(random.randint(1000, 9999)),
-                                                                  type=VerificationCode.EMAIL_CHANGE_TYPE)
+                                                                  type=VerificationCode.EMAIL_CHANGE_TYPE,
+                                                                  new_email=email)
                     send_mail_change_code(email, Vcode_email.code)
 
                     return Response({"message": "Verification code sent to email"}, status=status.HTTP_200_OK)
@@ -711,6 +713,94 @@ class ChangePasswordView(generics.GenericAPIView):
             user.save()
 
             return Response({"message": "Password has been changed"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChangeEmailView(generics.GenericAPIView):
+    serializer_class = ChangeEmailSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        tags=["Users"],
+        summary="Смена почты",
+        responses={
+            200: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Успешно",
+                        value={
+                            "message": "Email has been changed"
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Прочие ошибки",
+                        value={
+                            "message": "Other error message"
+                        },
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Код не найден или истек",
+                        value={
+                            "message": "Verification code not found or expired"
+                        },
+                    )
+                ]
+            ),
+            406: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Неверный код",
+                        value={
+                            "message": "Verification code is incorrect"
+                        },
+                    )
+                ]
+            ),
+
+        }
+
+    )
+    def post(self, request):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            try:
+                Vcode: VerificationCode = VerificationCode.objects.get(user=request.user,
+                                                                       type=VerificationCode.EMAIL_CHANGE_TYPE,
+                                                                       is_used=False)
+            except VerificationCode.DoesNotExist:
+                return Response({"message": "Verification code not found or expired"},
+                                status=status.HTTP_404_NOT_FOUND)
+
+            if not Vcode.is_valid():
+                return Response({"message": "Verification code not found or expired"},
+                                status=status.HTTP_404_NOT_FOUND)
+
+            if Vcode.code != serializer.validated_data["code"]:
+                return Response({"message": "Verification code is incorrect"},
+                                status=status.HTTP_406_NOT_ACCEPTABLE)
+
+            request.user.email = Vcode.new_email
+            request.user.save()
+
+            return Response({"message": "Email has been changed"}, status=status.HTTP_200_OK)
+
 
         except Exception as e:
             return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)

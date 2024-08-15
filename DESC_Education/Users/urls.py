@@ -8,7 +8,8 @@ from Users.views import (
     VerifyRegistrationView,
     AuthView,
     SendVerifyCodeView,
-    ChangePasswordView
+    ChangePasswordView,
+    ChangeEmailView
 
 )
 
@@ -24,6 +25,7 @@ urlpatterns = [
     path('auth/', AuthView.as_view(), name='auth'),
     path('send_verify_code/', SendVerifyCodeView.as_view(), name='send_verify_code'),
     path('change_password/', ChangePasswordView.as_view(), name='change_password'),
+    path('change_email/', ChangeEmailView.as_view(), name='change_email'),
 
 
     # path('', HelloView.as_view(), name='hello'),

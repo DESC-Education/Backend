@@ -90,6 +90,7 @@ class VerificationCode(models.Model):
                           default=uuid.uuid4,
                           editable=False,
                           unique=True)
+    new_email = models.EmailField(null=True)
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     code = models.IntegerField()
     type = models.CharField(max_length=2, choices=TYPE_CHOISES)
