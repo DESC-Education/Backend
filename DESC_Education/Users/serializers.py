@@ -16,7 +16,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 
 class EmptySerializer(serializers.Serializer):
-    pass
+    email = serializers.CharField()
 
 
 class LoginSerializer(serializers.Serializer):
