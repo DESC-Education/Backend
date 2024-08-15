@@ -36,3 +36,18 @@ class VerifyRegistrationSerializer(serializers.Serializer):
 
 class RefreshTokenSerializer(serializers.Serializer):
     refresh_token = serializers.CharField()
+
+
+class VerifyCodeSerializer(serializers.Serializer):
+    REGISTRATION_TYPE = "RG"
+    PASSWORD_CHANGE_TYPE = "PW"
+    EMAIL_CHANGE_TYPE = "EM"
+
+    TYPE_CHOISES = [
+        (REGISTRATION_TYPE, "Registration Code"),
+        (PASSWORD_CHANGE_TYPE, "Password Code"),
+        (EMAIL_CHANGE_TYPE, "Email Code")
+    ]
+
+    type = serializers.CharField(max_length=2)
+    email = serializers.EmailField(required=False)

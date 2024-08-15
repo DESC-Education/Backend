@@ -189,9 +189,7 @@ class VerifyRegistrationViewTest(APITestCase):
         self.assertEqual(res.status_code, 406)
         self.assertEqual(res.data, {"message": "The verification code does not exist or did not match"})
 
-
     def test_expired_code_403(self):
-
         code: VerificationCode = VerificationCode.objects.get(user=self.user)
         code.created_at = timezone.now() - timezone.timedelta(days=2)
         code.save()
@@ -200,10 +198,8 @@ class VerifyRegistrationViewTest(APITestCase):
                                                 "code": "1234"}),
                                content_type="application/json")
 
-
         self.assertEqual(res.status_code, 403)
         self.assertEqual(res.data, {"message": "The verification code has expired, request a new one"})
-
 
 
 class AuthViewTest(APITestCase):
@@ -251,3 +247,117 @@ class AuthViewTest(APITestCase):
         self.assertEqual(res.status_code, 401)
         self.assertEqual(res.data.get("detail"), 'Данный токен недействителен для любого типа токена')
 
+
+class SendVerifyCodeViewTest(APITestCase):
+    def setUp(self):
+        self.unverified_user: CustomUser = CustomUser.objects.create_user(
+            email="test@mail.com",
+            first_name="first_name",
+            last_name="last_name",
+            password="test123",
+            email_auth=False
+        )
+
+        self.verified_user: CustomUser = CustomUser.objects.create_user(
+            email="test2@mail.com",
+            first_name="first_name",
+            last_name="last_name",
+            password="test123",
+            email_auth=True
+        )
+
+        self.active_code_user: CustomUser = CustomUser.objects.create_user(
+            email="test3@mail.com",
+            first_name="first_name",
+            last_name="last_name",
+            password="test123",
+
+        )
+
+        VerificationCode.objects.create(
+            user=self.active_code_user,
+            code="1234",
+            type=VerificationCode.REGISTRATION_TYPE,
+        )
+
+    def test_rg_code_200(self):
+        res = self.client.post(reverse('send_verify_code'), data=json.dumps({"email": "test@mail.com", "type": "RG"}),
+                               content_type="application/json")
+
+        VerificationCode.objects.get(user=self.unverified_user, type=VerificationCode.REGISTRATION_TYPE)
+
+        self.assertEqual(res.data, {'message': 'Verification code sent to email'})
+        self.assertEqual(res.status_code, 200)
+
+    def test_rg_user_already_verified_405(self):
+        res = self.client.post(reverse('send_verify_code'), data=json.dumps({"email": "test2@mail.com", "type": "RG"}),
+                               content_type="application/json")
+
+        self.assertEqual(res.data, {'message': 'User already verified'})
+        self.assertEqual(res.status_code, 405)
+
+    def test_rg_user_not_found_405(self):
+        res = self.client.post(reverse('send_verify_code'), data=json.dumps({"email": "wrong_email@mail.com",
+                                                                             "type": "RG"}),
+                               content_type="application/json")
+
+        self.assertEqual(res.data, {'message': 'User not found'})
+        self.assertEqual(res.status_code, 404)
+
+    def test_rg_code_still_active_409(self):
+        res = self.client.post(reverse('send_verify_code'), data=json.dumps({"email": "test3@mail.com", "type": "RG"}),
+                               content_type="application/json")
+
+        self.assertEqual(res.data, {'message': 'The verification code is still active, try again later'})
+        self.assertEqual(res.status_code, 409)
+
+    def test_em_code_200(self):
+        tokens = self.unverified_user.get_token()
+        res = self.client.post(reverse('send_verify_code'),
+                               data=json.dumps({
+                                   "email": "change_email@mail.com",
+                                   "type": "EM"}),
+                               headers={"Authorization": f"Bearer {tokens.get('accessToken')}"},
+                               content_type="application/json")
+
+        self.assertEqual(res.data, {'message': 'Verification code sent to email'})
+        self.assertEqual(res.status_code, 200)
+
+    def test_em_not_authenticated_401(self):
+        res = self.client.post(reverse('send_verify_code'),
+                               data=json.dumps({
+                                   "email": "change_email@mail.com",
+                                   "type": "EM"}),
+                               content_type="application/json")
+
+        self.assertEqual(res.data, {'message': 'User is not authenticated'})
+        self.assertEqual(res.status_code, 401)
+
+    def test_pw_code_200(self):
+        tokens = self.unverified_user.get_token()
+        res = self.client.post(reverse('send_verify_code'),
+                               data=json.dumps({
+                                   "type": "PW"}),
+                               headers={"Authorization": f"Bearer {tokens.get('accessToken')}"},
+                               content_type="application/json")
+
+        self.assertEqual(res.data, {'message': 'Verification code sent to email'})
+        self.assertEqual(res.status_code, 200)
+
+    def test_pw_not_authenticated_401(self):
+        res = self.client.post(reverse('send_verify_code'),
+                               data=json.dumps({
+                                   "type": "PW"}),
+                               content_type="application/json")
+
+        self.assertEqual(res.data, {'message': 'User is not authenticated'})
+        self.assertEqual(res.status_code, 401)
+
+    def test_incorrect_type_406(self):
+        res = self.client.post(reverse('send_verify_code'),
+                               data=json.dumps({
+                                   "type": "PD"}),
+                               content_type="application/json")
+
+        self.assertEqual(res.data, {'message': "Code type incorrect"})
+        self.assertEqual(res.status_code, 406)

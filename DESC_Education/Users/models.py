@@ -75,15 +75,21 @@ class CustomUser(AbstractBaseUser):
 
 class VerificationCode(models.Model):
     REGISTRATION_TYPE = "RG"
-    PASSWORD_TYPE = "PW"
-    EMAIL_TYPE = "EM"
+    PASSWORD_CHANGE_TYPE = "PW"
+    EMAIL_CHANGE_TYPE = "EM"
 
     TYPE_CHOISES = [
         (REGISTRATION_TYPE, "Registration Code"),
-        (PASSWORD_TYPE, "Password Code"),
-        (EMAIL_TYPE, "Email Code")
+        (PASSWORD_CHANGE_TYPE, "Password Code"),
+        (EMAIL_CHANGE_TYPE, "Email Code")
     ]
 
+    EXPIRED_MINUTES = 30
+
+    id = models.UUIDField(primary_key=True,
+                          default=uuid.uuid4,
+                          editable=False,
+                          unique=True)
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     code = models.CharField(max_length=4)
     type = models.CharField(max_length=2, choices=TYPE_CHOISES)
@@ -92,7 +98,7 @@ class VerificationCode(models.Model):
 
     def is_valid(self):
 
-        return (timezone.now() - self.created_at).total_seconds() < 60 * 30 and not self.is_used
+        return (timezone.now() - self.created_at).total_seconds() < 60 * self.EXPIRED_MINUTES and not self.is_used
 
 
 

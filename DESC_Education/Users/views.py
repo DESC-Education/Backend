@@ -28,15 +28,18 @@ from Users.serializers import (
     RegistrationSerializer,
     VerifyRegistrationSerializer,
     CustomUserSerializer,
-    EmptySerializer
+    EmptySerializer,
+    VerifyCodeSerializer,
 
 )
-from Users.smtp import send_auth_registration_code
+from Users.smtp import (
+    send_auth_registration_code,
+    send_password_change_code,
+    send_mail_change_code
+)
+
 
 # Create your views here.
-
-
-
 
 
 class LoginView(generics.GenericAPIView):
@@ -216,7 +219,8 @@ class RegistrationView(generics.GenericAPIView):
 
             Vcode: VerificationCode = VerificationCode.objects.create(
                 user=user,
-                code=str(random.randint(1000, 9999))
+                code=str(random.randint(1000, 9999)),
+                type=VerificationCode.REGISTRATION_TYPE
             )
 
             send_auth_registration_code(email, Vcode.code)
@@ -309,7 +313,9 @@ class VerifyRegistrationView(generics.GenericAPIView):
                 return Response({"message": "The user was not found"},
                                 status=status.HTTP_404_NOT_FOUND)
             try:
-                Vcode: VerificationCode = VerificationCode.objects.get(user=user)
+                Vcode: VerificationCode = VerificationCode.objects.get(user=user,
+                                                                       type=VerificationCode.REGISTRATION_TYPE,
+                                                                       is_used=False)
             except VerificationCode.DoesNotExist:
                 return Response({"message": "The verification code does not exist or did not match"},
                                 status=status.HTTP_406_NOT_ACCEPTABLE)
@@ -432,13 +438,191 @@ class AuthView(generics.GenericAPIView):
             user = request.user
             serializer = CustomUserSerializer(user)
 
-
             return Response({
                 "data": {
                     "user": serializer.data
                 },
                 "message": "Success"},
                 status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SendVerifyCodeView(generics.GenericAPIView):
+    serializer_class = VerifyCodeSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        tags=["Users"],
+        summary="Отправка кода подтверждения",
+        examples=[
+            OpenApiExample(
+                "Подтверждение регистрации",
+                description='НЕ ТРЕБУЕТСЯ аторизация!',
+                value={
+                    "type": "RG",
+                    "email": "user@example.com"
+                },
+            ),
+            OpenApiExample(
+                "Подтверждение смены пароля",
+                description='ТРЕБУЕТСЯ аторизация!\n'
+                            'НЕ ТРЕБУЕТСЯ почта!',
+                value={
+                    "type": "PW",
+                    "email": "user@example.com"
+                },
+            ),
+            OpenApiExample(
+                "Подтверждение смены почты",
+                description='ТРЕБУЕТСЯ аторизация!\n'
+                            'Необходимо указывать новую почту.\n'
+                            'Код подтверждения будет отправлен на новую почту',
+                value={
+                    "type": "EM",
+                    "email": "user@example.com"
+                },
+            ),
+
+        ],
+        responses={
+            200: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Успешно",
+                        value={
+                            "message": "Verification code sent to email"
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Прочие ошибки",
+                        value={
+                            "message": "Other error message"
+                        },
+                    )
+                ]
+            ),
+            401: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Не авторизован",
+                        value={
+                            "message": "User is not authenticated."
+                        },
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Пользователь не существует",
+                        value={
+                            "message": "User not found."
+                        },
+                    )
+                ]
+            ),
+            405: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Пользователь уже верифицирован",
+                        value={
+                            "message": "User already verified."
+                        },
+                    )
+                ]
+            ),
+            406: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Неверный тип кода",
+                        value={
+                            "message": "Code type incorrect."
+                        },
+                    )
+                ]
+            ),
+
+        }
+
+    )
+    def post(self, request):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            type = serializer.validated_data['type']
+
+
+            match type:
+                case self.serializer_class.REGISTRATION_TYPE:
+                    email = serializer.validated_data['email']
+                    try:
+                        user = CustomUser.objects.get(email=email)
+
+                        if user.email_auth:
+                            return Response({"message": "User already verified"},
+                                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+                    except CustomUser.DoesNotExist:
+                        return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+                    try:
+                        code: VerificationCode = VerificationCode.objects.get(user=user,
+                                                                              type=VerificationCode.REGISTRATION_TYPE,
+                                                                              is_used=False)
+                        if code.is_valid():
+                            return Response({"message": "The verification code is still active, try again later"},
+                                            status=status.HTTP_409_CONFLICT)
+                    except VerificationCode.DoesNotExist:
+                        pass
+
+                    Vcode_reg = VerificationCode.objects.create(user=user,
+                                                                code=str(random.randint(1000, 9999)),
+                                                                type=VerificationCode.REGISTRATION_TYPE)
+
+                    send_auth_registration_code(email, Vcode_reg.code)
+
+                    return Response({"message": "Verification code sent to email"}, status=status.HTTP_200_OK)
+
+                case self.serializer_class.EMAIL_CHANGE_TYPE:
+                    email = serializer.validated_data['email']
+
+                    if not request.user.is_authenticated:
+                        return Response({"message": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+
+                    Vcode_email = VerificationCode.objects.create(user=request.user,
+                                                                  code=str(random.randint(1000, 9999)),
+                                                                  type=VerificationCode.EMAIL_CHANGE_TYPE)
+                    send_mail_change_code(email, Vcode_email.code)
+
+                    return Response({"message": "Verification code sent to email"}, status=status.HTTP_200_OK)
+
+                case self.serializer_class.PASSWORD_CHANGE_TYPE:
+                    if not request.user.is_authenticated:
+                        return Response({"message": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+
+                    Vcode_pass = VerificationCode.objects.create(user=request.user,
+                                                                 code=str(random.randint(1000, 9999)),
+                                                                 type=VerificationCode.PASSWORD_CHANGE_TYPE)
+
+                    send_password_change_code(request.user.email, Vcode_pass.code)
+
+                    return Response({"message": "Verification code sent to email"}, status=status.HTTP_200_OK)
+
+                case _:
+                    return Response({"message": "Code type incorrect"}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         except Exception as e:
             return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
