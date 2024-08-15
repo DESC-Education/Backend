@@ -27,8 +27,9 @@ SECRET_KEY = config.SECRET_KEY.get_secret_value()
 DEBUG = config.DEBUG
 
 ALLOWED_HOSTS = ["*"]
-
-
+# CORS_ALLOWED_ORIGINS = ["*"]
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 # Application definition
 
 INSTALLED_APPS = [
@@ -42,11 +43,13 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'Users',
     'drf_spectacular',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "django.middleware.common.CommonMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -80,19 +83,23 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'DEFAULT_PERMISSION_CLASSES': [],
-    'TEST_REQUEST_DEFAULT_FORMAT': 'json'
+    # 'DEFAULT_PERMISSION_CLASSES': [],
+    # 'TEST_REQUEST_DEFAULT_FORMAT': 'json'
 
 }
 
 AUTH_USER_MODEL = "Users.CustomUser"
 
+# SIMPLE_JWT = {
+#     "UPDATE_LAST_LOGIN": True,
+# }
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'DESC Education API',
     'DESCRIPTION': '',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+
     # OTHER SETTINGS
 }
 
