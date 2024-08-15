@@ -91,7 +91,7 @@ class VerificationCode(models.Model):
                           editable=False,
                           unique=True)
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    code = models.CharField(max_length=4)
+    code = models.IntegerField()
     type = models.CharField(max_length=2, choices=TYPE_CHOISES)
     created_at = models.DateTimeField(auto_now_add=True)
     is_used = models.BooleanField(default=False)

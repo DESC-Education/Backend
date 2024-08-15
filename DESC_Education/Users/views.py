@@ -219,7 +219,7 @@ class RegistrationView(generics.GenericAPIView):
 
             Vcode: VerificationCode = VerificationCode.objects.create(
                 user=user,
-                code=str(random.randint(1000, 9999)),
+                code=random.randint(1000, 9999),
                 type=VerificationCode.REGISTRATION_TYPE
             )
 
@@ -614,7 +614,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
                         return Response({"message": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
 
                     Vcode_pass = VerificationCode.objects.create(user=request.user,
-                                                                 code=str(random.randint(1000, 9999)),
+                                                                 code=random.randint(1000, 9999),
                                                                  type=VerificationCode.PASSWORD_CHANGE_TYPE)
 
                     send_password_change_code(request.user.email, Vcode_pass.code)
@@ -626,3 +626,6 @@ class SendVerifyCodeView(generics.GenericAPIView):
 
         except Exception as e:
             return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# class ChangePasswordView(generics.GenericAPIView):
