@@ -384,6 +384,7 @@ class ChangePasswordViewTest(APITestCase):
         res = self.client.post(reverse('change_password'),
                                data=json.dumps({
                                    "code": 1234,
+                                   "email": "test@mail.com",
                                    "new_password": "new_password",
                                }),
                                headers={"Authorization": f"Bearer {self.access_token}"},
@@ -402,6 +403,7 @@ class ChangePasswordViewTest(APITestCase):
         res = self.client.post(reverse('change_password'),
                                data=json.dumps({
                                    "code": 1234,
+                                   "email": "test@mail.com",
                                    "new_password": "new_password",
                                }),
                                headers={"Authorization": f"Bearer {self.access_token}"},
@@ -417,6 +419,7 @@ class ChangePasswordViewTest(APITestCase):
         res = self.client.post(reverse('change_password'),
                                data=json.dumps({
                                    "code": 1234,
+                                   "email": "test@mail.com",
                                    "new_password": "new_password",
                                }),
                                headers={"Authorization": f"Bearer {self.access_token}"},
@@ -429,6 +432,7 @@ class ChangePasswordViewTest(APITestCase):
         res = self.client.post(reverse('change_password'),
                                data=json.dumps({
                                    "code": 1235,
+                                   "email": "test@mail.com",
                                    "new_password": "new_password",
                                }),
                                headers={"Authorization": f"Bearer {self.access_token}"},
@@ -436,6 +440,19 @@ class ChangePasswordViewTest(APITestCase):
 
         self.assertEqual(res.data, {'message': 'Verification code is incorrect'})
         self.assertEqual(res.status_code, 406)
+
+    def test_user_not_found_409(self):
+        res = self.client.post(reverse('change_password'),
+                               data=json.dumps({
+                                   "code": 1235,
+                                   "email": "test2@mail.com",
+                                   "new_password": "new_password",
+                               }),
+                               headers={"Authorization": f"Bearer {self.access_token}"},
+                               content_type="application/json")
+
+        self.assertEqual(res.data, {'message': 'User not found'})
+        self.assertEqual(res.status_code, 409)
 
 
 class ChangeEmailViewTest(APITestCase):
@@ -510,3 +527,5 @@ class ChangeEmailViewTest(APITestCase):
 
         self.assertEqual(res.data, {'message': 'Verification code is incorrect'})
         self.assertEqual(res.status_code, 406)
+
+

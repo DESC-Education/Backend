@@ -469,8 +469,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
             ),
             OpenApiExample(
                 "Подтверждение смены пароля",
-                description='ТРЕБУЕТСЯ аторизация!\n'
-                            'НЕ ТРЕБУЕТСЯ почта!',
+                description='ТРЕБУЕТСЯ аторизация!\n',
                 value={
                     "type": "PW",
                     "email": "user@example.com"
@@ -632,7 +631,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
 class ChangePasswordView(generics.GenericAPIView):
     serializer_class = ChangePasswordSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     @extend_schema(
         tags=["Users"],
@@ -682,6 +681,17 @@ class ChangePasswordView(generics.GenericAPIView):
                     )
                 ]
             ),
+            409: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Пользователь не найден",
+                        value={
+                            "message": "User not found"
+                        },
+                    )
+                ]
+            ),
 
         }
 
@@ -691,7 +701,13 @@ class ChangePasswordView(generics.GenericAPIView):
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
 
-            user: CustomUser = request.user
+            email = serializer.validated_data["email"]
+
+            try:
+                user: CustomUser = CustomUser.objects.get(email=email)
+
+            except CustomUser.DoesNotExist:
+                return Response({"message": "User not found"}, status=status.HTTP_409_CONFLICT)
 
             try:
                 Vcode = VerificationCode.objects.get(user=user,
@@ -700,11 +716,11 @@ class ChangePasswordView(generics.GenericAPIView):
             except VerificationCode.DoesNotExist:
                 return Response({"message": "Verification code not found or expired"},
                                 status=status.HTTP_404_NOT_FOUND)
-
+            #
             if not Vcode.is_valid():
                 return Response({"message": "Verification code not found or expired"},
                                 status=status.HTTP_404_NOT_FOUND)
-
+            #
             if Vcode.code != serializer.validated_data["code"]:
                 return Response({"message": "Verification code is incorrect"},
                                 status=status.HTTP_406_NOT_ACCEPTABLE)
