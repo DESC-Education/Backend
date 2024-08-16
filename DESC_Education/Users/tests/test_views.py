@@ -83,13 +83,35 @@ class RegistrationViewTest(APITestCase):
         self.assertEqual(res.status_code, 406)
         self.assertEqual(res.data, {'message': 'Email already registered'})
 
-    def test_registration_200(self):
+    def test_registration_default_200(self):
         res = self.client.post(reverse('registration'),
                                data=json.dumps({"email": "test@mail.com", "password": "test123"}),
                                content_type="application/json")
 
+        user: CustomUser = CustomUser.objects.get(email="test@mail.com")
+
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data, {"message": "Authorization code sent to email"})
+        self.assertEqual(user.role, user.STUDENT_ROLE)
+        self.assertEqual(user.is_verified, False)
+
+    def test_registration_company_200(self):
+        res = self.client.post(reverse('registration'),
+                               data=json.dumps({
+                                   "email": "test@mail.com",
+                                   "password": "test123",
+                                   "role": CustomUser.COMPANY_ROLE
+                               }),
+                               content_type="application/json")
+
+        user: CustomUser = CustomUser.objects.get(email="test@mail.com")
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data, {"message": "Authorization code sent to email"})
+        self.assertEqual(user.role, user.COMPANY_ROLE)
+        self.assertEqual(user.is_verified, False)
+
+
 
 
 class CustomTokenRefreshViewTest(APITestCase):

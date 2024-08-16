@@ -161,6 +161,26 @@ class RegistrationView(generics.GenericAPIView):
     @extend_schema(
         tags=["Users"],
         summary="Регистрация пользователя",
+        examples=[
+            OpenApiExample(
+                "Регистрация студента",
+                description='Дефолтный вариант, можно не указывать role',
+                value={
+                  "email": "user@example.com",
+                  "password": "string",
+                  "role": "student"
+                },
+            ),
+            OpenApiExample(
+                "Регистрация компании",
+                description='',
+                value={
+                  "email": "user@example.com",
+                  "password": "string",
+                  "role": "company"
+                },
+            ),
+        ],
         responses={
             200: OpenApiResponse(
                 serializer_class,
@@ -205,6 +225,7 @@ class RegistrationView(generics.GenericAPIView):
 
             email = serializer.validated_data['email']
             password = serializer.validated_data['password']
+            role = serializer.validated_data['role']
 
             if len(CustomUser.objects.filter(email=email)) != 0:
                 return Response(
@@ -213,7 +234,8 @@ class RegistrationView(generics.GenericAPIView):
 
             user = CustomUser.objects.create_user(
                 email=email,
-                password=password
+                password=password,
+                role=role
             )
 
             Vcode: VerificationCode = VerificationCode.objects.create(

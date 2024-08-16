@@ -36,6 +36,12 @@ class CustomUserTest(TestCase):
 
         self.assertEqual(str(user), user.email)
 
+    def test_create_user_without_mail(self):
+        with self.assertRaises(ValueError):
+            CustomUser.objects.create_user(email=None, password="123")
+
+
+
 
 
 

@@ -3,7 +3,7 @@ from Users.models import CustomUser
 
 
 # Create your models here.
-class UserProfile(models.Model):
+class BaseProfile(models.Model):
     id = models.UUIDField(primary_key=True,
                           default=uuid.uuid4,
                           editable=False,
@@ -12,4 +12,7 @@ class UserProfile(models.Model):
 
     first_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50, blank=True)
+    description = models.TextField(blank=True)
+    phone = models.CharField(max_length=15)
+
 

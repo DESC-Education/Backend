@@ -23,11 +23,21 @@ class LoginSerializer(serializers.Serializer):
 
 
 class RegistrationSerializer(serializers.Serializer):
+    STUDENT_ROLE = "student"
+    COMPANY_ROLE = "company"
+
+    ROLE_CHOISES = [
+        (STUDENT_ROLE, "Student Role"),
+        (COMPANY_ROLE, "Company Role")
+    ]
+
     email = serializers.EmailField()
     password = serializers.CharField(max_length=128, write_only=True)
+    role = serializers.ChoiceField(choices=ROLE_CHOISES, default=STUDENT_ROLE)
 
 
 class VerifyRegistrationSerializer(serializers.Serializer):
+
     code = serializers.IntegerField()
     email = serializers.EmailField()
 

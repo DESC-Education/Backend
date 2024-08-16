@@ -28,11 +28,21 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser):
+    STUDENT_ROLE = "student"
+    COMPANY_ROLE = "company"
+
+    ROLE_CHOISES = [
+        (STUDENT_ROLE, "Student Role"),
+        (COMPANY_ROLE, "Company Role")
+    ]
+
+
     id = models.UUIDField(primary_key=True,
                           default=uuid.uuid4,
                           editable=False,
                           unique=True)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(db_index=True, unique=True)
+    role = models.CharField(max_length=7, choices=ROLE_CHOISES, default=STUDENT_ROLE)
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -44,12 +54,6 @@ class CustomUser(AbstractBaseUser):
 
     def __str__(self):
         return self.email
-
-    # def has_perm(self, perm, obj=None):
-    #     return True
-    #
-    # def has_module_perms(self, app_label):
-    #     return True
 
 
     def get_token(self):
