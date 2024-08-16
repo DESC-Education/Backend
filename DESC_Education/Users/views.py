@@ -469,7 +469,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
             ),
             OpenApiExample(
                 "Подтверждение смены пароля",
-                description='ТРЕБУЕТСЯ аторизация!\n',
+                description='НЕ ТРЕБУЕТСЯ аторизация!\n',
                 value={
                     "type": "PW",
                     "email": "user@example.com"
