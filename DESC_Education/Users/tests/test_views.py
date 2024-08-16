@@ -62,6 +62,7 @@ class LoginViewTest(APITestCase):
                          {
                              "id": str(self.user.id),
                              "email": self.user.email,
+                             "role": self.user.role,
                              "isActive": self.user.is_active,
                              "isStaff": self.user.is_staff,
                              "isSuperuser": self.user.is_superuser,
@@ -233,6 +234,7 @@ class AuthViewTest(APITestCase):
                 "user": {
                     "id": str(self.user.id),
                     "email": self.user.email,
+                    "role": self.user.role,
                     "isActive": self.user.is_active,
                     "isStaff": self.user.is_staff,
                     "isSuperuser": self.user.is_superuser,

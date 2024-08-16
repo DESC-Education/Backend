@@ -69,6 +69,7 @@ class LoginView(generics.GenericAPIView):
                                 "user": {
                                     "id": "uuid",
                                     "email": "str",
+                                    "role": "str",
                                     "isActive": "bool",
                                     "isStaff": "bool",
                                     "isSuperuser": "bool"
@@ -173,7 +174,6 @@ class RegistrationView(generics.GenericAPIView):
             ),
             OpenApiExample(
                 "Регистрация компании",
-                description='',
                 value={
                   "email": "user@example.com",
                   "password": "string",
@@ -416,6 +416,7 @@ class AuthView(generics.GenericAPIView):
                                 "user": {
                                     "id": "uuid",
                                     "email": "str",
+                                    "role": "str",
                                     "isActive": "bool",
                                     "isStaff": "bool",
                                     "isSuperuser": "bool"
