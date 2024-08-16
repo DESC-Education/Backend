@@ -69,8 +69,6 @@ class LoginView(generics.GenericAPIView):
                                 "user": {
                                     "id": "uuid",
                                     "email": "str",
-                                    "firstName": "str",
-                                    "lastName": "str",
                                     "isActive": "bool",
                                     "isStaff": "bool",
                                     "isSuperuser": "bool"
@@ -396,8 +394,6 @@ class AuthView(generics.GenericAPIView):
                                 "user": {
                                     "id": "uuid",
                                     "email": "str",
-                                    "firstName": "str",
-                                    "lastName": "str",
                                     "isActive": "bool",
                                     "isStaff": "bool",
                                     "isSuperuser": "bool"

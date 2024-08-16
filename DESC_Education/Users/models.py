@@ -33,8 +33,6 @@ class CustomUser(AbstractBaseUser):
                           editable=False,
                           unique=True)
     email = models.EmailField(unique=True)
-    first_name = models.CharField(max_length=50, blank=True)
-    last_name = models.CharField(max_length=50, blank=True)
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -68,8 +66,6 @@ class CustomUser(AbstractBaseUser):
         return {
             'id': self.id,
             'email': self.email,
-            'first_name': self.first_name,
-            'last_name': self.last_name,
         }
 
 

@@ -18,8 +18,6 @@ class LoginViewTest(APITestCase):
         # Set up data for the whole TestCase
         cls.user: CustomUser = CustomUser.objects.create_user(
             email="test@mail.com",
-            first_name="first_name",
-            last_name="last_name",
             password="test123",
             is_verified=True)
 
@@ -64,8 +62,6 @@ class LoginViewTest(APITestCase):
                          {
                              "id": str(self.user.id),
                              "email": self.user.email,
-                             "firstName": self.user.first_name,
-                             "lastName": self.user.last_name,
                              "isActive": self.user.is_active,
                              "isStaff": self.user.is_staff,
                              "isSuperuser": self.user.is_superuser,
@@ -102,8 +98,6 @@ class CustomTokenRefreshViewTest(APITestCase):
         # Set up data for the whole TestCase
         self.user: CustomUser = CustomUser.objects.create_user(
             email="test@mail.com",
-            first_name="first_name",
-            last_name="last_name",
             password="test123",
             is_verified=True)
 
@@ -136,14 +130,10 @@ class VerifyRegistrationViewTest(APITestCase):
         # Set up data for the whole TestCase
         self.user: CustomUser = CustomUser.objects.create_user(
             email="test@mail.com",
-            first_name="first_name",
-            last_name="last_name",
             password="test123",
         )
         CustomUser.objects.create_user(
             email="test2@mail.com",
-            first_name="first_name",
-            last_name="last_name",
             password="test123",
         )
 
@@ -206,8 +196,6 @@ class AuthViewTest(APITestCase):
     def setUp(self):
         self.user: CustomUser = CustomUser.objects.create_user(
             email="test@mail.com",
-            first_name="first_name",
-            last_name="last_name",
             password="test123",
             is_verified=True,
         )
@@ -223,8 +211,6 @@ class AuthViewTest(APITestCase):
                 "user": {
                     "id": str(self.user.id),
                     "email": self.user.email,
-                    "firstName": self.user.first_name,
-                    "lastName": self.user.last_name,
                     "isActive": self.user.is_active,
                     "isStaff": self.user.is_staff,
                     "isSuperuser": self.user.is_superuser,
@@ -252,24 +238,18 @@ class SendVerifyCodeViewTest(APITestCase):
     def setUp(self):
         self.unverified_user: CustomUser = CustomUser.objects.create_user(
             email="test@mail.com",
-            first_name="first_name",
-            last_name="last_name",
             password="test123",
             is_verified=False
         )
 
         self.verified_user: CustomUser = CustomUser.objects.create_user(
             email="test2@mail.com",
-            first_name="first_name",
-            last_name="last_name",
             password="test123",
             is_verified=True
         )
 
         self.active_code_user: CustomUser = CustomUser.objects.create_user(
             email="test3@mail.com",
-            first_name="first_name",
-            last_name="last_name",
             password="test123",
 
         )
@@ -367,8 +347,6 @@ class ChangePasswordViewTest(APITestCase):
     def setUp(self):
         self.user: CustomUser = CustomUser.objects.create_user(
             email="test@mail.com",
-            first_name="first_name",
-            last_name="last_name",
             password="test123",
             is_verified=True
         )
@@ -459,8 +437,6 @@ class ChangeEmailViewTest(APITestCase):
     def setUp(self):
         self.user: CustomUser = CustomUser.objects.create_user(
             email="test@mail.com",
-            first_name="first_name",
-            last_name="last_name",
             password="test123",
             is_verified=True
         )

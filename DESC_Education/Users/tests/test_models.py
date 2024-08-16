@@ -6,16 +6,16 @@ from django.utils import timezone
 class CustomUserTest(TestCase):
     def setUp(self):
         CustomUser.objects.create_user(
-            email="testemail@example.com", first_name="Test_First_Name",
-            last_name="Test_Last_Name", password="testpassword"
+            email="testemail@example.com",
+            password="testpassword"
             )
         CustomUser.objects.create_user(
-            email="testemail2@example.com", first_name="Test_First_Name2",
-            last_name="Test_Last_Name2", password="testpassword"
+            email="testemail2@example.com",
+            password="testpassword"
         )
         CustomUser.objects.create_superuser(
-            email="testemail3@example.com", first_name="Test_First_Name",
-            last_name="Test_Last_Name", password="testpassword")
+            email="testemail3@example.com",
+            password="testpassword")
 
     def test_token_payload(self):
         FirstUser: CustomUser = CustomUser.objects.get(email='testemail@example.com')
@@ -24,14 +24,11 @@ class CustomUserTest(TestCase):
             FirstUser.token_payload, {
                 'id': FirstUser.id,
                 'email': "testemail@example.com",
-                'first_name': "Test_First_Name",
-                'last_name': "Test_Last_Name"})
+            })
         self.assertEqual(
             SecondUser.token_payload, {
                 "id": SecondUser.id,
                 'email': "testemail2@example.com",
-                'first_name': "Test_First_Name2",
-                'last_name': "Test_Last_Name2"
             })
 
     def test_user(self):
@@ -46,8 +43,7 @@ class CustomUserTest(TestCase):
 
 class VerificationCodeTest(TestCase):
     def setUp(self):
-        self.user = CustomUser.objects.create_user(email="testemail@example.com", first_name="Test_First_Name",
-            last_name="Test_Last_Name", password="testpassword")
+        self.user = CustomUser.objects.create_user(email="testemail@example.com", password="testpassword")
 
         VerificationCode.objects.create(
             user=self.user, code="1234", type=VerificationCode.REGISTRATION_TYPE,
@@ -63,7 +59,7 @@ class VerificationCodeTest(TestCase):
     def test_expired_verification_code(self):
         code: VerificationCode = VerificationCode.objects.get(user=self.user)
 
-        code.created_at = timezone.now() - timezone.timedelta(minutes=35)
+        code.created_at = timezone.now() - timezone.timedelta(minutes=VerificationCode.EXPIRED_MINUTES + 5)
         code.save()
 
         self.assertEqual(code.is_valid(), False)
