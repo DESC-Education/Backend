@@ -136,7 +136,7 @@ class LoginView(generics.GenericAPIView):
             if not user.check_password(serializer.validated_data['password']):
                 return Response({'message': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
 
-            if not user.email_auth:
+            if not user.is_verified:
                 return Response({'message': 'Need to verify email'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
             tokens = user.get_token()
@@ -329,7 +329,7 @@ class VerifyRegistrationView(generics.GenericAPIView):
                 return Response({"message": "The verification code has expired, request a new one"},
                                 status=status.HTTP_403_FORBIDDEN)
 
-            user.email_auth = True
+            user.is_verified = True
             user.save()
             Vcode.is_used = True
             Vcode.save()
@@ -571,7 +571,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
                     try:
                         user = CustomUser.objects.get(email=email)
 
-                        if user.email_auth:
+                        if user.is_verified:
                             return Response({"message": "User already verified"},
                                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 

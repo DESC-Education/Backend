@@ -5,3 +5,4 @@ DESC_Education/.env
 /DESC_Education/Users/migrations/
 /DESC_Education/.coverage
 /DESC_Education/htmlcov/
+/DESC_Education/Profiles/migrations/

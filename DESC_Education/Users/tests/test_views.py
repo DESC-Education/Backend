@@ -21,7 +21,7 @@ class LoginViewTest(APITestCase):
             first_name="first_name",
             last_name="last_name",
             password="test123",
-            email_auth=True)
+            is_verified=True)
 
     def test_invalid_login_401(self):
         res = self.client.post(reverse('login'),
@@ -40,7 +40,7 @@ class LoginViewTest(APITestCase):
         self.assertEqual(res.data.get("message"), "Invalid email or password")
 
     def test_invalid_auth_mail_406(self):
-        self.user.email_auth = False
+        self.user.is_verified = False
         self.user.save()
 
         res = self.client.post(reverse('login'),
@@ -105,7 +105,7 @@ class CustomTokenRefreshViewTest(APITestCase):
             first_name="first_name",
             last_name="last_name",
             password="test123",
-            email_auth=True)
+            is_verified=True)
 
         res = self.client.post(reverse('login'),
                                data=json.dumps({"email": "test@mail.com", "password": "test123"}),
@@ -161,7 +161,7 @@ class VerifyRegistrationViewTest(APITestCase):
         code: VerificationCode = VerificationCode.objects.get(user=user)
 
         self.assertEqual(res.status_code, 200)
-        self.assertTrue(user.email_auth)
+        self.assertTrue(user.is_verified)
         self.assertTrue(code.is_used)
 
     def test_invalid_user_404(self):
@@ -209,7 +209,7 @@ class AuthViewTest(APITestCase):
             first_name="first_name",
             last_name="last_name",
             password="test123",
-            email_auth=True,
+            is_verified=True,
         )
 
     def test_auth_200(self):
@@ -255,7 +255,7 @@ class SendVerifyCodeViewTest(APITestCase):
             first_name="first_name",
             last_name="last_name",
             password="test123",
-            email_auth=False
+            is_verified=False
         )
 
         self.verified_user: CustomUser = CustomUser.objects.create_user(
@@ -263,7 +263,7 @@ class SendVerifyCodeViewTest(APITestCase):
             first_name="first_name",
             last_name="last_name",
             password="test123",
-            email_auth=True
+            is_verified=True
         )
 
         self.active_code_user: CustomUser = CustomUser.objects.create_user(
@@ -370,7 +370,7 @@ class ChangePasswordViewTest(APITestCase):
             first_name="first_name",
             last_name="last_name",
             password="test123",
-            email_auth=True
+            is_verified=True
         )
 
         tokens = self.user.get_token()
@@ -462,7 +462,7 @@ class ChangeEmailViewTest(APITestCase):
             first_name="first_name",
             last_name="last_name",
             password="test123",
-            email_auth=True
+            is_verified=True
         )
 
         tokens = self.user.get_token()
