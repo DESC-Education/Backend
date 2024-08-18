@@ -173,6 +173,16 @@ class VerifyRegistrationViewTest(APITestCase):
         user: CustomUser = CustomUser.objects.get(email="test@mail.com")
         code: VerificationCode = VerificationCode.objects.get(user=user)
 
+        self.assertEqual(res.data.get("data").get("user"),
+                         {
+                             "id": str(user.id),
+                             "email": user.email,
+                             "role": user.role,
+                             "isActive": user.is_active,
+                             "isStaff": user.is_staff,
+                             "isSuperuser": user.is_superuser,
+                         }
+                         )
         self.assertEqual(res.status_code, 200)
         self.assertTrue(user.is_verified)
         self.assertTrue(code.is_used)

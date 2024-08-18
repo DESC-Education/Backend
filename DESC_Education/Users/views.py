@@ -269,6 +269,21 @@ class VerifyRegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
+                            "data": {
+                                "user": {
+                                    "id": "uuid",
+                                    "email": "str",
+                                    "role": "str",
+                                    "isActive": "bool",
+                                    "isStaff": "bool",
+                                    "isSuperuser": "bool"
+                                }
+                                ,
+                                "tokens": {
+                                    "accessToken": "str",
+                                    "refreshToken": "str"
+                                }
+                            },
                             "message": "User verified registration"
                         },
                     )
@@ -354,7 +369,16 @@ class VerifyRegistrationView(generics.GenericAPIView):
             Vcode.is_used = True
             Vcode.save()
 
-            return Response({"message": "User verified registration"},
+            tokens = user.get_token()
+
+            user_serializer = CustomUserSerializer(user)
+
+            return Response({
+                "data": {
+                    "user": user_serializer.data,
+                    "tokens": tokens
+                },
+                "message": "User verified registration"},
                             status=status.HTTP_200_OK)
 
 

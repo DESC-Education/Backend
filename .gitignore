@@ -2,7 +2,6 @@
 *.env
 DESC_Education/.env
 /DESC_Education/db.sqlite3
-/DESC_Education/Users/migrations/
 /DESC_Education/.coverage
 /DESC_Education/htmlcov/
-#/DESC_Education/Profiles/migrations/
+

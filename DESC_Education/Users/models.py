@@ -30,10 +30,14 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser):
     STUDENT_ROLE = "student"
     COMPANY_ROLE = "company"
+    ADMIN_ROLE = "admin"
+    UNIVERSITY_ADMIN_ROLE = "u_admin"
 
     ROLE_CHOISES = [
         (STUDENT_ROLE, "Student Role"),
-        (COMPANY_ROLE, "Company Role")
+        (COMPANY_ROLE, "Company Role"),
+        (ADMIN_ROLE, "Admin Role"),
+        (UNIVERSITY_ADMIN_ROLE, "University Admin Role")
     ]
 
 
@@ -98,7 +102,6 @@ class VerificationCode(models.Model):
     is_used = models.BooleanField(default=False)
 
     def is_valid(self):
-
         return (timezone.now() - self.created_at).total_seconds() < 60 * self.EXPIRED_MINUTES and not self.is_used
 
 
