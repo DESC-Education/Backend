@@ -35,13 +35,13 @@ class BaseProfile(models.Model):
     last_name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
     phone = models.CharField(max_length=15)
-    phone_visibility = models.BooleanField()
-    email_visibility = models.BooleanField()
+    phone_visibility = models.BooleanField(default=False)
+    email_visibility = models.BooleanField(default=False)
     logo_img = models.ImageField(upload_to=image_upload_to, width_field=220, height_field=220, blank=True, null=True)
     telegram_link = models.CharField(blank=True, null=True)
     vk_link = models.CharField(blank=True, null=True)
     timezone = models.IntegerField()
-    verification = models.CharField(choices=VERIFICATION_CHOISES)
+    verification = models.CharField(choices=VERIFICATION_CHOISES, default=NOT_VERIFIED)
 
     class Meta:
         abstract = True
@@ -74,12 +74,12 @@ class StudentProfile(BaseProfile):
 
     form_of_education = models.CharField(choices=EDUCATION_CHOISES)
     university = models.OneToOneField(University, on_delete=models.CASCADE)
-    speciality = models.CharField()
+    speciality = models.CharField(max_length=50,)
     admission_year = models.IntegerField()
 
 
 class CompanyProfile(BaseProfile):
-    link_to_company = models.CharField()
+    link_to_company = models.CharField(null=True)
 
 
 class City(models.Model):
