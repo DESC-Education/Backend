@@ -11,3 +11,4 @@ pillow==10.4.0
 gunicorn==23.0.0
 gevent==24.2.1
 requests==2.32.3
+sentry-sdk==2.13.0

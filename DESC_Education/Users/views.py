@@ -653,14 +653,22 @@ class SendVerifyCodeView(generics.GenericAPIView):
                     return Response({"message": "Verification code sent to email"}, status=status.HTTP_200_OK)
 
                 case self.serializer_class.PASSWORD_CHANGE_TYPE:
-                    if not request.user.is_authenticated:
-                        return Response({"message": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+                    email = serializer.validated_data['email']
+                    try:
+                        user = CustomUser.objects.get(email=email)
 
-                    Vcode_pass = VerificationCode.objects.create(user=request.user,
+                        if not user.is_verified:
+                            return Response({"message": "User not verified"},
+                                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+                    except CustomUser.DoesNotExist:
+                        return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+                    Vcode_pass = VerificationCode.objects.create(user=user,
                                                                  code=random.randint(1000, 9999),
                                                                  type=VerificationCode.PASSWORD_CHANGE_TYPE)
 
-                    send_password_change_code(request.user.email, Vcode_pass.code)
+                    send_password_change_code(user.email, Vcode_pass.code)
 
                     return Response({"message": "Verification code sent to email"}, status=status.HTTP_200_OK)
 

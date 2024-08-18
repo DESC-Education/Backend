@@ -348,29 +348,31 @@ class SendVerifyCodeViewTest(APITestCase):
         self.assertEqual(res.status_code, 401)
 
     def test_pw_code_200(self):
-        tokens = self.unverified_user.get_token()
         res = self.client.post(reverse('send_verify_code'),
                                data=json.dumps({
-                                   "type": "PW"}),
-                               headers={"Authorization": f"Bearer {tokens.get('accessToken')}"},
+                                   "type": "PW",
+                                   "email": "test2@mail.com"}),
                                content_type="application/json")
 
         self.assertEqual(res.data, {'message': 'Verification code sent to email'})
         self.assertEqual(res.status_code, 200)
 
-    def test_pw_not_authenticated_401(self):
+    def test_pw_user_not_found_404(self):
         res = self.client.post(reverse('send_verify_code'),
                                data=json.dumps({
-                                   "type": "PW"}),
+                                   "type": "PW",
+                                   "email": "test1232@mail.com"}),
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'User is not authenticated'})
-        self.assertEqual(res.status_code, 401)
+        self.assertEqual(res.data, {'message': 'User not found'})
+        self.assertEqual(res.status_code, 404)
+
 
     def test_incorrect_type_406(self):
         res = self.client.post(reverse('send_verify_code'),
                                data=json.dumps({
-                                   "type": "PD"}),
+                                   "type": "PD",
+                                   "email": "test2@mail.com"}),
                                content_type="application/json")
 
         self.assertEqual(res.data, {'message': "Code type incorrect"})
