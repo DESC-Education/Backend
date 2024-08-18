@@ -5,3 +5,4 @@ DESC_Education/.env
 /DESC_Education/.coverage
 /DESC_Education/htmlcov/
 
+/venv

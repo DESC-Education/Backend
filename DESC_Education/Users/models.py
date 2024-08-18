@@ -41,6 +41,7 @@ class CustomUser(AbstractBaseUser):
     ]
 
 
+
     id = models.UUIDField(primary_key=True,
                           default=uuid.uuid4,
                           editable=False,
@@ -58,6 +59,12 @@ class CustomUser(AbstractBaseUser):
 
     def __str__(self):
         return self.email
+
+    def has_perm(self, perm, obj=None):
+        return True
+
+    def has_module_perms(self, app_label):
+        return True
 
 
     def get_token(self):
@@ -88,21 +95,23 @@ class VerificationCode(models.Model):
         (EMAIL_CHANGE_TYPE, "Email Code")
     ]
 
-    EXPIRED_MINUTES = 30
+    EXPIRED_SECONDS = 300
 
     id = models.UUIDField(primary_key=True,
                           default=uuid.uuid4,
                           editable=False,
                           unique=True)
     new_email = models.EmailField(null=True)
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     code = models.IntegerField()
     type = models.CharField(max_length=2, choices=TYPE_CHOISES)
     created_at = models.DateTimeField(auto_now_add=True)
     is_used = models.BooleanField(default=False)
 
     def is_valid(self):
-        return (timezone.now() - self.created_at).total_seconds() < 60 * self.EXPIRED_MINUTES and not self.is_used
+        return (timezone.now() - self.created_at).total_seconds() < self.EXPIRED_SECONDS and not self.is_used
 
+    def get_time(self):
+        return (timezone.now() - self.created_at).total_seconds()
 
 

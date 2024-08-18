@@ -65,7 +65,7 @@ class VerificationCodeTest(TestCase):
     def test_expired_verification_code(self):
         code: VerificationCode = VerificationCode.objects.get(user=self.user)
 
-        code.created_at = timezone.now() - timezone.timedelta(minutes=VerificationCode.EXPIRED_MINUTES + 5)
+        code.created_at = timezone.now() - timezone.timedelta(minutes=VerificationCode.EXPIRED_SECONDS + 5)
         code.save()
 
         self.assertEqual(code.is_valid(), False)

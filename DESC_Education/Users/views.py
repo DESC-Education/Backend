@@ -624,7 +624,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
                         code: VerificationCode = VerificationCode.objects.get(user=user,
                                                                               type=VerificationCode.REGISTRATION_TYPE,
                                                                               is_used=False)
-                        if code.is_valid():
+                        if code.get_time() < 55:
                             return Response({"message": "The verification code is still active, try again later"},
                                             status=status.HTTP_409_CONFLICT)
                     except VerificationCode.DoesNotExist:
@@ -643,6 +643,16 @@ class SendVerifyCodeView(generics.GenericAPIView):
 
                     if not request.user.is_authenticated:
                         return Response({"message": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+
+                    try:
+                        code: VerificationCode = VerificationCode.objects.get(user=request.user,
+                                                                              type=VerificationCode.REGISTRATION_TYPE,
+                                                                              is_used=False)
+                        if code.get_time() < 55:
+                            return Response({"message": "The verification code is still active, try again later"},
+                                            status=status.HTTP_409_CONFLICT)
+                    except VerificationCode.DoesNotExist:
+                        pass
 
                     Vcode_email = VerificationCode.objects.create(user=request.user,
                                                                   code=str(random.randint(1000, 9999)),
@@ -663,6 +673,16 @@ class SendVerifyCodeView(generics.GenericAPIView):
 
                     except CustomUser.DoesNotExist:
                         return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+                    try:
+                        code: VerificationCode = VerificationCode.objects.get(user=user,
+                                                                              type=VerificationCode.REGISTRATION_TYPE,
+                                                                              is_used=False)
+                        if code.get_time() < 55:
+                            return Response({"message": "The verification code is still active, try again later"},
+                                            status=status.HTTP_409_CONFLICT)
+                    except VerificationCode.DoesNotExist:
+                        pass
 
                     Vcode_pass = VerificationCode.objects.create(user=user,
                                                                  code=random.randint(1000, 9999),
