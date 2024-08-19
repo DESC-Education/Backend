@@ -204,3 +204,5 @@ class CreateStudentProfileView(generics.GenericAPIView):
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
