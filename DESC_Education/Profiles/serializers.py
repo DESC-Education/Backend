@@ -33,9 +33,9 @@ class CreateStudentProfileSerializer(BaseProfileSerializer):
 
 
 
-class CompanyProfileSerializer(BaseProfileSerializer):
+class CreateCompanyProfileSerializer(BaseProfileSerializer):
     linkToCompany = serializers.URLField(source="link_to_company")
-    companyName = serializers.URLField(source="company_name")
+    companyName = serializers.CharField(source="company_name")
 
     class Meta(BaseProfileSerializer.Meta):
         model = CompanyProfile

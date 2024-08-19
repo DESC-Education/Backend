@@ -16,7 +16,7 @@ from drf_spectacular.utils import (
 from drf_spectacular.types import OpenApiTypes
 from Profiles.serializers import (
     CreateStudentProfileSerializer,
-
+    CreateCompanyProfileSerializer,
 )
 from Users.models import (
     CustomUser,
@@ -95,7 +95,6 @@ class CreateStudentProfileView(generics.GenericAPIView):
                     "studentCard": 'image'
                 },
             ),
-
 
         ],
         responses={
@@ -205,4 +204,133 @@ class CreateStudentProfileView(generics.GenericAPIView):
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+class CreateCompanyProfileView(generics.GenericAPIView):
+    serializer_class = CreateCompanyProfileSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    @extend_schema(
+        tags=["Profiles"],
+        summary="Создание профиля компании",
+        examples=[
+            OpenApiExample(
+                "пример",
+                value={
+                    "firstName": 'str',
+                    "lastName": 'str',
+                    "description": "str",
+                    "phone": "+79991234567",
+                    "phoneVisibility": True,
+                    "emailVisibility": True,
+                    "telegramLink": "https://t.me/example",
+                    "vkLink": "https://vk.com/example",
+                    "timezone": 7,
+                    'linkToCompany': "https://link.com/example",
+                    "companyName": "str",
+                },
+            )
 
+        ],
+        responses={
+            200: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Успешно",
+                        value={
+                            "data": {
+                                "companyProfile": {
+                                    'linkToCompany': "str",
+                                    "companyName": "str",
+                                    'description': 'str',
+                                    'emailVisibility': "bool",
+                                    'firstName': 'str',
+                                    'id': 'uuid',
+                                    'isVerified': 'bool',
+                                    'lastName': 'str',
+                                    'logoImg': 'bool',
+                                    'phone': 'str',
+                                    'phoneVisibility': 'bool',
+                                    'telegramLink': 'str',
+                                    'timezone': 3,
+                                    'vkLink': 'str'}
+                            },
+                            "message": "Профиль компании создан и отправлен на проверку!"}
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Прочие ошибки",
+                        value={
+                            "message": "Сообщение об ошибке"
+                        },
+                    )
+                ]
+            ),
+            401: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Не авторизован",
+                        value={
+                            "detail": "Учетные данные не были предоставлены."
+                        },
+                    )
+                ]
+            ),
+            403: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Неверная роль",
+                        value={
+                            "message": "Вы можете создать профиль компании только для компании!"
+                        },
+                    )
+                ]
+            ),
+            409: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Профиль уже создан",
+                        value={
+                            "message": "Профиль с такими данными уже существует!"
+                        },
+                    )
+                ]
+            ),
+
+        }
+
+    )
+    def post(self, request):
+        try:
+            if request.user.role != CustomUser.COMPANY_ROLE:
+                return Response({"message": "Вы можете создать профиль компании только для компании!"},
+                                status=status.HTTP_403_FORBIDDEN)
+
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.validated_data["user"] = request.user
+
+            try:
+                profile: CompanyProfile = CompanyProfile.objects.create(**serializer.validated_data)
+            except:
+                return Response({"message": "Профиль с такими данными уже существует!"},
+                                status=status.HTTP_409_CONFLICT)
+
+            ProfileVerifyRequest.objects.create(
+                object_id=profile.id, content_type=ContentType.objects.get_for_model(profile))
+
+            resp = CreateCompanyProfileSerializer(profile)
+            return Response({
+                "data": {
+                    "companyProfile": resp.data
+                },
+                "message": "Профиль компании создан и отправлен на проверку!"})
+
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)

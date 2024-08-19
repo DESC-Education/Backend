@@ -8,6 +8,7 @@ from Users.models import (
 from tempfile import NamedTemporaryFile
 from Profiles.models import (
     StudentProfile,
+    CompanyProfile,
     University,
     ProfileVerifyRequest
 )
@@ -16,7 +17,7 @@ from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 
-class StudentProfileView(APITestCase):
+class StudentProfileViewTest(APITestCase):
 
     @staticmethod
     def create_test_image():
@@ -63,7 +64,7 @@ class StudentProfileView(APITestCase):
 
     def test_create_profile_200(self):
         example_data = self.example_data.copy()
-        res = self.client.post(reverse("student_profile"),
+        res = self.client.post(reverse("student_profile_create"),
                                data=example_data,
                                headers={"Authorization": f"Bearer {self.token}"},
                                )
@@ -92,7 +93,7 @@ class StudentProfileView(APITestCase):
         example_data = self.example_data.copy()
         example_data['studentCard'] = self.create_test_image()
         self.test_create_profile_200()
-        res = self.client.post(reverse("student_profile"),
+        res = self.client.post(reverse("student_profile_create"),
                                data=example_data,
                                headers={"Authorization": f"Bearer {self.token}"},
                                )
@@ -102,7 +103,7 @@ class StudentProfileView(APITestCase):
         self.assertEqual(res.status_code, 409)
 
     def test_unathorized_401(self):
-        res = self.client.post(reverse("student_profile"),
+        res = self.client.post(reverse("student_profile_create"),
                                data=json.dumps({}),
                                content_type="application/json")
 
@@ -110,7 +111,7 @@ class StudentProfileView(APITestCase):
         self.assertEqual(res.status_code, 401)
 
     def test_create_student_profile_to_company_403(self):
-        res = self.client.post(reverse("student_profile"),
+        res = self.client.post(reverse("student_profile_create"),
                                data=json.dumps({}),
                                headers={"Authorization": f"Bearer {self.company_token}"},
                                content_type="application/json"
@@ -118,4 +119,106 @@ class StudentProfileView(APITestCase):
 
 
         self.assertEqual(res.data.get("message"), 'Вы можете создать профиль студента только для студента!')
+        self.assertEqual(res.status_code, 403)
+
+
+class CompanyProfileViewTest(APITestCase):
+
+    @staticmethod
+    def create_test_image():
+        bts = BytesIO()
+        img = Image.new("RGB", (100, 100))
+        img.save(bts, 'jpeg')
+        return SimpleUploadedFile("test.jpg", bts.getvalue())
+
+
+
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(
+            email="example@example.com",
+            password="test123",
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+        self.student = CustomUser.objects.create_user(
+            email="example2@example.com",
+            password="test123",
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        self.token = self.user.get_token()['accessToken']
+        self.student_token = self.student.get_token()['accessToken']
+
+        self.example_data = {
+            "firstName": "John",
+            "lastName": "Doe",
+            "description": "Company description",
+            "phone": "+79991234567",
+            "phoneVisibility": True,
+            "emailVisibility": True,
+            "telegramLink": "https://t.me/john_doe",
+            "vkLink": "https://vk.com/john_doe",
+            "timezone": 3,
+            'linkToCompany': "https://vk.com/john_doe",
+            "companyName": "companyname",
+        }
+
+
+    def test_create_profile_200(self):
+        example_data = self.example_data.copy()
+        res = self.client.post(reverse("company_profile_create"),
+                               data=example_data,
+                               headers={"Authorization": f"Bearer {self.token}"},
+                               )
+
+        print(res.data)
+
+        profile = CompanyProfile.objects.first()
+
+        expected_data = example_data
+        expected_data["id"] = str(profile.id)
+        expected_data["isVerified"] = False
+        expected_data["logoImg"] = None
+
+
+        res = json.loads(res.content)
+
+
+        self.assertEqual(res.get("data").get("companyProfile"), expected_data)
+        self.assertEqual(res.get("message"), "Профиль компании создан и отправлен на проверку!")
+
+        v_request: ProfileVerifyRequest = ProfileVerifyRequest.objects.get(object_id=profile.id)
+        self.assertEqual(v_request.profile.user, profile.user)
+        self.assertEqual(v_request.status, v_request.PENDING)
+
+    def test_duplicate_409(self, ):
+        example_data = self.example_data.copy()
+
+        self.test_create_profile_200()
+        res = self.client.post(reverse("company_profile_create"),
+                               data=example_data,
+                               headers={"Authorization": f"Bearer {self.token}"},
+                               )
+
+
+        self.assertEqual(res.data.get("message"), "Профиль с такими данными уже существует!")
+        self.assertEqual(res.status_code, 409)
+
+    def test_unathorized_401(self):
+        res = self.client.post(reverse("company_profile_create"),
+                               data=json.dumps({}),
+                               content_type="application/json")
+
+        self.assertEqual(res.data.get("detail"), 'Учетные данные не были предоставлены.')
+        self.assertEqual(res.status_code, 401)
+
+    def test_create_student_profile_to_company_403(self):
+        res = self.client.post(reverse("company_profile_create"),
+                               data=json.dumps({}),
+                               headers={"Authorization": f"Bearer {self.student_token}"},
+                               content_type="application/json"
+                               )
+
+
+        self.assertEqual(res.data.get("message"), 'Вы можете создать профиль компании только для компании!')
         self.assertEqual(res.status_code, 403)
