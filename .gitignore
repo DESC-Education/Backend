@@ -6,3 +6,5 @@ DESC_Education/.env
 /DESC_Education/htmlcov/
 
 /venv
+
+/mediafiles/

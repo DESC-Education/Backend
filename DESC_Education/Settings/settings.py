@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 from Settings.env_config import config
 import os
+import sys
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -114,23 +115,23 @@ NEW_RELIC_CONFIG_FILE = '/Settings/newrelic.ini'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config.DB_NAME,
-        'USER': config.DB_USER.get_secret_value(),
-        'PASSWORD': config.DB_PASSWORD.get_secret_value(),
-        'HOST': config.DB_HOST,
-        "PORT": config.DB_PORT
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+#
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': config.DB_NAME,
+#         'USER': config.DB_USER.get_secret_value(),
+#         'PASSWORD': config.DB_PASSWORD.get_secret_value(),
+#         'HOST': config.DB_HOST,
+#         "PORT": config.DB_PORT
+#     }
+# }
 
 
 # Password validation
@@ -188,3 +189,8 @@ SERVER_EMAIL = EMAIL_HOST_USER
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+if 'test' in sys.argv:
+    # store files in memory, no cleanup after tests are finished
+    DEFAULT_FILE_STORAGE = 'inmemorystorage.InMemoryStorage'
+    # much faster password hashing, default one is super slow (on purpose)

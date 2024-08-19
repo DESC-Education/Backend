@@ -1,6 +1,8 @@
 from django.urls import path
 
-
+from Profiles.views import (
+    CreateStudentProfileView
+)
 # from Users.views import (
 #     LoginView,
 #     RegistrationView,
@@ -18,7 +20,7 @@ from django.urls import path
 urlpatterns = [
 
 
-    # path('login', LoginView.as_view(), name='login'),
+    path('student_profile/create', CreateStudentProfileView.as_view(), name='student_profile'),
 
 
 ]

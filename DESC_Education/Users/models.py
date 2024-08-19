@@ -48,6 +48,7 @@ class CustomUser(AbstractBaseUser):
                           unique=True)
     email = models.EmailField(db_index=True, unique=True)
     role = models.CharField(max_length=7, choices=ROLE_CHOISES, default=STUDENT_ROLE)
+    created_at = models.DateTimeField(blank=True, auto_now_add=True, editable=False)
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -105,7 +106,7 @@ class VerificationCode(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     code = models.IntegerField()
     type = models.CharField(max_length=2, choices=TYPE_CHOISES)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(blank=True, auto_now_add=True, editable=False)
     is_used = models.BooleanField(default=False)
 
     def is_valid(self):

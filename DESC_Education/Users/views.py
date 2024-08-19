@@ -6,12 +6,11 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
-from django.contrib.auth.models import User
+
 from Users.models import (
     CustomUser,
     VerificationCode,
 )
-from rest_framework import serializers
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
