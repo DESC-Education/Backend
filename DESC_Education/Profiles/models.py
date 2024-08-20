@@ -88,13 +88,13 @@ class BaseProfile(models.Model):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     description = models.TextField(blank=True, null=True)
-    phone = models.CharField(max_length=15)
-    phone_visibility = models.BooleanField()
-    email_visibility = models.BooleanField()
+    phone = models.CharField(max_length=15, blank=True, null=True)
+    phone_visibility = models.BooleanField(default=True)
+    email_visibility = models.BooleanField(default=True)
     logo_img = models.ImageField(upload_to=image_upload_to, width_field=220, height_field=220, blank=True, null=True)
     telegram_link = models.URLField(blank=True, null=True)
     vk_link = models.URLField(blank=True, null=True)
-    timezone = models.IntegerField()
+    timezone = models.IntegerField(null=True)
     is_verified = models.BooleanField(default=False)
     verification_requests = GenericRelation(ProfileVerifyRequest)
 
@@ -116,11 +116,11 @@ class StudentProfile(BaseProfile):
         (FULL_TIME_AND_PART_TIME_EDUCATION, "Очно-Заочная форма обучения")
     ]
 
-    form_of_education = models.CharField(choices=EDUCATION_CHOISES, max_length=15)
-    university = models.ForeignKey(University, on_delete=models.CASCADE)
-    speciality = models.CharField(max_length=50, )
-    admission_year = models.IntegerField()
-    student_card = models.ImageField(upload_to=student_card_upload)
+    form_of_education = models.CharField(choices=EDUCATION_CHOISES, max_length=15, null=True)
+    university = models.ForeignKey(University, on_delete=models.CASCADE, null=True)
+    speciality = models.CharField(max_length=50, null=True)
+    admission_year = models.IntegerField(null=True)
+    student_card = models.ImageField(upload_to=student_card_upload, null=True)
 
 
 class CompanyProfile(BaseProfile):

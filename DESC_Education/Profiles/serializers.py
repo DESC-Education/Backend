@@ -7,7 +7,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
 
     phoneVisibility = serializers.BooleanField(source="phone_visibility")
     emailVisibility = serializers.BooleanField(source="email_visibility")
-
+    phone = serializers.CharField(read_only=True)
     firstName = serializers.CharField(source="first_name")
     lastName = serializers.CharField(source="last_name")
     telegramLink = serializers.URLField(source="telegram_link", required=False)
@@ -30,6 +30,7 @@ class CreateStudentProfileSerializer(BaseProfileSerializer):
         model = StudentProfile
         fields = BaseProfileSerializer.Meta.fields + \
                  ('formOfEducation', 'university', 'speciality', 'admissionYear', 'studentCard')
+
 
 
 

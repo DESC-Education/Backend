@@ -1,8 +1,7 @@
 from django.urls import path
 
 from Profiles.views import (
-    CreateStudentProfileView,
-    CreateCompanyProfileView
+    CreateProfileView
 )
 # from Users.views import (
 #     LoginView,
@@ -19,7 +18,7 @@ from Profiles.views import (
 
 
 urlpatterns = [
-    path('student_profile/create', CreateStudentProfileView.as_view(), name='student_profile_create'),
-    path('company_profile/create', CreateCompanyProfileView.as_view(), name='company_profile_create'),
+    path('profile', CreateProfileView.as_view(), name='profile_create'),
+
 
 ]

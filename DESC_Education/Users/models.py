@@ -3,8 +3,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from django.utils import timezone
-
 # Create your models here.
+from django.apps import apps
 
 
 class CustomUserManager(BaseUserManager):
@@ -16,6 +16,13 @@ class CustomUserManager(BaseUserManager):
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
+
+        if user.role == CustomUser.STUDENT_ROLE:
+            profile = apps.get_model('Profiles.StudentProfile')
+            profile.objects.create(user=user)
+        elif user.role == CustomUser.COMPANY_ROLE:
+            profile = apps.get_model('Profiles.CompanyProfile')
+            profile.objects.create(user=user)
 
         return user
 
