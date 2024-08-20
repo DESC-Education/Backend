@@ -25,7 +25,6 @@ class BaseProfileSerializer(serializers.ModelSerializer):
         fields = ('id', 'firstName', 'lastName', 'description', 'phone', 'phoneVisibility', 'emailVisibility',
                   'logoImg', 'telegramLink', 'vkLink', 'timezone', 'isVerified')
 
-
 class CreateStudentProfileSerializer(BaseProfileSerializer):
     formOfEducation = serializers.CharField(source="form_of_education")
     admissionYear = serializers.IntegerField(source="admission_year")
@@ -47,4 +46,4 @@ class CreateCompanyProfileSerializer(BaseProfileSerializer):
 
 
 class EmptySerializer(serializers.Serializer):
-    empty = serializers.CharField()
+    empty = serializers.CharField(required=False)
