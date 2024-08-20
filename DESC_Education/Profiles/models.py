@@ -6,6 +6,18 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 
 
+def image_upload_to(instance, filename):
+    return f'logo_imgs/{filename}'
+
+
+def student_card_upload(instance, filename):
+    return f'students/student_cards/{filename}'
+
+
+def verification_files_upload(instance, filename):
+    return f'verification_files/{filename}'
+
+
 class City(models.Model):
     id = models.UUIDField(primary_key=True,
                           default=uuid.uuid4,
@@ -54,17 +66,15 @@ class ProfileVerifyRequest(models.Model):
     comments = models.TextField(null=True, blank=True)
 
 
-def image_upload_to(instance, filename):
-    # match image_type:
-    #     case "logo":
-    #         return f'logo_imgs/{filename}'
-    #     case "":
-    #         assert Exception("Invalid image type")
-    return f'logo_imgs/{filename}'
-
-
-def student_card_upload(instance, filename):
-    return f'student_cards/{filename}'
+class File(models.Model):
+    id = models.UUIDField(primary_key=True,
+                          default=uuid.uuid4,
+                          editable=False,
+                          unique=True)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.UUIDField()
+    profile = GenericForeignKey(ct_field='content_type', fk_field='object_id')
+    file = models.FileField(upload_to=verification_files_upload)
 
 
 # Create your models here.
@@ -97,6 +107,7 @@ class BaseProfile(models.Model):
     timezone = models.IntegerField(null=True)
     is_verified = models.BooleanField(default=False)
     verification_requests = GenericRelation(ProfileVerifyRequest)
+    verification_files = GenericRelation(File)
 
     class Meta:
         abstract = True
@@ -120,7 +131,6 @@ class StudentProfile(BaseProfile):
     university = models.ForeignKey(University, on_delete=models.CASCADE, null=True)
     speciality = models.CharField(max_length=50, null=True)
     admission_year = models.IntegerField(null=True)
-    student_card = models.ImageField(upload_to=student_card_upload, null=True)
 
 
 class CompanyProfile(BaseProfile):

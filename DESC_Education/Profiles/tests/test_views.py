@@ -1,3 +1,5 @@
+import random
+
 from django.urls import reverse
 import json
 from django.utils import timezone
@@ -10,27 +12,32 @@ from Profiles.models import (
     StudentProfile,
     CompanyProfile,
     University,
-    ProfileVerifyRequest
+    ProfileVerifyRequest,
+    File
 )
 from io import BytesIO
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
-
+from Profiles.serializers import (
+    CreateCompanyProfileSerializer
+)
 
 
 
 class CreateProfileViewTest(APITestCase):
+
 
     @staticmethod
     def create_test_image():
         bts = BytesIO()
         img = Image.new("RGB", (100, 100))
         img.save(bts, 'jpeg')
-        return SimpleUploadedFile("test.jpg", bts.getvalue())
+        return SimpleUploadedFile(f"test_{random.randint(1, 25)}.jpg", bts.getvalue())
 
 
 
     def setUp(self):
+        self.maxDiff = None
         self.user = CustomUser.objects.create_user(
             email="example@example.com",
             password="test123",
@@ -66,7 +73,7 @@ class CreateProfileViewTest(APITestCase):
             "speciality": "it",
             "admissionYear": 2020,
             "university": str(university.id),
-            "studentCard": self.create_test_image()
+            "files": [self.create_test_image()]
         }
 
         self.company_example_data = {
@@ -79,8 +86,11 @@ class CreateProfileViewTest(APITestCase):
             "vkLink": "https://vk.com/john_doe",
             "timezone": 3,
             "companyName": "Test Company",
-            'linkToCompany': "https://link.com/"
+            'linkToCompany': "https://link.com/",
+            'files': [{"file": self.create_test_image()} for _ in range(6)]
         }
+
+
 
 
     def test_create_student_profile_200(self):
@@ -95,27 +105,44 @@ class CreateProfileViewTest(APITestCase):
         expected_data["isVerified"] = False
         expected_data["logoImg"] = None
         expected_data["phone"] = None
-        expected_data["studentCard"] = profile.student_card.url
+        files = expected_data.pop('files')
 
+        self.assertEqual(len(files), profile.verification_files.count())
         self.assertEqual(res.status_code, 200)
         self.assertEqual(json.loads(res.content).get("data").get("studentProfile"), expected_data)
+
+        v_request: ProfileVerifyRequest = ProfileVerifyRequest.objects.first()
+
+        self.assertEqual(v_request.profile, profile)
+        self.assertEqual(v_request.status, v_request.PENDING)
+
 
     def test_create_company_profile_200(self):
         res = self.client.post(reverse('profile_create'),
                                data=self.company_example_data,
+                               format='multipart',
                                headers={"Authorization": f"Bearer {self.company_token}"})
 
-        profile = CompanyProfile.objects.first()
 
-        expected_data = self.company_example_data
+
+        profile: CompanyProfile = CompanyProfile.objects.first()
+
+
+
+        expected_data = self.company_example_data.copy()
         expected_data["id"] = str(profile.id)
         expected_data["isVerified"] = False
         expected_data["logoImg"] = None
         expected_data["phone"] = None
+        files = expected_data.pop('files')
 
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(files), profile.verification_files.count())
         self.assertEqual(json.loads(res.content).get("data").get("companyProfile"), expected_data)
+        self.assertEqual(CreateCompanyProfileSerializer(profile).data, expected_data)
+        self.assertEqual(res.status_code, 200)
+
+
 
     def test_student_duplicate_405(self, ):
         example_data = self.student_example_data.copy()
@@ -132,10 +159,9 @@ class CreateProfileViewTest(APITestCase):
         self.assertEqual(res.data.get('message'), 'Профиль еще на проверке')
 
 
-    def test_student_rejected_405(self, ):
+    def test_student_rejected_200(self, ):
         example_data = self.student_example_data.copy()
         example_data['firstName'] = "newFIrstName"
-        example_data['studentCard'] = self.create_test_image()
 
         self.test_create_student_profile_200()
         ProfileVerifyRequest.objects.filter(object_id=StudentProfile.objects.first().id)\
@@ -153,12 +179,40 @@ class CreateProfileViewTest(APITestCase):
         expected_data["isVerified"] = False
         expected_data["logoImg"] = None
         expected_data["phone"] = None
-        expected_data["studentCard"] = profile.student_card.url
+        expected_data.pop("files")
 
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data.get('message'), 'Профиль создан и отправлен на проверку!')
         self.assertEqual(json.loads(res.content).get("data").get("studentProfile"), expected_data)
+
+
+    def test_company_rejected_200(self, ):
+        example_data = self.company_example_data.copy()
+        example_data['firstName'] = "newFIrstName"
+
+        self.test_create_company_profile_200()
+        ProfileVerifyRequest.objects.filter(object_id=CompanyProfile.objects.first().id)\
+            .update(status=ProfileVerifyRequest.REJECTED)
+
+        res = self.client.post(reverse("profile_create"),
+                               data=example_data,
+                               headers={"Authorization": f"Bearer {self.company_token}"},
+                               )
+
+        profile = CompanyProfile.objects.first()
+
+        expected_data = example_data
+        expected_data["id"] = str(profile.id)
+        expected_data["isVerified"] = False
+        expected_data["logoImg"] = None
+        expected_data["phone"] = None
+        expected_data.pop("files")
+
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data.get('message'), 'Профиль создан и отправлен на проверку!')
+        self.assertEqual(json.loads(res.content).get("data").get("companyProfile"), expected_data)
 
 
 
@@ -192,7 +246,7 @@ class CreateProfileViewTest(APITestCase):
         self.assertEqual(res.status_code, 405)
         self.assertEqual(res.data.get('message'), 'Профиль уже подтвержден')
 
-    def test_create_admin_profile_200(self):
+    def test_create_admin_profile_403(self):
         res = self.client.post(reverse('profile_create'),
                                data=self.student_example_data,
                                headers={"Authorization": f"Bearer {self.admin_token}"})

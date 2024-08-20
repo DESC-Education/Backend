@@ -1,10 +1,15 @@
 from rest_framework import serializers
 
-from Profiles.models import StudentProfile, CompanyProfile, BaseProfile
+from Profiles.models import StudentProfile, CompanyProfile, BaseProfile, File
+
+
+class FileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = File
+        fields = ('file',)
 
 
 class BaseProfileSerializer(serializers.ModelSerializer):
-
     phoneVisibility = serializers.BooleanField(source="phone_visibility")
     emailVisibility = serializers.BooleanField(source="email_visibility")
     phone = serializers.CharField(read_only=True)
@@ -24,14 +29,11 @@ class BaseProfileSerializer(serializers.ModelSerializer):
 class CreateStudentProfileSerializer(BaseProfileSerializer):
     formOfEducation = serializers.CharField(source="form_of_education")
     admissionYear = serializers.IntegerField(source="admission_year")
-    studentCard = serializers.ImageField(source="student_card")
 
     class Meta(BaseProfileSerializer.Meta):
         model = StudentProfile
         fields = BaseProfileSerializer.Meta.fields + \
-                 ('formOfEducation', 'university', 'speciality', 'admissionYear', 'studentCard')
-
-
+                 ('formOfEducation', 'university', 'speciality', 'admissionYear')
 
 
 class CreateCompanyProfileSerializer(BaseProfileSerializer):
@@ -41,8 +43,7 @@ class CreateCompanyProfileSerializer(BaseProfileSerializer):
     class Meta(BaseProfileSerializer.Meta):
         model = CompanyProfile
         fields = BaseProfileSerializer.Meta.fields + \
-                 ('linkToCompany', 'companyName')
-
+                 ('linkToCompany', 'companyName',)
 
 
 class EmptySerializer(serializers.Serializer):

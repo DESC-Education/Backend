@@ -121,6 +121,7 @@ class LoginView(generics.GenericAPIView):
     )
     def post(self, request):
         try:
+
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
 

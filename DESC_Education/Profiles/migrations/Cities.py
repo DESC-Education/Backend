@@ -29,7 +29,7 @@ def get_cities(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        # ('Profiles', '0001_initial'),  # Замените на имя предыдущей миграции
+        ('Profiles', '0001_initial'),  # Замените на имя предыдущей миграции
     ]
 
     operations = [

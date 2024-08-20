@@ -1,5 +1,5 @@
 import random
-
+from rest_framework.parsers import MultiPartParser
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -26,13 +26,15 @@ from Users.models import (
 from Profiles.models import (
     StudentProfile,
     CompanyProfile,
-    ProfileVerifyRequest
+    ProfileVerifyRequest,
+    File
 )
 
 
 class CreateProfileView(generics.GenericAPIView):
     serializer_class = CreateStudentProfileSerializer
     authentication_classes = [JWTAuthentication]
+    # parser_classes = (MultiPartParser,)
     permission_classes = [IsAuthenticated]
     profile_class = None
     profile_str_name = {
@@ -65,7 +67,7 @@ class CreateProfileView(generics.GenericAPIView):
                     "speciality": 'str',
                     "admissionYear": 'str',
                     "university": 'uuid',
-                    "studentCard": 'image'
+                    "files": [{"file": "file"}]
                 },
             ),
             OpenApiExample(
@@ -84,7 +86,7 @@ class CreateProfileView(generics.GenericAPIView):
                     "speciality": 'str',
                     "admissionYear": 'str',
                     "university": 'uuid',
-                    "studentCard": 'image'
+                    "files": [{"file": "file"}]
                 },
             ),
             OpenApiExample(
@@ -103,7 +105,7 @@ class CreateProfileView(generics.GenericAPIView):
                     "speciality": 'str',
                     "admissionYear": 'str',
                     "university": 'uuid',
-                    "studentCard": 'image'
+                    "files": [{"file": "file"}]
                 },
             ),
             OpenApiExample(
@@ -119,6 +121,14 @@ class CreateProfileView(generics.GenericAPIView):
                     "timezone": 7,
                     'linkToCompany': "https://link.com/example",
                     "companyName": "str",
+                    "files": [{
+                        "file": "file"
+                    },
+                        {
+                            "file": "file"
+                        },
+
+                    ]
                 },
             )
 
@@ -230,6 +240,8 @@ class CreateProfileView(generics.GenericAPIView):
     )
     def post(self, request):
         try:
+
+
             user = request.user
             classes = self.serializer_classes.get(user.role, None)
             if classes is None:
@@ -242,6 +254,7 @@ class CreateProfileView(generics.GenericAPIView):
             profile: CompanyProfile = self.profile_class.objects.get(user=user)
 
             serializer = self.serializer_class(data=request.data, instance=profile)
+
             serializer.is_valid(raise_exception=True)
 
             if profile.is_verified:
@@ -255,8 +268,25 @@ class CreateProfileView(generics.GenericAPIView):
 
             serializer.save()
 
-            ProfileVerifyRequest.objects.create(
-                object_id=profile.id, content_type=ContentType.objects.get_for_model(profile))
+
+
+            files_data = self.request.data.getlist('files')
+
+            if profile.verification_files.count() != 0:
+                profile.verification_files.all().delete()
+
+
+
+            if len(files_data) == 0:
+                return Response({"message": "Необходимо загрузить хотя бы одно изображение"}, status=status.HTTP_400_BAD_REQUEST)
+            if len(files_data) > 6:
+                files_data = files_data[:6]
+            for file_data in files_data:
+                File.objects.create(file=file_data, profile=profile)
+
+            ProfileVerifyRequest.objects.create(profile=profile)
+
+
 
 
             return Response({
