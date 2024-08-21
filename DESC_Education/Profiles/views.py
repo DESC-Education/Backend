@@ -17,7 +17,9 @@ from drf_spectacular.types import OpenApiTypes
 from Profiles.serializers import (
     CreateStudentProfileSerializer,
     CreateCompanyProfileSerializer,
-    EmptySerializer
+    EmptySerializer,
+    GetCompanyProfileSerializer,
+    GetStudentProfileSerializer
 )
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from Users.models import (
@@ -32,38 +34,7 @@ from Profiles.models import (
 )
 
 
-
-class testView(generics.GenericAPIView):
-    serializer_class = EmptySerializer
-    authentication_classes = [JWTAuthentication]
-    # parser_classes = (MultiPartParser,)
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        try:
-            files_data = self.request.data.getlist('files')
-            profile = StudentProfile.objects.first()
-            if profile.verification_files.count() != 0:
-                profile.verification_files.all().delete()
-
-            if len(files_data) == 0:
-                return Response({"message": "Необходимо загрузить хотя бы одно изображение"},
-                                status=status.HTTP_400_BAD_REQUEST)
-            if len(files_data) > 6:
-                files_data = files_data[:6]
-            for file_data in files_data:
-                File.objects.create(file=file_data, profile=profile)
-
-            ProfileVerifyRequest.objects.create(profile=profile)
-
-            return Response({
-                "data": {
-                    ''
-                },
-                "message": "Профиль создан и отправлен на проверку!"})
-
-        except Exception as e:
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+import pprint
 
 
 
@@ -81,6 +52,11 @@ class ProfileView(generics.GenericAPIView):
     serializer_classes = {
         CustomUser.COMPANY_ROLE: (CreateCompanyProfileSerializer, CompanyProfile),
         CustomUser.STUDENT_ROLE: (CreateStudentProfileSerializer, StudentProfile)
+    }
+
+    get_serializer_classes = {
+        CustomUser.COMPANY_ROLE: GetCompanyProfileSerializer,
+        CustomUser.STUDENT_ROLE: GetStudentProfileSerializer
     }
 
     @extend_schema(
@@ -102,7 +78,9 @@ class ProfileView(generics.GenericAPIView):
                     "formOfEducation": StudentProfile.FULL_TIME_EDUCATION,
                     "speciality": 'str',
                     "admissionYear": 'str',
+                    "educationProgram": StudentProfile.BACHELOR,
                     "university": 'uuid',
+                    'skills_ids': ["uuid", "uuids"],
                     "files": [{"file": "file"}]
                 },
             ),
@@ -121,7 +99,9 @@ class ProfileView(generics.GenericAPIView):
                     "formOfEducation": StudentProfile.PART_TIME_EDUCATION,
                     "speciality": 'str',
                     "admissionYear": 'str',
+                    "educationProgram": StudentProfile.MAGISTRACY,
                     "university": 'uuid',
+                    'skills_ids': ["uuid", "uuids"],
                     "files": [{"file": "file"}]
                 },
             ),
@@ -140,7 +120,9 @@ class ProfileView(generics.GenericAPIView):
                     "formOfEducation": StudentProfile.FULL_TIME_AND_PART_TIME_EDUCATION,
                     "speciality": 'str',
                     "admissionYear": 'str',
+                    "educationProgram": StudentProfile.SPECIALTY,
                     "university": 'uuid',
+                    'skills_ids': ["uuid", "uuid"],
                     "files": [{"file": "file"}]
                 },
             ),
@@ -188,11 +170,12 @@ class ProfileView(generics.GenericAPIView):
                                                    'logoImg': 'bool',
                                                    'phoneVisibility': 'bool',
                                                    'speciality': 'str',
-                                                   'studentCard': 'url',
                                                    'telegramLink': 'str',
                                                    'timezone': 3,
                                                    'university': 'uuid',
-                                                   'vkLink': 'str'}
+                                                   "educationProgram": 'str',
+                                                   'vkLink': 'str',
+                                                   'skill': ["str", "str"]}
                             },
                             "message": "Профиль студента создан и отправлен на проверку!"}
                     ),
@@ -302,7 +285,7 @@ class ProfileView(generics.GenericAPIView):
             except ObjectDoesNotExist:
                 pass
 
-            serializer.save()
+            profile = serializer.save()
 
 
 
@@ -311,8 +294,6 @@ class ProfileView(generics.GenericAPIView):
             if profile.verification_files.count() != 0:
                 profile.verification_files.all().delete()
 
-
-
             if len(files_data) == 0:
                 return Response({"message": "Необходимо загрузить хотя бы одно изображение"}, status=status.HTTP_400_BAD_REQUEST)
             if len(files_data) > 6:
@@ -320,14 +301,16 @@ class ProfileView(generics.GenericAPIView):
             for file_data in files_data:
                 File.objects.create(file=file_data, profile=profile)
 
+
+
             ProfileVerifyRequest.objects.create(profile=profile)
 
 
-
+            res_serializer = self.get_serializer_classes[user.role](profile)
 
             return Response({
                 "data": {
-                   self.profile_str_name[self.profile_class]: serializer.data
+                   self.profile_str_name[self.profile_class]: res_serializer.data
                 },
                 "message": "Профиль создан и отправлен на проверку!"})
 
@@ -344,6 +327,11 @@ class GetMyProfileView(generics.GenericAPIView):
     profile_classes = {
         CustomUser.STUDENT_ROLE: StudentProfile,
         CustomUser.COMPANY_ROLE: CompanyProfile
+    }
+
+    profile_serializer_class = {
+        CustomUser.STUDENT_ROLE: CreateStudentProfileSerializer,
+        CustomUser.COMPANY_ROLE: CreateCompanyProfileSerializer
     }
 
     str_profile_classes = {
@@ -437,8 +425,8 @@ class GetMyProfileView(generics.GenericAPIView):
         try:
             user = request.user
             profile = self.profile_classes[user.role].objects.get(user=user)
-            serializer = CreateStudentProfileSerializer(profile)
-            return Response({"data": {self.str_profile_classes[user.role] : serializer.data, "message": "Успешно!"}},
+            serializer = self.profile_serializer_class[user.role](profile)
+            return Response({"data": {self.str_profile_classes[user.role]: serializer.data, "message": "Успешно!"}},
                             status=status.HTTP_200_OK)
 
         except Exception as e:
@@ -452,6 +440,10 @@ class GetProfileView(generics.GenericAPIView):
         CustomUser.STUDENT_ROLE: StudentProfile,
         CustomUser.COMPANY_ROLE: CompanyProfile
     }
+    profile_serializer_class = {
+        CustomUser.STUDENT_ROLE: GetStudentProfileSerializer,
+        CustomUser.COMPANY_ROLE: GetCompanyProfileSerializer
+    }
 
     str_profile_classes = {
         CustomUser.STUDENT_ROLE: "studentProfile",
@@ -461,11 +453,25 @@ class GetProfileView(generics.GenericAPIView):
     def get(self, request, pk):
         try:
             user = CustomUser.objects.get(id=pk)
-            print(user)
-            print(123)
+            profile = self.profile_classes[user.role].objects.get(user=user, is_verified=True)
+
+            profile_data = self.profile_serializer_class[user.role](profile).data
+            profile_data['email'] = user.email
 
 
-            return Response({"message": str(user)}, status=status.HTTP_200_OK)
+            Phone_V = profile_data.pop('phoneVisibility')
+            if not Phone_V:
+                profile_data.pop('phone')
+            Email_V = profile_data.pop('emailVisibility')
+            if not Email_V:
+                profile_data.pop('phone')
+
+            pprint.pprint(dict(profile_data), width=40)
+
+
+
+
+            return Response({"message": ''}, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)

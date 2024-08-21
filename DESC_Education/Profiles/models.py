@@ -30,6 +30,18 @@ class City(models.Model):
         return self.name
 
 
+class Skill(models.Model):
+    id = models.UUIDField(primary_key=True,
+                          default=uuid.uuid4,
+                          editable=False,
+                          unique=True)
+    name = models.CharField(unique=True, max_length=50)
+
+
+    def __str__(self):
+        return self.name
+
+
 class University(models.Model):
     id = models.UUIDField(primary_key=True,
                           default=uuid.uuid4,
@@ -106,8 +118,9 @@ class BaseProfile(models.Model):
     vk_link = models.URLField(blank=True, null=True)
     timezone = models.IntegerField(null=True)
     is_verified = models.BooleanField(default=False)
-    verification_requests = GenericRelation(ProfileVerifyRequest)
-    verification_files = GenericRelation(File)
+    verification_requests = GenericRelation(ProfileVerifyRequest, related_name="v_requests")
+    verification_files = GenericRelation(File, related_name='v_files')
+
 
     class Meta:
         abstract = True
@@ -126,11 +139,21 @@ class StudentProfile(BaseProfile):
         (PART_TIME_EDUCATION, "Заочная форма обучения"),
         (FULL_TIME_AND_PART_TIME_EDUCATION, "Очно-Заочная форма обучения")
     ]
+    BACHELOR = "bachelor"
+    MAGISTRACY = "magistracy"
+    SPECIALTY = "specialty"
+    EDUCATION_PROGRAMS = [
+        (BACHELOR, "Бакалавриат"),
+        (MAGISTRACY, "Магистратура"),
+        (SPECIALTY, "Специалитет")
+    ]
 
+    education_program = models.CharField(choices=EDUCATION_PROGRAMS, max_length=11, null=True)
     form_of_education = models.CharField(choices=EDUCATION_CHOISES, max_length=15, null=True)
-    university = models.ForeignKey(University, on_delete=models.CASCADE, null=True)
+    university = models.ForeignKey(University, on_delete=models.CASCADE, null=True, related_name='university')
     speciality = models.CharField(max_length=50, null=True)
     admission_year = models.IntegerField(null=True)
+    skills = models.ManyToManyField(Skill, related_name="skills")
 
 
 class CompanyProfile(BaseProfile):

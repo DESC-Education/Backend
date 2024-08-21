@@ -7,13 +7,15 @@ from rest_framework.test import APITestCase
 from Users.models import (
     CustomUser
 )
+from django.test.client import MULTIPART_CONTENT, encode_multipart, BOUNDARY
 from tempfile import NamedTemporaryFile
 from Profiles.models import (
     StudentProfile,
     CompanyProfile,
     University,
     ProfileVerifyRequest,
-    File
+    File,
+    Skill
 )
 from io import BytesIO
 from PIL import Image
@@ -32,6 +34,17 @@ class CreateProfileViewTest(APITestCase):
         img = Image.new("RGB", (100, 100))
         img.save(bts, 'jpeg')
         return SimpleUploadedFile(f"test_{random.randint(1, 25)}.jpg", bts.getvalue())
+
+
+    def get_skils_ids(self):
+        skills_ids = []
+
+        skils = Skill.objects.all()
+
+        for i in skils:
+            skills_ids.append(i.id)
+
+        return skills_ids
 
     def setUp(self):
         self.maxDiff = None
@@ -68,9 +81,11 @@ class CreateProfileViewTest(APITestCase):
             "timezone": 3,
             "formOfEducation": StudentProfile.FULL_TIME_EDUCATION,
             "speciality": "it",
+            'educationProgram': StudentProfile.BACHELOR,
             "admissionYear": 2020,
             "university": str(university.id),
-            "files": [self.create_test_image()]
+            "files": [self.create_test_image()],
+            "skills_ids": self.get_skils_ids()
         }
 
         self.company_example_data = {
@@ -84,15 +99,16 @@ class CreateProfileViewTest(APITestCase):
             "timezone": 3,
             "companyName": "Test Company",
             'linkToCompany': "https://link.com/",
-            'files': [{"file": self.create_test_image()} for _ in range(6)]
+            'files': [self.create_test_image() for _ in range(6)]
         }
 
     def test_create_student_profile_200(self):
+
         res = self.client.post(reverse('profile_create'),
                                data=self.student_example_data,
                                headers={"Authorization": f"Bearer {self.token}"})
 
-        profile = StudentProfile.objects.first()
+        profile: StudentProfile = StudentProfile.objects.first()
 
         expected_data = self.student_example_data
         expected_data["id"] = str(profile.id)
@@ -100,11 +116,20 @@ class CreateProfileViewTest(APITestCase):
         expected_data["logoImg"] = None
         expected_data["phone"] = None
         files = expected_data.pop('files')
+        skills_ids = expected_data.pop('skills_ids')
+        expected_data['skills'] = list(Skill.objects.filter(id__in=skills_ids).values_list('name', flat=True))
+        expected_data['university'] = University.objects.get(id=expected_data['university']).name
+        expected_data['formOfEducation'] = profile.get_form_of_education_display()
+        expected_data['educationProgram'] = profile.get_education_program_display()
 
-        self.assertEqual(len(files), profile.verification_files.count())
-        self.assertEqual(res.status_code, 200)
+
+
+
+
         self.assertEqual(json.loads(res.content).get("data").get("studentProfile"), expected_data)
-
+        self.assertEqual(len(files), profile.verification_files.count())
+        self.assertEqual(profile.skills.count(), len(skills_ids))
+        self.assertEqual(res.status_code, 200)
         v_request: ProfileVerifyRequest = ProfileVerifyRequest.objects.first()
 
         self.assertEqual(v_request.profile, profile)
@@ -124,6 +149,9 @@ class CreateProfileViewTest(APITestCase):
         expected_data["logoImg"] = None
         expected_data["phone"] = None
         files = expected_data.pop('files')
+
+
+
 
         self.assertEqual(len(files), profile.verification_files.count())
         self.assertEqual(json.loads(res.content).get("data").get("companyProfile"), expected_data)
@@ -163,7 +191,12 @@ class CreateProfileViewTest(APITestCase):
         expected_data["isVerified"] = False
         expected_data["logoImg"] = None
         expected_data["phone"] = None
-        expected_data.pop("files")
+        files = expected_data.pop('files')
+        skills_ids = expected_data.pop('skills_ids')
+        expected_data['skills'] = list(Skill.objects.filter(id__in=skills_ids).values_list('name', flat=True))
+        expected_data['university'] = University.objects.get(id=expected_data['university']).name
+        expected_data['formOfEducation'] = profile.get_form_of_education_display()
+        expected_data['educationProgram'] = profile.get_education_program_display()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data.get('message'), 'Профиль создан и отправлен на проверку!')
@@ -263,6 +296,12 @@ class GetProfileTest(APITestCase):
             role=CustomUser.STUDENT_ROLE,
             is_verified=True
         )
+        univer = University.objects.first()
+
+        profile: StudentProfile = StudentProfile.objects.get(user=self.user)
+        profile.is_verified = True
+        profile.university = univer
+        profile.save()
         self.token = self.user.get_token()["accessToken"]
 
     def test_get_profile_200(self):
@@ -274,3 +313,4 @@ class GetProfileTest(APITestCase):
                               )
 
         print(res.data)
+        print(res.status_code)
