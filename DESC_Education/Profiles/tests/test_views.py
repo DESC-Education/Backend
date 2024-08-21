@@ -15,7 +15,8 @@ from Profiles.models import (
     University,
     ProfileVerifyRequest,
     File,
-    Skill
+    Skill,
+    City
 )
 from io import BytesIO
 from PIL import Image
@@ -35,7 +36,6 @@ class CreateProfileViewTest(APITestCase):
         img = Image.new("RGB", (100, 100))
         img.save(bts, 'jpeg')
         return SimpleUploadedFile(f"test_{random.randint(1, 25)}.jpg", bts.getvalue())
-
 
     def get_skils_ids(self):
         skills_ids = []
@@ -104,7 +104,6 @@ class CreateProfileViewTest(APITestCase):
         }
 
     def test_create_student_profile_200(self):
-
         res = self.client.post(reverse('profile_create'),
                                data=self.student_example_data,
                                headers={"Authorization": f"Bearer {self.token}"})
@@ -122,10 +121,6 @@ class CreateProfileViewTest(APITestCase):
         expected_data['university'] = University.objects.get(id=expected_data['university']).name
         expected_data['formOfEducation'] = profile.get_form_of_education_display()
         expected_data['educationProgram'] = profile.get_education_program_display()
-
-
-
-
 
         self.assertEqual(json.loads(res.content).get("data").get("studentProfile"), expected_data)
         self.assertEqual(len(files), profile.verification_files.count())
@@ -150,9 +145,6 @@ class CreateProfileViewTest(APITestCase):
         expected_data["logoImg"] = None
         expected_data["phone"] = None
         files = expected_data.pop('files')
-
-
-
 
         self.assertEqual(len(files), profile.verification_files.count())
         self.assertEqual(json.loads(res.content).get("data").get("companyProfile"), expected_data)
@@ -375,10 +367,8 @@ class GetProfileTest(APITestCase):
 
         res = self.client.get(reverse("profile_get", kwargs={"pk": user_id}))
 
-
         self.assertEqual(json.loads(res.content), {'message': 'Профиль не найден'})
         self.assertEqual(res.status_code, 404)
-
 
 
 class UniversitiesListTest(APITestCase):
@@ -388,12 +378,50 @@ class UniversitiesListTest(APITestCase):
         University.objects.create(name='Университет', short_name='УНИ')
         University.objects.create(name='Высший университет', short_name='ВЫШУНИ')
 
-
     def test_get(self):
         res = self.client.get(reverse('universities_list'), {'search': "Школа"})
 
-
         self.assertEqual(res.data[0].get('name'), 'Школа')
+        self.assertEqual(res.status_code, 200)
+
+    def test_get_not_found(self):
+        res = self.client.get(reverse('universities_list'), {'search': "Школа11"})
+
+        self.assertEqual(res.data, [])
+        self.assertEqual(res.status_code, 200)
+
+
+class SkillListTest(APITestCase):
+    def setUp(self):
+        Skill.objects.all().delete()
+        Skill.objects.create(name='Python', is_verified=True)
+        Skill.objects.create(name='C#', is_verified=True)
+        Skill.objects.create(name='Illustrator', is_verified=True)
+
+    def test_get(self):
+        res = self.client.get(reverse('skills_list'), {'search': "ill"})
+
+        self.assertEqual(res.data[0].get('name'), 'Illustrator')
+        self.assertEqual(res.status_code, 200)
+
+    def test_get_not_found(self):
+        res = self.client.get(reverse('universities_list'), {'search': "Школа11"})
+
+        self.assertEqual(res.data, [])
+        self.assertEqual(res.status_code, 200)
+
+
+class CitiesTest(APITestCase):
+    def setUp(self):
+        City.objects.all().delete()
+        City.objects.create(name='Красноярск')
+        City.objects.create(name='Новгород')
+        City.objects.create(name='Москва')
+
+    def test_get(self):
+        res = self.client.get(reverse('cities_list'), {'search': "Красно"})
+
+        self.assertEqual(res.data[0].get('name'), 'Красноярск')
         self.assertEqual(res.status_code, 200)
 
     def test_get_not_found(self):

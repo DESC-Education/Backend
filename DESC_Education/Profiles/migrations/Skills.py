@@ -7,13 +7,13 @@ def get_skills(apps, schema_editor):
     Skill = apps.get_model('Profiles', 'Skill')
 
     skills_data = [
-        {'name': "Python"},
-        {'name': "C#"},
-        {'name': "C++"},
-        {'name': "Photoshop"},
-        {'name': "Figma"},
-        {'name': "Adobe Illustrator"},
-        {'name': "Анимация"},
+        {'name': "Python", 'is_verified': True},
+        {'name': "C#", 'is_verified': True},
+        {'name': "C++", 'is_verified': True},
+        {'name': "Photoshop", 'is_verified': True},
+        {'name': "Figma", 'is_verified': True},
+        {'name': "Adobe Illustrator", 'is_verified': True},
+        {'name': "Анимация", 'is_verified': True},
     ]
 
     skills = [Skill(**data) for data in skills_data]

@@ -6,7 +6,8 @@ from Profiles.models import (
     BaseProfile,
     File,
     Skill,
-    University
+    University,
+    City
 )
 
 
@@ -42,9 +43,13 @@ class BaseProfileSerializer(serializers.ModelSerializer):
 class SkillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Skill
+        fields = ('id', 'name',)
+
+
+class CitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
         fields = '__all__'
-
-
 
 
 class CreateStudentProfileSerializer(BaseProfileSerializer):
@@ -55,13 +60,11 @@ class CreateStudentProfileSerializer(BaseProfileSerializer):
                                                     queryset=Skill.objects.all(),
                                                     source="skills")
 
-
     class Meta(BaseProfileSerializer.Meta):
         model = StudentProfile
         fields = BaseProfileSerializer.Meta.fields + \
                  ('formOfEducation', 'university', 'speciality', 'admissionYear', 'skills_ids',
                   'educationProgram')
-
 
 
 class CreateCompanyProfileSerializer(BaseProfileSerializer):
@@ -93,7 +96,7 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
     educationProgram = serializers.CharField(source="get_education_program_display")
     admissionYear = serializers.IntegerField(source="admission_year")
     university = serializers.StringRelatedField()
-    skills = serializers.StringRelatedField(many=True)
+    skills = serializers.SerializerMethodField()
 
     class Meta(BaseProfileSerializer.Meta):
         model = StudentProfile
@@ -101,3 +104,5 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
                  ('formOfEducation', 'admissionYear', 'university', 'speciality', 'skills',
                   'educationProgram')
 
+    def get_skills(self, obj):
+        return [skill.name for skill in obj.skills.filter(is_verified=True)]

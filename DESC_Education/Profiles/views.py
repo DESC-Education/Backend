@@ -20,7 +20,9 @@ from Profiles.serializers import (
     EmptySerializer,
     GetCompanyProfileSerializer,
     GetStudentProfileSerializer,
-    UniversitySerializer
+    UniversitySerializer,
+    SkillSerializer,
+    CitySerializer
 )
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from Users.models import (
@@ -32,7 +34,9 @@ from Profiles.models import (
     CompanyProfile,
     ProfileVerifyRequest,
     File,
-    University
+    University,
+    Skill,
+    City
 )
 from rest_framework import filters
 
@@ -559,11 +563,29 @@ class UniversitiesList(generics.ListAPIView):
         return super().get(request, *args, **kwargs)
 
 
+class SkillsList(generics.ListAPIView):
+    queryset = Skill.objects.filter(is_verified=True)
+    serializer_class = SkillSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+
+    @extend_schema(
+        tags=["Profiles"],
+        summary="Получение экземпляров Навыков"
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 
+class CityList(generics.ListAPIView):
+    queryset = City.objects.filter()
+    serializer_class = CitySerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
 
-
-
-
-
-
+    @extend_schema(
+        tags=["Profiles"],
+        summary="Получение экземпляров Городов"
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
