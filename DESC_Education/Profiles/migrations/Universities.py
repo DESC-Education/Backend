@@ -1,29 +1,21 @@
 from django.db import migrations
 import requests
 from Settings.env_config import config
-
+import csv
 
 def get_universities(apps, schema_editor):
     University = apps.get_model('Profiles', 'University')
-
-    raw_universities = requests.get("https://api.socio.center/public/priority/list").json()
-
-    universities_list = raw_universities.get('data').get('participants')
-
     universities_data = []
 
-    for i in universities_list:
-        name = i.get("name").replace(
-            'Федеральное государственное автономное образовательное учреждение высшего образования',
-            "ФГАОУ ВО").replace('Федеральное государственное бюджетное образовательное учреждение высшего образования',
-                                "ФГБОУ ВО").replace(
-            'федеральное государственное бюджетное образовательное учреждение высшего образования',
-            "ФГБОУ ВО").replace('федеральное государственное автономное образовательное учреждение высшего образования',
-                                "ФГАОУ ВО")
-        short_name = i.get('shortName')
 
+    with open('Profiles/migrations/universities.csv', newline='') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        for row in reader:
+            id = row[4]
+            name = row[1]
+            city_id = row[3]
 
-        universities_data.append({"name": name, "short_name": short_name})
+            universities_data.append({'id': id, "name": name, "city_id": city_id})
 
     universities = [University(**data) for data in universities_data]
 

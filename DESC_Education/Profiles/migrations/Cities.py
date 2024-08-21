@@ -12,12 +12,13 @@ def get_cities(apps, schema_editor):
     with open('Profiles/migrations/cities.csv', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='|')
         for row in reader:
-            name = row[0]
-            region = row[1]
+            id = row[3]
+            name = row[1]
+            region = row[2]
             if name in city_names:
                 continue
             city_names.add(name)
-            cities_data.append({"name": name, "region": region})
+            cities_data.append({"id": id, "name": name, "region": region})
 
     cities = [City(**data) for data in cities_data]
 

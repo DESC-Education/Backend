@@ -36,7 +36,7 @@ from Profiles.models import (
     File,
     University,
     Skill,
-    City
+    City,
 )
 from rest_framework import filters
 
@@ -553,7 +553,7 @@ class UniversitiesList(generics.ListAPIView):
     queryset = University.objects.all()
     serializer_class = UniversitySerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['name', 'short_name']
+    search_fields = ['name']
 
     @extend_schema(
         tags=["Profiles"],

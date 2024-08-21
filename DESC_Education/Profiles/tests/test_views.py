@@ -374,9 +374,10 @@ class GetProfileTest(APITestCase):
 class UniversitiesListTest(APITestCase):
     def setUp(self):
         University.objects.all().delete()
-        University.objects.create(name='Школа', short_name='Шк')
-        University.objects.create(name='Университет', short_name='УНИ')
-        University.objects.create(name='Высший университет', short_name='ВЫШУНИ')
+        city = City.objects.first()
+        University.objects.create(name='Школа', city_id=city.id)
+        University.objects.create(name='Университет', city_id=city.id)
+        University.objects.create(name='Высший университет', city_id=city.id)
 
     def test_get(self):
         res = self.client.get(reverse('universities_list'), {'search': "Школа"})
@@ -425,7 +426,7 @@ class CitiesTest(APITestCase):
         self.assertEqual(res.status_code, 200)
 
     def test_get_not_found(self):
-        res = self.client.get(reverse('universities_list'), {'search': "Школа11"})
+        res = self.client.get(reverse('cities_list'), {'search': "Школа11"})
 
         self.assertEqual(res.data, [])
         self.assertEqual(res.status_code, 200)

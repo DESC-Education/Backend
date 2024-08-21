@@ -7,6 +7,7 @@ from Profiles.models import (
     File,
     Skill,
     University,
+    Faculty,
     City
 )
 
