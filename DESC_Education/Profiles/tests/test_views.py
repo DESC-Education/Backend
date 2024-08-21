@@ -280,13 +280,30 @@ class GetMyProfileTest(APITestCase):
                               headers={"Authorization": f"Bearer {self.token}"})
 
         profile = StudentProfile.objects.get()
-        serializer = CreateStudentProfileSerializer(profile)
+        expected_data = dict(CreateStudentProfileSerializer(profile).data)
+        expected_data['skills'] = []
 
-        self.assertEqual(json.loads(res.content).get('data').get('studentProfile'), serializer.data)
+        self.assertEqual(json.loads(res.content).get('data').get('studentProfile'), expected_data)
         self.assertEqual(res.status_code, 200)
 
 
 class GetProfileTest(APITestCase):
+    @staticmethod
+    def create_test_image():
+        bts = BytesIO()
+        img = Image.new("RGB", (100, 100))
+        img.save(bts, 'jpeg')
+        return SimpleUploadedFile(f"test_{random.randint(1, 25)}.jpg", bts.getvalue())
+
+    def get_skils_ids(self):
+        skills_ids = []
+
+        skils = Skill.objects.all()
+
+        for i in skils:
+            skills_ids.append(i.id)
+
+        return skills_ids
 
     def setUp(self):
         self.maxDiff = None
@@ -296,21 +313,54 @@ class GetProfileTest(APITestCase):
             role=CustomUser.STUDENT_ROLE,
             is_verified=True
         )
-        univer = University.objects.first()
 
-        profile: StudentProfile = StudentProfile.objects.get(user=self.user)
-        profile.is_verified = True
-        profile.university = univer
-        profile.save()
         self.token = self.user.get_token()["accessToken"]
+        university = University.objects.first()
+        self.student_example_data = {
+            "firstName": "John",
+            "lastName": "Doe",
+            "description": "Student description",
+            "phoneVisibility": False,
+            "emailVisibility": True,
+            "telegramLink": "https://t.me/john_doe",
+            "vkLink": "https://vk.com/john_doe",
+            "timezone": 3,
+            "formOfEducation": StudentProfile.FULL_TIME_EDUCATION,
+            "speciality": "it",
+            'educationProgram': StudentProfile.BACHELOR,
+            "admissionYear": 2020,
+            "university": str(university.id),
+            "files": [self.create_test_image()],
+            "skills_ids": self.get_skils_ids()
+        }
 
     def test_get_profile_200(self):
+        res = self.client.post(reverse('profile_create'),
+                               data=self.student_example_data,
+                               headers={"Authorization": f"Bearer {self.token}"})
+
+        profile = StudentProfile.objects.first()
+        profile.is_verified = True
+        profile.save()
         students = CustomUser.objects.all()
-        # print(students)
         # print(reverse("profile_get", kwargs={"pk": str(self.user.id)}))
-        res = self.client.get(reverse("profile_get", kwargs={"pk": str(self.user.id)}),
-                              headers={"Authorization": f"Bearer {self.token}"}
+        res = self.client.get(reverse("profile_get", kwargs={"pk": str(self.user.id)})
                               )
 
-        print(res.data)
-        print(res.status_code)
+        expected_data = self.student_example_data.copy()
+        expected_data["id"] = str(profile.id)
+        expected_data["isVerified"] = True
+        expected_data["logoImg"] = None
+        expected_data["email"] = profile.user.email
+        expected_data.pop('emailVisibility')
+        expected_data.pop('phoneVisibility')
+
+        files = expected_data.pop('files')
+        skills_ids = expected_data.pop('skills_ids')
+        expected_data['skills'] = list(Skill.objects.filter(id__in=skills_ids).values_list('name', flat=True))
+        expected_data['university'] = University.objects.get(id=expected_data['university']).name
+        expected_data['formOfEducation'] = profile.get_form_of_education_display()
+        expected_data['educationProgram'] = profile.get_education_program_display()
+
+        self.assertEqual(json.loads(res.content).get('data').get('studentProfile'), expected_data)
+        self.assertEqual(res.status_code, 200)

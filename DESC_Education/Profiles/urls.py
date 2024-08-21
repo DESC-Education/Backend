@@ -22,7 +22,7 @@ from Profiles.views import (
 
 urlpatterns = [
     path('profile', ProfileView.as_view(), name='profile_create'),
-    path('profile/my', GetMyProfileView.as_view(), name='profile_my'),
+    path('profile/', GetMyProfileView.as_view(), name='profile_my'),
     path('profile/<uuid:pk>', GetProfileView.as_view(), name='profile_get'),
 
 

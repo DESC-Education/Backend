@@ -330,9 +330,10 @@ class GetMyProfileView(generics.GenericAPIView):
     }
 
     profile_serializer_class = {
-        CustomUser.STUDENT_ROLE: CreateStudentProfileSerializer,
-        CustomUser.COMPANY_ROLE: CreateCompanyProfileSerializer
+        CustomUser.STUDENT_ROLE: GetStudentProfileSerializer,
+        CustomUser.COMPANY_ROLE: GetCompanyProfileSerializer
     }
+
 
     str_profile_classes = {
         CustomUser.STUDENT_ROLE: "studentProfile",
@@ -341,7 +342,7 @@ class GetMyProfileView(generics.GenericAPIView):
 
     @extend_schema(
         tags=["Profiles"],
-        summary="получение профиля",
+        summary="Получение своего профиля",
         description="Необходима авторизация",
         responses={
             200: OpenApiResponse(
@@ -362,11 +363,12 @@ class GetMyProfileView(generics.GenericAPIView):
                                                    'logoImg': 'bool',
                                                    'phoneVisibility': 'bool',
                                                    'speciality': 'str',
-                                                   'studentCard': 'url',
                                                    'telegramLink': 'str',
                                                    'timezone': 3,
                                                    'university': 'uuid',
-                                                   'vkLink': 'str'}
+                                                   "educationProgram": 'str',
+                                                   'vkLink': 'str',
+                                                   'skill': ["str", "str"]}
                             },
                             "message": "Успешно!"}
                     ),
@@ -445,6 +447,7 @@ class GetProfileView(generics.GenericAPIView):
         CustomUser.COMPANY_ROLE: GetCompanyProfileSerializer
     }
 
+
     str_profile_classes = {
         CustomUser.STUDENT_ROLE: "studentProfile",
         CustomUser.COMPANY_ROLE: "companyProfile"
@@ -466,12 +469,11 @@ class GetProfileView(generics.GenericAPIView):
             if not Email_V:
                 profile_data.pop('phone')
 
-            pprint.pprint(dict(profile_data), width=40)
-
-
-
-
-            return Response({"message": ''}, status=status.HTTP_200_OK)
+            return Response({
+                "data": {
+                    self.str_profile_classes[user.role]:  profile_data
+            },
+                "message": ''}, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
