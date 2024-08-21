@@ -33,9 +33,7 @@ from Profiles.models import (
     File
 )
 
-
 import pprint
-
 
 
 class ProfileView(generics.GenericAPIView):
@@ -175,7 +173,7 @@ class ProfileView(generics.GenericAPIView):
                                                    'university': 'uuid',
                                                    "educationProgram": 'str',
                                                    'vkLink': 'str',
-                                                   'skill': ["str", "str"]}
+                                                   'skills': ["str", "str"]}
                             },
                             "message": "Профиль студента создан и отправлен на проверку!"}
                     ),
@@ -260,7 +258,6 @@ class ProfileView(generics.GenericAPIView):
     def post(self, request):
         try:
 
-
             user = request.user
             classes = self.serializer_classes.get(user.role, None)
             if classes is None:
@@ -287,37 +284,31 @@ class ProfileView(generics.GenericAPIView):
 
             profile = serializer.save()
 
-
-
             files_data = self.request.data.getlist('files')
 
             if profile.verification_files.count() != 0:
                 profile.verification_files.all().delete()
 
             if len(files_data) == 0:
-                return Response({"message": "Необходимо загрузить хотя бы одно изображение"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"message": "Необходимо загрузить хотя бы одно изображение"},
+                                status=status.HTTP_400_BAD_REQUEST)
             if len(files_data) > 6:
                 files_data = files_data[:6]
             for file_data in files_data:
                 File.objects.create(file=file_data, profile=profile)
 
-
-
             ProfileVerifyRequest.objects.create(profile=profile)
-
 
             res_serializer = self.get_serializer_classes[user.role](profile)
 
             return Response({
                 "data": {
-                   self.profile_str_name[self.profile_class]: res_serializer.data
+                    self.profile_str_name[self.profile_class]: res_serializer.data
                 },
                 "message": "Профиль создан и отправлен на проверку!"})
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 class GetMyProfileView(generics.GenericAPIView):
@@ -333,7 +324,6 @@ class GetMyProfileView(generics.GenericAPIView):
         CustomUser.STUDENT_ROLE: GetStudentProfileSerializer,
         CustomUser.COMPANY_ROLE: GetCompanyProfileSerializer
     }
-
 
     str_profile_classes = {
         CustomUser.STUDENT_ROLE: "studentProfile",
@@ -368,7 +358,7 @@ class GetMyProfileView(generics.GenericAPIView):
                                                    'university': 'uuid',
                                                    "educationProgram": 'str',
                                                    'vkLink': 'str',
-                                                   'skill': ["str", "str"]}
+                                                   'skills': ["str", "str"]}
                             },
                             "message": "Успешно!"}
                     ),
@@ -419,7 +409,6 @@ class GetMyProfileView(generics.GenericAPIView):
                 ]
             ),
 
-
         }
 
     )
@@ -447,20 +436,96 @@ class GetProfileView(generics.GenericAPIView):
         CustomUser.COMPANY_ROLE: GetCompanyProfileSerializer
     }
 
-
     str_profile_classes = {
         CustomUser.STUDENT_ROLE: "studentProfile",
         CustomUser.COMPANY_ROLE: "companyProfile"
     }
 
+    @extend_schema(
+        tags=["Profiles"],
+        summary="Получение профиля пользователя по id user",
+        responses={
+            200: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Студент Успешно",
+                        value={
+                            "data": {
+                                "studentProfile": {'admissionYear': 'int',
+                                                   'description': 'str',
+                                                   'firstName': 'str',
+                                                   'formOfEducation': 'str',
+                                                   'id': 'uuid',
+                                                   'isVerified': 'bool',
+                                                   'lastName': 'str',
+                                                   'logoImg': 'bool',
+                                                   'speciality': 'str',
+                                                   'telegramLink': 'str',
+                                                   'timezone': 3,
+                                                   'university': 'uuid',
+                                                   "educationProgram": 'str',
+                                                   'vkLink': 'str',
+                                                   'skills': ["str", "str"]}
+                            },
+                            "message": "Успешно!"}
+                    ),
+                    OpenApiExample(
+                        "Компания Успешно",
+                        value={
+                            "data": {
+                                "companyProfile": {
+                                    'linkToCompany': "str",
+                                    "companyName": "str",
+                                    'description': 'str',
+                                    'firstName': 'str',
+                                    'id': 'uuid',
+                                    'isVerified': 'bool',
+                                    'lastName': 'str',
+                                    'logoImg': 'bool',
+                                    'phone': 'str',
+                                    'telegramLink': 'str',
+                                    'timezone': 3,
+                                    'vkLink': 'str'}
+                            },
+                            "message": "Успешно!"}
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Прочие ошибки",
+                        value={
+                            "message": "Сообщение об ошибке"
+                        },
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Профиль не найден",
+                        value={
+                            "message": "Профиль не найден"
+                        },
+                    )
+                ]
+            ),
+        }
+
+    )
     def get(self, request, pk):
         try:
-            user = CustomUser.objects.get(id=pk)
-            profile = self.profile_classes[user.role].objects.get(user=user, is_verified=True)
-
+            try:
+                user = CustomUser.objects.get(id=pk)
+                profile = self.profile_classes[user.role].objects.get(user=user, is_verified=True)
+            except ObjectDoesNotExist:
+                return Response({"message": "Профиль не найден"}, status=status.HTTP_404_NOT_FOUND)
             profile_data = self.profile_serializer_class[user.role](profile).data
             profile_data['email'] = user.email
-
 
             Phone_V = profile_data.pop('phoneVisibility')
             if not Phone_V:
@@ -471,14 +536,9 @@ class GetProfileView(generics.GenericAPIView):
 
             return Response({
                 "data": {
-                    self.str_profile_classes[user.role]:  profile_data
-            },
-                "message": ''}, status=status.HTTP_200_OK)
+                    self.str_profile_classes[user.role]: profile_data
+                },
+                "message": 'Усппешно!'}, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
-

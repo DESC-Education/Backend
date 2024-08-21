@@ -364,3 +364,16 @@ class GetProfileTest(APITestCase):
 
         self.assertEqual(json.loads(res.content).get('data').get('studentProfile'), expected_data)
         self.assertEqual(res.status_code, 200)
+
+    def test_get_invalid_profile_404(self):
+        user_id = list(str(self.user.id))
+        f = user_id[0]
+        user_id[0] = user_id[-1]
+        user_id[-1] = f
+        user_id = ''.join(user_id)
+
+        res = self.client.get(reverse("profile_get", kwargs={"pk": user_id}))
+
+
+        self.assertEqual(json.loads(res.content), {'message': 'Профиль не найден'})
+        self.assertEqual(res.status_code, 404)
