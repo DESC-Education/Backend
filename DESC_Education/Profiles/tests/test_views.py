@@ -1,5 +1,6 @@
 import random
 
+import rest_framework.generics
 from django.urls import reverse
 import json
 from django.utils import timezone
@@ -7,7 +8,6 @@ from rest_framework.test import APITestCase
 from Users.models import (
     CustomUser
 )
-from django.test.client import MULTIPART_CONTENT, encode_multipart, BOUNDARY
 from tempfile import NamedTemporaryFile
 from Profiles.models import (
     StudentProfile,
@@ -23,6 +23,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from Profiles.serializers import (
     CreateCompanyProfileSerializer,
     CreateStudentProfileSerializer,
+    UniversitySerializer
 )
 
 
@@ -377,3 +378,26 @@ class GetProfileTest(APITestCase):
 
         self.assertEqual(json.loads(res.content), {'message': 'Профиль не найден'})
         self.assertEqual(res.status_code, 404)
+
+
+
+class UniversitiesListTest(APITestCase):
+    def setUp(self):
+        University.objects.all().delete()
+        University.objects.create(name='Школа', short_name='Шк')
+        University.objects.create(name='Университет', short_name='УНИ')
+        University.objects.create(name='Высший университет', short_name='ВЫШУНИ')
+
+
+    def test_get(self):
+        res = self.client.get(reverse('universities_list'), {'search': "Школа"})
+
+
+        self.assertEqual(res.data[0].get('name'), 'Школа')
+        self.assertEqual(res.status_code, 200)
+
+    def test_get_not_found(self):
+        res = self.client.get(reverse('universities_list'), {'search': "Школа11"})
+
+        self.assertEqual(res.data, [])
+        self.assertEqual(res.status_code, 200)

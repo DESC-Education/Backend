@@ -6,6 +6,7 @@ from Profiles.models import (
     BaseProfile,
     File,
     Skill,
+    University
 )
 
 
@@ -13,6 +14,12 @@ class FileSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
         fields = ('file',)
+
+
+class UniversitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = University
+        fields = "__all__"
 
 
 class BaseProfileSerializer(serializers.ModelSerializer):

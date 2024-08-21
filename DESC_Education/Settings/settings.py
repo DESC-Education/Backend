@@ -95,6 +95,7 @@ REST_FRAMEWORK = {
 
 
 
+
 AUTH_USER_MODEL = "Users.CustomUser"
 
 # SIMPLE_JWT = {

@@ -19,7 +19,8 @@ from Profiles.serializers import (
     CreateCompanyProfileSerializer,
     EmptySerializer,
     GetCompanyProfileSerializer,
-    GetStudentProfileSerializer
+    GetStudentProfileSerializer,
+    UniversitySerializer
 )
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from Users.models import (
@@ -30,10 +31,10 @@ from Profiles.models import (
     StudentProfile,
     CompanyProfile,
     ProfileVerifyRequest,
-    File
+    File,
+    University
 )
-
-import pprint
+from rest_framework import filters
 
 
 class ProfileView(generics.GenericAPIView):
@@ -542,3 +543,27 @@ class GetProfileView(generics.GenericAPIView):
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UniversitiesList(generics.ListAPIView):
+    queryset = University.objects.all()
+    serializer_class = UniversitySerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'short_name']
+
+    @extend_schema(
+        tags=["Profiles"],
+        summary="Получение экземпляров Университетов"
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+
+
+
+
+
+
+
+
+
