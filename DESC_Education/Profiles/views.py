@@ -80,7 +80,7 @@ class ProfileView(generics.GenericAPIView):
                     "admissionYear": 'str',
                     "educationProgram": StudentProfile.BACHELOR,
                     "university": 'uuid',
-                    'skills_ids': ["uuid", "uuids"],
+                    'skills_ids': ["uuid", "uuid"],
                     "files": [{"file": "file"}]
                 },
             ),
@@ -101,7 +101,7 @@ class ProfileView(generics.GenericAPIView):
                     "admissionYear": 'str',
                     "educationProgram": StudentProfile.MAGISTRACY,
                     "university": 'uuid',
-                    'skills_ids': ["uuid", "uuids"],
+                    'skills_ids': ["uuid", "uuid"],
                     "files": [{"file": "file"}]
                 },
             ),
