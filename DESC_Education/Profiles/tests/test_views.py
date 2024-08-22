@@ -24,7 +24,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from Profiles.serializers import (
     CreateCompanyProfileSerializer,
     CreateStudentProfileSerializer,
-    UniversitySerializer
+    UniversitySerializer,
+    SkillSerializer,
 )
 
 
@@ -40,12 +41,12 @@ class CreateProfileViewTest(APITestCase):
     def get_skils_ids(self):
         skills_ids = []
 
-        skils = Skill.objects.all()
+        skills = Skill.objects.all()
 
-        for i in skils:
+        for i in skills:
             skills_ids.append(i.id)
 
-        return skills_ids
+        return skills_ids, SkillSerializer(skills, many=True).data
 
     def setUp(self):
         self.maxDiff = None
@@ -70,7 +71,11 @@ class CreateProfileViewTest(APITestCase):
         self.admin_token = self.admin.get_token()['accessToken']
         self.token = self.user.get_token()['accessToken']
         self.company_token = self.company.get_token()['accessToken']
-        university = University.objects.first()
+        self.university = University.objects.first()
+
+        skills = self.get_skils_ids()
+        skills_ids = skills[0]
+        self.skills = list(skills[1])
         self.student_example_data = {
             "firstName": "John",
             "lastName": "Doe",
@@ -84,9 +89,9 @@ class CreateProfileViewTest(APITestCase):
             "speciality": "it",
             'educationProgram': StudentProfile.BACHELOR,
             "admissionYear": 2020,
-            "university": str(university.id),
+            "university": str(self.university.id),
             "files": [self.create_test_image()],
-            "skills_ids": self.get_skils_ids()
+            "skills_ids": skills_ids
         }
 
         self.company_example_data = {
@@ -117,12 +122,20 @@ class CreateProfileViewTest(APITestCase):
         expected_data["phone"] = None
         files = expected_data.pop('files')
         skills_ids = expected_data.pop('skills_ids')
-        expected_data['skills'] = list(Skill.objects.filter(id__in=skills_ids).values_list('name', flat=True))
-        expected_data['university'] = University.objects.get(id=expected_data['university']).name
+        expected_skill_names = set()
+        for i in self.skills:
+            expected_skill_names.add(i.get('name'))
+        expected_data['skills'] = expected_skill_names
         expected_data['formOfEducation'] = profile.get_form_of_education_display()
         expected_data['educationProgram'] = profile.get_education_program_display()
+        expected_data['university'] = UniversitySerializer(self.university).data
 
-        self.assertEqual(json.loads(res.content).get("data").get("studentProfile"), expected_data)
+        result = json.loads(res.content).get("data").get("studentProfile")
+        res_skills_names = set()
+        for i in result.get("skills"):
+            res_skills_names.add(i.get('name'))
+        result['skills'] = res_skills_names
+        self.assertEqual(result, expected_data)
         self.assertEqual(len(files), profile.verification_files.count())
         self.assertEqual(profile.skills.count(), len(skills_ids))
         self.assertEqual(res.status_code, 200)
@@ -184,16 +197,25 @@ class CreateProfileViewTest(APITestCase):
         expected_data["isVerified"] = False
         expected_data["logoImg"] = None
         expected_data["phone"] = None
-        files = expected_data.pop('files')
-        skills_ids = expected_data.pop('skills_ids')
-        expected_data['skills'] = list(Skill.objects.filter(id__in=skills_ids).values_list('name', flat=True))
-        expected_data['university'] = University.objects.get(id=expected_data['university']).name
+        expected_data.pop('files')
+        expected_data.pop('skills_ids')
+        expected_skill_names = set()
+        for i in self.skills:
+            expected_skill_names.add(i.get('name'))
+        expected_data['skills'] = expected_skill_names
+        expected_data['university'] = UniversitySerializer(self.university).data
         expected_data['formOfEducation'] = profile.get_form_of_education_display()
         expected_data['educationProgram'] = profile.get_education_program_display()
 
+        result = json.loads(res.content).get("data").get("studentProfile")
+        res_skills_names = set()
+        for i in result.get("skills"):
+            res_skills_names.add(i.get('name'))
+        result['skills'] = res_skills_names
+        self.assertEqual(result, expected_data)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data.get('message'), 'Профиль создан и отправлен на проверку!')
-        self.assertEqual(json.loads(res.content).get("data").get("studentProfile"), expected_data)
+
 
     def test_company_rejected_200(self, ):
         example_data = self.company_example_data.copy()
@@ -291,12 +313,12 @@ class GetProfileTest(APITestCase):
     def get_skils_ids(self):
         skills_ids = []
 
-        skils = Skill.objects.all()
+        skills = Skill.objects.all()
 
-        for i in skils:
+        for i in skills:
             skills_ids.append(i.id)
 
-        return skills_ids
+        return skills_ids, SkillSerializer(skills, many=True).data
 
     def setUp(self):
         self.maxDiff = None
@@ -308,7 +330,11 @@ class GetProfileTest(APITestCase):
         )
 
         self.token = self.user.get_token()["accessToken"]
-        university = University.objects.first()
+        self.university = University.objects.first()
+        skills = self.get_skils_ids()
+        self.skills = skills[1]
+        skills_ids = skills[0]
+
         self.student_example_data = {
             "firstName": "John",
             "lastName": "Doe",
@@ -322,9 +348,9 @@ class GetProfileTest(APITestCase):
             "speciality": "it",
             'educationProgram': StudentProfile.BACHELOR,
             "admissionYear": 2020,
-            "university": str(university.id),
+            "university": str(self.university.id),
             "files": [self.create_test_image()],
-            "skills_ids": self.get_skils_ids()
+            "skills_ids": skills_ids
         }
 
     def test_get_profile_200(self):
@@ -335,8 +361,6 @@ class GetProfileTest(APITestCase):
         profile = StudentProfile.objects.first()
         profile.is_verified = True
         profile.save()
-        students = CustomUser.objects.all()
-        # print(reverse("profile_get", kwargs={"pk": str(self.user.id)}))
         res = self.client.get(reverse("profile_get", kwargs={"pk": str(self.user.id)})
                               )
 
@@ -348,14 +372,23 @@ class GetProfileTest(APITestCase):
         expected_data.pop('emailVisibility')
         expected_data.pop('phoneVisibility')
 
-        files = expected_data.pop('files')
-        skills_ids = expected_data.pop('skills_ids')
-        expected_data['skills'] = list(Skill.objects.filter(id__in=skills_ids).values_list('name', flat=True))
-        expected_data['university'] = University.objects.get(id=expected_data['university']).name
+        expected_data.pop('files')
+        expected_data.pop('skills_ids')
+        expected_skill_names = set()
+        for i in self.skills:
+            expected_skill_names.add(i.get('name'))
+        expected_data['skills'] = expected_skill_names
+        expected_data['university'] = dict(UniversitySerializer(self.university).data)
         expected_data['formOfEducation'] = profile.get_form_of_education_display()
         expected_data['educationProgram'] = profile.get_education_program_display()
 
-        self.assertEqual(json.loads(res.content).get('data').get('studentProfile'), expected_data)
+        result = json.loads(res.content).get("data").get("studentProfile")
+
+        res_skills_names = set()
+        for i in result.get("skills"):
+            res_skills_names.add(i.get('name'))
+        result['skills'] = res_skills_names
+        self.assertEqual(result, expected_data)
         self.assertEqual(res.status_code, 200)
 
     def test_get_invalid_profile_404(self):

@@ -12,6 +12,12 @@ from Profiles.models import (
 )
 
 
+class CitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = '__all__'
+
+
 class FileSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
@@ -19,6 +25,8 @@ class FileSerializer(serializers.ModelSerializer):
 
 
 class UniversitySerializer(serializers.ModelSerializer):
+    city = CitySerializer()
+
     class Meta:
         model = University
         fields = "__all__"
@@ -45,12 +53,6 @@ class SkillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Skill
         fields = ('id', 'name',)
-
-
-class CitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = City
-        fields = '__all__'
 
 
 class CreateStudentProfileSerializer(BaseProfileSerializer):
@@ -96,8 +98,11 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
     formOfEducation = serializers.CharField(source="get_form_of_education_display")
     educationProgram = serializers.CharField(source="get_education_program_display")
     admissionYear = serializers.IntegerField(source="admission_year")
-    university = serializers.StringRelatedField()
-    skills = serializers.SerializerMethodField()
+    university = UniversitySerializer()
+    skills = SkillSerializer(many=True)
+
+
+    # skills = serializers.SerializerMethodField()
 
     class Meta(BaseProfileSerializer.Meta):
         model = StudentProfile
@@ -105,5 +110,5 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
                  ('formOfEducation', 'admissionYear', 'university', 'speciality', 'skills',
                   'educationProgram')
 
-    def get_skills(self, obj):
-        return [skill.name for skill in obj.skills.filter(is_verified=True)]
+    # def get_skills(self, obj):
+    #     return [SkillSerializer(skill) for skill in obj.skills.filter(is_verified=True)]

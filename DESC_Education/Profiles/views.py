@@ -175,10 +175,20 @@ class ProfileView(generics.GenericAPIView):
                                                    'speciality': 'str',
                                                    'telegramLink': 'str',
                                                    'timezone': 3,
-                                                   'university': 'uuid',
+                                                   'university': {
+                                                        'id': 'uuid',
+                                                        'name': 'str',
+                                                        'city': {
+                                                            'id': 'uuid',
+                                                            'name': 'str',
+                                                            'region': 'str'}
+                                                   },
                                                    "educationProgram": 'str',
                                                    'vkLink': 'str',
-                                                   'skills': ["str", "str"]}
+                                                   'skills': [
+                                                       {'id': 'uuid', 'name': 'str'},
+                                                       {'id': 'uuid', 'name': 'str'}]
+                                                   }
                             },
                             "message": "Профиль студента создан и отправлен на проверку!"}
                     ),
@@ -360,10 +370,20 @@ class GetMyProfileView(generics.GenericAPIView):
                                                    'speciality': 'str',
                                                    'telegramLink': 'str',
                                                    'timezone': 3,
-                                                   'university': 'uuid',
+                                                   'university': {
+                                                        'id': 'uuid',
+                                                        'name': 'str',
+                                                        'city': {
+                                                            'id': 'uuid',
+                                                            'name': 'str',
+                                                            'region': 'str'}
+                                                   },
                                                    "educationProgram": 'str',
                                                    'vkLink': 'str',
-                                                   'skills': ["str", "str"]}
+                                                   'skills': [
+                                                       {'id': 'uuid', 'name': 'str'},
+                                                       {'id': 'uuid', 'name': 'str'}]
+                                                   }
                             },
                             "message": "Успешно!"}
                     ),
@@ -468,10 +488,20 @@ class GetProfileView(generics.GenericAPIView):
                                                    'speciality': 'str',
                                                    'telegramLink': 'str',
                                                    'timezone': 3,
-                                                   'university': 'uuid',
+                                                   'university': {
+                                                        'id': 'uuid',
+                                                        'name': 'str',
+                                                        'city': {
+                                                            'id': 'uuid',
+                                                            'name': 'str',
+                                                            'region': 'str'}
+                                                   },
                                                    "educationProgram": 'str',
                                                    'vkLink': 'str',
-                                                   'skills': ["str", "str"]}
+                                                   'skills': [
+                                                       {'id': 'uuid', 'name': 'str'},
+                                                       {'id': 'uuid', 'name': 'str'}]
+                                                   }
                             },
                             "message": "Успешно!"}
                     ),
