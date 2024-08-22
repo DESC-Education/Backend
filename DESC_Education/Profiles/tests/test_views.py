@@ -60,18 +60,25 @@ class CreateProfileViewTest(APITestCase):
             role=CustomUser.STUDENT_ROLE,
             is_verified=True
         )
+        user_profile = StudentProfile.objects.get(user=self.user)
+        user_profile.phone = '+77777777777'
+        user_profile.save()
         self.company = CustomUser.objects.create_user(
             email="example2@example.com",
             password="test123",
             role=CustomUser.COMPANY_ROLE,
             is_verified=True
         )
+        company_profile = CompanyProfile.objects.get(user=self.company)
+        company_profile.phone = '+77777777777'
+        company_profile.save()
         self.admin = CustomUser.objects.create_user(
             email="example3@example.com",
             password="test123",
             role=CustomUser.ADMIN_ROLE,
             is_verified=True
         )
+
         self.admin_token = self.admin.get_token()['accessToken']
         self.token = self.user.get_token()['accessToken']
         self.company_token = self.company.get_token()['accessToken']
@@ -123,7 +130,7 @@ class CreateProfileViewTest(APITestCase):
         expected_data["id"] = str(profile.id)
         expected_data["isVerified"] = False
         expected_data["logoImg"] = None
-        expected_data["phone"] = None
+        expected_data["phone"] = '+77777777777'
         files = expected_data.pop('files')
         skills_ids = expected_data.pop('skills_ids')
         expected_skill_names = set()
@@ -164,7 +171,7 @@ class CreateProfileViewTest(APITestCase):
         expected_data["id"] = str(profile.id)
         expected_data["isVerified"] = False
         expected_data["logoImg"] = None
-        expected_data["phone"] = None
+        expected_data["phone"] = '+77777777777'
         files = expected_data.pop('files')
 
         self.assertEqual(len(files), profile.verification_files.count())
@@ -204,7 +211,7 @@ class CreateProfileViewTest(APITestCase):
         expected_data["id"] = str(profile.id)
         expected_data["isVerified"] = False
         expected_data["logoImg"] = None
-        expected_data["phone"] = None
+        expected_data["phone"] = '+77777777777'
         expected_data.pop('files')
         expected_data.pop('skills_ids')
         expected_skill_names = set()
@@ -247,7 +254,7 @@ class CreateProfileViewTest(APITestCase):
         expected_data["id"] = str(profile.id)
         expected_data["isVerified"] = False
         expected_data["logoImg"] = None
-        expected_data["phone"] = None
+        expected_data["phone"] = '+77777777777'
         expected_data.pop("files")
 
 
@@ -340,6 +347,9 @@ class GetProfileTest(APITestCase):
             role=CustomUser.STUDENT_ROLE,
             is_verified=True
         )
+        user_profile = StudentProfile.objects.get(user=self.user)
+        user_profile.phone = '+77777777777'
+        user_profile.save()
 
         self.token = self.user.get_token()["accessToken"]
         self.university = University.objects.first()
@@ -542,3 +552,31 @@ class SpecialtiesListTest(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data.get('results')), 1)
         self.assertEqual(response.data.get('results')[0]['name'], "Математика")
+
+
+
+class ChangeLogoImgViewTest(APITestCase):
+    @staticmethod
+    def create_test_image():
+        bts = BytesIO()
+        img = Image.new("RGB", (100, 100))
+        img.save(bts, 'jpeg')
+        return SimpleUploadedFile(f"test_{random.randint(1, 25)}.jpg", bts.getvalue())
+
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(password='testuser',
+                                                   email='testuser@example.com',
+                                                   role=CustomUser.STUDENT_ROLE)
+        self.token = self.user.get_token()['accessToken']
+        self.image = self.create_test_image()
+
+
+    def test_change_logo_200(self):
+        res = self.client.post(reverse('logo_change'), {'logo': self.image},
+                               HTTP_AUTHORIZATION='Bearer ' + self.token)
+        profile = StudentProfile.objects.get(user=self.user)
+
+
+
+        self.assertEqual(f'logo_imgs/{self.image}', profile.logo_img)
+        self.assertEqual(res.status_code, 200)

@@ -137,7 +137,7 @@ class BaseProfile(models.Model):
     phone = models.CharField(max_length=15, blank=True, null=True)
     phone_visibility = models.BooleanField(default=True)
     email_visibility = models.BooleanField(default=True)
-    logo_img = models.ImageField(upload_to=image_upload_to, width_field=220, height_field=220, blank=True, null=True)
+    logo_img = models.ImageField(upload_to=image_upload_to, blank=True, null=True)
     telegram_link = models.URLField(blank=True, null=True)
     vk_link = models.URLField(blank=True, null=True)
     timezone = models.IntegerField(null=True)

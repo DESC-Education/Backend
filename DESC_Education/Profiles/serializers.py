@@ -13,6 +13,10 @@ from Profiles.models import (
 )
 
 
+class ChangeLogoImgSerializer(serializers.Serializer):
+    logo = serializers.ImageField(required=True, allow_empty_file=False)
+
+
 class SpecialtySerializer(serializers.ModelSerializer):
     class Meta:
         model = Specialty

@@ -8,7 +8,9 @@ from Profiles.views import (
     SkillsList,
     CitiesList,
     FacultiesList,
-    SpecialtiesList
+    SpecialtiesList,
+    ChangeLogoImgView,
+
 
 )
 # from Users.views import (
@@ -34,7 +36,6 @@ urlpatterns = [
     path('profile/cities', CitiesList.as_view(), name='cities_list'),
     path('profile/faculties', FacultiesList.as_view(), name='faculties_list'),
     path('profile/specialties', SpecialtiesList.as_view(), name='specialties_list'),
-
-
+    path('profile/logo', ChangeLogoImgView.as_view(), name='logo_change'),
 
 ]

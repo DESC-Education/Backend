@@ -24,7 +24,8 @@ from Profiles.serializers import (
     UniversitySerializer,
     SkillSerializer,
     CitySerializer,
-    FacultySerializer
+    FacultySerializer,
+    ChangeLogoImgSerializer
 )
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from Users.models import (
@@ -281,6 +282,17 @@ class ProfileView(generics.GenericAPIView):
                     )
                 ]
             ),
+            406: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Отсутствует телефон",
+                        value={
+                            "message": "Необходимо сперва добавить телефон"
+                        },
+                    ),
+                ]
+            ),
 
         }
 
@@ -293,11 +305,12 @@ class ProfileView(generics.GenericAPIView):
             if classes is None:
                 return Response({"message": "Вы можете создать профиль только для студента или компании!"},
                                 status=status.HTTP_403_FORBIDDEN)
-
             self.serializer_class = classes[0]
             self.profile_class = classes[1]
 
             profile: CompanyProfile = self.profile_class.objects.get(user=user)
+            if profile.phone is None:
+                return Response({"message": "Необходимо сперва добавить телефон"}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
             serializer = self.serializer_class(data=request.data, instance=profile)
 
@@ -607,6 +620,95 @@ class GetProfileView(generics.GenericAPIView):
                     self.str_profile_classes[user.role]: profile_data
                 },
                 "message": 'Усппешно!'}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class ChangeLogoImgView(generics.GenericAPIView):
+    serializer_class = ChangeLogoImgSerializer
+    permission_classes = [IsAuthenticated]
+
+    profile_classes = {
+        CustomUser.STUDENT_ROLE: StudentProfile,
+        CustomUser.COMPANY_ROLE: CompanyProfile
+    }
+
+    @extend_schema(
+        tags=["Profiles"],
+        summary="изменение изображения профиля",
+        responses={
+            200: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Успешно",
+                        value={
+                            "data": {
+                                'logo': 'urlpath'
+                            },
+                            "message": "Изображение профиля успешно изменено!"}
+                    ),
+                ]
+            ),
+            400: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Прочие ошибки",
+                        value={
+                            "message": "Сообщение об ошибке"
+                        },
+                    )
+                ]
+            ),
+            401: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Не авторизован",
+                        value={
+                            "detail": "Учетные данные не были предоставлены."
+                        },
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Профиль не найден",
+                        value={
+                            "message": "Профиль не найден"
+                        },
+                    )
+                ]
+            ),
+        }
+
+    )
+    def post(self, request):
+        try:
+            user = request.user
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            try:
+                profile = self.profile_classes[user.role].objects.get(user=user)
+            except ObjectDoesNotExist:
+                return Response({"message": "Профиль не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+            profile.logo_img = serializer.validated_data['logo']
+            profile.save()
+
+
+            return Response({
+                "data": {
+                    "logo": profile.logo_img.url
+                },
+                "message": "Изображение профиля успешно изменено"}, status=status.HTTP_200_OK)
+
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
