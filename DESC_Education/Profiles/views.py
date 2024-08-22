@@ -83,6 +83,7 @@ class ProfileView(generics.GenericAPIView):
                     "admissionYear": 'str',
                     "educationProgram": StudentProfile.BACHELOR,
                     "university": 'uuid',
+                    "faculty": "uuid",
                     'skills_ids': ["uuid", "uuid"],
                     "files": [{"file": "file"}]
                 },
@@ -104,6 +105,7 @@ class ProfileView(generics.GenericAPIView):
                     "admissionYear": 'str',
                     "educationProgram": StudentProfile.MAGISTRACY,
                     "university": 'uuid',
+                    "faculty": "uuid",
                     'skills_ids': ["uuid", "uuid"],
                     "files": [{"file": "file"}]
                 },
@@ -125,6 +127,7 @@ class ProfileView(generics.GenericAPIView):
                     "admissionYear": 'str',
                     "educationProgram": StudentProfile.SPECIALTY,
                     "university": 'uuid',
+                    "faculty": "uuid",
                     'skills_ids': ["uuid", "uuid"],
                     "files": [{"file": "file"}]
                 },
@@ -182,6 +185,11 @@ class ProfileView(generics.GenericAPIView):
                                                             'id': 'uuid',
                                                             'name': 'str',
                                                             'region': 'str'}
+                                                   },
+                                                   "faculty": {
+                                                       'id': 'uuid',
+                                                       'name': 'str',
+                                                       'university': 'uuid'
                                                    },
                                                    "educationProgram": 'str',
                                                    'vkLink': 'str',
@@ -378,6 +386,11 @@ class GetMyProfileView(generics.GenericAPIView):
                                                             'name': 'str',
                                                             'region': 'str'}
                                                    },
+                                                   "faculty": {
+                                                       'id': 'uuid',
+                                                       'name': 'str',
+                                                       'university': 'uuid'
+                                                   },
                                                    "educationProgram": 'str',
                                                    'vkLink': 'str',
                                                    'skills': [
@@ -495,6 +508,11 @@ class GetProfileView(generics.GenericAPIView):
                                                             'id': 'uuid',
                                                             'name': 'str',
                                                             'region': 'str'}
+                                                   },
+                                                   "faculty": {
+                                                       'id': 'uuid',
+                                                       'name': 'str',
+                                                       'university': 'uuid'
                                                    },
                                                    "educationProgram": 'str',
                                                    'vkLink': 'str',

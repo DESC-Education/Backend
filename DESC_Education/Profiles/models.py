@@ -162,6 +162,7 @@ class StudentProfile(BaseProfile):
     education_program = models.CharField(choices=EDUCATION_PROGRAMS, max_length=11, null=True)
     form_of_education = models.CharField(choices=EDUCATION_CHOISES, max_length=15, null=True)
     university = models.ForeignKey(University, on_delete=models.CASCADE, null=True, related_name='university')
+    faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, null=True, related_name='faculty')
     speciality = models.CharField(max_length=50, null=True)
     admission_year = models.IntegerField(null=True)
     skills = models.ManyToManyField(Skill, related_name="skills")

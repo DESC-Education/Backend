@@ -32,12 +32,18 @@ class UniversitySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class FacultySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Faculty
+        fields = '__all__'
+
+
 class BaseProfileSerializer(serializers.ModelSerializer):
-    phoneVisibility = serializers.BooleanField(source="phone_visibility")
-    emailVisibility = serializers.BooleanField(source="email_visibility")
+    phoneVisibility = serializers.BooleanField(source="phone_visibility", required=True)
+    emailVisibility = serializers.BooleanField(source="email_visibility", required=True)
     phone = serializers.CharField(read_only=True)
-    firstName = serializers.CharField(source="first_name")
-    lastName = serializers.CharField(source="last_name")
+    firstName = serializers.CharField(source="first_name", required=True)
+    lastName = serializers.CharField(source="last_name", required=True)
     telegramLink = serializers.URLField(source="telegram_link", required=False)
     vkLink = serializers.URLField(source="vk_link", required=False)
     logoImg = serializers.ImageField(source="logo_img", read_only=True)
@@ -56,17 +62,20 @@ class SkillSerializer(serializers.ModelSerializer):
 
 
 class CreateStudentProfileSerializer(BaseProfileSerializer):
-    formOfEducation = serializers.CharField(source="form_of_education")
-    educationProgram = serializers.CharField(source="education_program")
-    admissionYear = serializers.IntegerField(source="admission_year")
+    formOfEducation = serializers.CharField(source="form_of_education", required=True)
+    educationProgram = serializers.CharField(source="education_program", required=True)
+    admissionYear = serializers.IntegerField(source="admission_year", required=True)
     skills_ids = serializers.PrimaryKeyRelatedField(many=True, write_only=True,
                                                     queryset=Skill.objects.all(),
                                                     source="skills")
+    university = serializers.PrimaryKeyRelatedField(queryset=University.objects.all(), required=True)
+    faculty = serializers.PrimaryKeyRelatedField(queryset=Faculty.objects.all(), required=True)
+
 
     class Meta(BaseProfileSerializer.Meta):
         model = StudentProfile
         fields = BaseProfileSerializer.Meta.fields + \
-                 ('formOfEducation', 'university', 'speciality', 'admissionYear', 'skills_ids',
+                 ('formOfEducation', 'university', 'faculty', 'speciality', 'admissionYear', 'skills_ids',
                   'educationProgram')
 
 
@@ -99,15 +108,15 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
     educationProgram = serializers.CharField(source="get_education_program_display")
     admissionYear = serializers.IntegerField(source="admission_year")
     university = UniversitySerializer()
+    faculty = FacultySerializer()
     skills = SkillSerializer(many=True)
-
 
     # skills = serializers.SerializerMethodField()
 
     class Meta(BaseProfileSerializer.Meta):
         model = StudentProfile
         fields = BaseProfileSerializer.Meta.fields + \
-                 ('formOfEducation', 'admissionYear', 'university', 'speciality', 'skills',
+                 ('formOfEducation', 'admissionYear', 'university', 'faculty', 'speciality', 'skills',
                   'educationProgram')
 
     # def get_skills(self, obj):
