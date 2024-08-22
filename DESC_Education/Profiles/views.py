@@ -593,14 +593,14 @@ class GetProfileView(generics.GenericAPIView):
             except ObjectDoesNotExist:
                 return Response({"message": "Профиль не найден"}, status=status.HTTP_404_NOT_FOUND)
             profile_data = self.profile_serializer_class[user.role](profile).data
-            profile_data['email'] = user.email
+
 
             Phone_V = profile_data.pop('phoneVisibility')
             if not Phone_V:
                 profile_data.pop('phone')
             Email_V = profile_data.pop('emailVisibility')
-            if not Email_V:
-                profile_data.pop('phone')
+            if Email_V:
+                profile_data['email'] = user.email
 
             return Response({
                 "data": {
@@ -677,7 +677,7 @@ class FacultiesList(generics.ListAPIView):
 
     @extend_schema(
         tags=["Profiles"],
-        summary="Получение экземпляров факультетов"
+        summary="Получение экземпляров Факультетов"
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
