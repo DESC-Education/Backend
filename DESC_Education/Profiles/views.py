@@ -638,7 +638,15 @@ class ChangeLogoImgView(generics.GenericAPIView):
 
     @extend_schema(
         tags=["Profiles"],
-        summary="изменение изображения профиля",
+        summary="Изменение изображения профиля",
+        examples=[
+            OpenApiExample(
+                "Пример",
+                value={
+                    'logo': 'file'
+                },
+            )
+        ],
         responses={
             200: OpenApiResponse(
                 serializer_class,
