@@ -6,7 +6,9 @@ from Profiles.views import (
     GetProfileView,
     UniversitiesList,
     SkillsList,
-    CityList,
+    CitiesList,
+    FacultiesList,
+    SpecialtiesList
 
 )
 # from Users.views import (
@@ -29,7 +31,9 @@ urlpatterns = [
     path('profile/<uuid:pk>', GetProfileView.as_view(), name='profile_get'),
     path('profile/universities', UniversitiesList.as_view(), name='universities_list'),
     path('profile/skills', SkillsList.as_view(), name='skills_list'),
-    path('profile/cities', CityList.as_view(), name='cities_list'),
+    path('profile/cities', CitiesList.as_view(), name='cities_list'),
+    path('profile/faculties', FacultiesList.as_view(), name='faculties_list'),
+    path('profile/specialties', SpecialtiesList.as_view(), name='specialties_list'),
 
 
 

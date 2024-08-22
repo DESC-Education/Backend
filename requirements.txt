@@ -12,5 +12,5 @@ gunicorn==23.0.0
 gevent==24.2.1
 requests==2.32.3
 dj-inmemorystorage==2.1.0
-
+django-filter==24.3
 

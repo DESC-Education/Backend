@@ -30,6 +30,9 @@ class City(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ['-id']
+
 
 class Skill(models.Model):
     id = models.UUIDField(primary_key=True,
@@ -41,6 +44,9 @@ class Skill(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ['-id']
 
 
 class University(models.Model):
@@ -55,6 +61,9 @@ class University(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ['-id']
+
 
 class Faculty(models.Model):
     id = models.UUIDField(primary_key=True,
@@ -66,6 +75,9 @@ class Faculty(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ['-id']
 
 
 class ProfileVerifyRequest(models.Model):
@@ -156,6 +168,12 @@ class Specialty(models.Model):
     code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=150)
     type = models.CharField(choices=EDUCATION_PROGRAMS, max_length=11, null=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['-id']
 
 
 class StudentProfile(BaseProfile):

@@ -432,13 +432,13 @@ class UniversitiesListTest(APITestCase):
     def test_get(self):
         res = self.client.get(reverse('universities_list'), {'search': "Школа"})
 
-        self.assertEqual(res.data[0].get('name'), 'Школа')
+        self.assertEqual(res.data.get('results')[0].get('name'), 'Школа')
         self.assertEqual(res.status_code, 200)
 
     def test_get_not_found(self):
         res = self.client.get(reverse('universities_list'), {'search': "Школа11"})
 
-        self.assertEqual(res.data, [])
+        self.assertEqual(res.data.get('results'), [])
         self.assertEqual(res.status_code, 200)
 
 
@@ -452,17 +452,17 @@ class SkillListTest(APITestCase):
     def test_get(self):
         res = self.client.get(reverse('skills_list'), {'search': "ill"})
 
-        self.assertEqual(res.data[0].get('name'), 'Illustrator')
+        self.assertEqual(res.data.get('results')[0].get('name'), 'Illustrator')
         self.assertEqual(res.status_code, 200)
 
     def test_get_not_found(self):
         res = self.client.get(reverse('universities_list'), {'search': "Школа11"})
 
-        self.assertEqual(res.data, [])
+        self.assertEqual(res.data.get('results'), [])
         self.assertEqual(res.status_code, 200)
 
 
-class CitiesTest(APITestCase):
+class CitiesListTest(APITestCase):
     def setUp(self):
         City.objects.all().delete()
         City.objects.create(name='Красноярск')
@@ -472,11 +472,73 @@ class CitiesTest(APITestCase):
     def test_get(self):
         res = self.client.get(reverse('cities_list'), {'search': "Красно"})
 
-        self.assertEqual(res.data[0].get('name'), 'Красноярск')
+        self.assertEqual(res.data.get('results')[0].get('name'), 'Красноярск')
         self.assertEqual(res.status_code, 200)
 
     def test_get_not_found(self):
         res = self.client.get(reverse('cities_list'), {'search': "Школа11"})
 
-        self.assertEqual(res.data, [])
+        self.assertEqual(res.data.get('results'), [])
         self.assertEqual(res.status_code, 200)
+
+
+class FacultiesListTest(APITestCase):
+
+    def setUp(self):
+        Faculty.objects.all().delete()
+        University.objects.all().delete()
+        self.university = University.objects.create(name='University', city=City.objects.first())
+        self.university2 = University.objects.create(name='University2', city=City.objects.first())
+        Faculty.objects.create(name='Факультет информатики', university_id=self.university.id)
+        Faculty.objects.create(name='Факультет экономики', university_id=self.university.id)
+        Faculty.objects.create(name='Факультет менеджмента', university_id=self.university.id)
+
+        Faculty.objects.create(name='Факультет древологии', university_id=self.university2.id)
+
+        self.url = reverse('faculties_list')
+
+    def test_get_faculties(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data.get('results')), 4)
+
+    def test_filter__by_name(self):
+        response = self.client.get(self.url, {'search': 'эконом'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data.get('results')), 1)
+        self.assertEqual(response.data.get('results')[0]['name'], "Факультет экономики")
+
+    def test_filter__by_university_id(self):
+        response = self.client.get(self.url, {'university_id': self.university2.id})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data.get('results')), 1)
+        self.assertEqual(response.data.get('results')[0]['name'], "Факультет древологии")
+
+    def test_filter_and_search_combined(self):
+        response = self.client.get(self.url, {'university_id': self.university.id, 'search': 'информа'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data.get('results')), 1)
+        self.assertEqual(response.data.get('results')[0]['name'], "Факультет информатики")
+
+
+class SpecialtiesListTest(APITestCase):
+    def setUp(self):
+        Specialty.objects.all().delete()
+
+        Specialty.objects.create(name='Информатика', code='1.0.1',type=Specialty.BACHELOR)
+        Specialty.objects.create(name='Математика', code='1.0.2', type=Specialty.SPECIALTY)
+        Specialty.objects.create(name='Программирование', code='1.0.3', type=Specialty.MAGISTRACY)
+
+        self.url = reverse('specialties_list')
+
+    def test_filter_specialties_by_name(self):
+        response = self.client.get(self.url, {'search': 'раммирова'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data.get('results')), 1)
+        self.assertEqual(response.data.get('results')[0]['name'], "Программирование")
+
+    def test_filter_specialties_by_code(self):
+        response = self.client.get(self.url, {'search': '1.0.2'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data.get('results')), 1)
+        self.assertEqual(response.data.get('results')[0]['name'], "Математика")

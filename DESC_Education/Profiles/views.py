@@ -5,6 +5,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.contenttypes.models import ContentType
 from drf_spectacular.utils import (
     extend_schema,
@@ -22,13 +23,16 @@ from Profiles.serializers import (
     GetStudentProfileSerializer,
     UniversitySerializer,
     SkillSerializer,
-    CitySerializer
+    CitySerializer,
+    FacultySerializer
 )
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from Users.models import (
     CustomUser,
 )
-
+from Profiles.filters import (
+    FacultiesFilter
+)
 from Profiles.models import (
     StudentProfile,
     CompanyProfile,
@@ -37,6 +41,8 @@ from Profiles.models import (
     University,
     Skill,
     City,
+    Specialty,
+    Faculty
 )
 from rest_framework import filters
 
@@ -181,12 +187,12 @@ class ProfileView(generics.GenericAPIView):
                                                    'telegramLink': 'str',
                                                    'timezone': 3,
                                                    'university': {
-                                                        'id': 'uuid',
-                                                        'name': 'str',
-                                                        'city': {
-                                                            'id': 'uuid',
-                                                            'name': 'str',
-                                                            'region': 'str'}
+                                                       'id': 'uuid',
+                                                       'name': 'str',
+                                                       'city': {
+                                                           'id': 'uuid',
+                                                           'name': 'str',
+                                                           'region': 'str'}
                                                    },
                                                    "faculty": {
                                                        'id': 'uuid',
@@ -385,12 +391,12 @@ class GetMyProfileView(generics.GenericAPIView):
                                                    'telegramLink': 'str',
                                                    'timezone': 3,
                                                    'university': {
-                                                        'id': 'uuid',
-                                                        'name': 'str',
-                                                        'city': {
-                                                            'id': 'uuid',
-                                                            'name': 'str',
-                                                            'region': 'str'}
+                                                       'id': 'uuid',
+                                                       'name': 'str',
+                                                       'city': {
+                                                           'id': 'uuid',
+                                                           'name': 'str',
+                                                           'region': 'str'}
                                                    },
                                                    "faculty": {
                                                        'id': 'uuid',
@@ -512,12 +518,12 @@ class GetProfileView(generics.GenericAPIView):
                                                    'telegramLink': 'str',
                                                    'timezone': 3,
                                                    'university': {
-                                                        'id': 'uuid',
-                                                        'name': 'str',
-                                                        'city': {
-                                                            'id': 'uuid',
-                                                            'name': 'str',
-                                                            'region': 'str'}
+                                                       'id': 'uuid',
+                                                       'name': 'str',
+                                                       'city': {
+                                                           'id': 'uuid',
+                                                           'name': 'str',
+                                                           'region': 'str'}
                                                    },
                                                    "faculty": {
                                                        'id': 'uuid',
@@ -634,8 +640,8 @@ class SkillsList(generics.ListAPIView):
         return super().get(request, *args, **kwargs)
 
 
-class CityList(generics.ListAPIView):
-    queryset = City.objects.filter()
+class CitiesList(generics.ListAPIView):
+    queryset = City.objects.all()
     serializer_class = CitySerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
@@ -643,6 +649,35 @@ class CityList(generics.ListAPIView):
     @extend_schema(
         tags=["Profiles"],
         summary="Получение экземпляров Городов"
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+
+class SpecialtiesList(generics.ListAPIView):
+    queryset = Specialty.objects.all()
+    serializer_class = CitySerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'code']
+
+    @extend_schema(
+        tags=["Profiles"],
+        summary="Получение экземпляров Специальностей"
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+
+class FacultiesList(generics.ListAPIView):
+    queryset = Faculty.objects.all()
+    serializer_class = FacultySerializer
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    search_fields = ['name']
+    filterset_class = FacultiesFilter
+
+    @extend_schema(
+        tags=["Profiles"],
+        summary="Получение экземпляров факультетов"
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
