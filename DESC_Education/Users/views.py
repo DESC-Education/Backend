@@ -597,6 +597,17 @@ class SendVerifyCodeView(generics.GenericAPIView):
                     )
                 ]
             ),
+            409: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Слишком часто",
+                        value={
+                            "message": "The verification code is still active, try again later"
+                        },
+                    )
+                ]
+            ),
 
         }
 

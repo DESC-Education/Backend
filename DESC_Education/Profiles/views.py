@@ -79,9 +79,8 @@ class ProfileView(generics.GenericAPIView):
                     "vkLink": "https://vk.com/example",
                     "timezone": 7,
                     "formOfEducation": StudentProfile.FULL_TIME_EDUCATION,
-                    "speciality": 'str',
-                    "admissionYear": 'str',
-                    "educationProgram": StudentProfile.BACHELOR,
+                    "specialty": 'uuid',
+                    "admissionYear": "int",
                     "university": 'uuid',
                     "faculty": "uuid",
                     'skills_ids': ["uuid", "uuid"],
@@ -101,9 +100,8 @@ class ProfileView(generics.GenericAPIView):
                     "vkLink": "https://vk.com/example",
                     "timezone": 7,
                     "formOfEducation": StudentProfile.PART_TIME_EDUCATION,
-                    "speciality": 'str',
-                    "admissionYear": 'str',
-                    "educationProgram": StudentProfile.MAGISTRACY,
+                    "specialty": 'uuid',
+                    "admissionYear": 'int',
                     "university": 'uuid',
                     "faculty": "uuid",
                     'skills_ids': ["uuid", "uuid"],
@@ -123,9 +121,8 @@ class ProfileView(generics.GenericAPIView):
                     "vkLink": "https://vk.com/example",
                     "timezone": 7,
                     "formOfEducation": StudentProfile.FULL_TIME_AND_PART_TIME_EDUCATION,
-                    "speciality": 'str',
-                    "admissionYear": 'str',
-                    "educationProgram": StudentProfile.SPECIALTY,
+                    "specialty": 'uuid',
+                    "admissionYear": 'int',
                     "university": 'uuid',
                     "faculty": "uuid",
                     'skills_ids': ["uuid", "uuid"],
@@ -175,7 +172,12 @@ class ProfileView(generics.GenericAPIView):
                                                    'lastName': 'str',
                                                    'logoImg': 'bool',
                                                    'phoneVisibility': 'bool',
-                                                   'speciality': 'str',
+                                                   'specialty': {
+                                                       'id': 'uuid',
+                                                       'name': 'str',
+                                                       'type': 'str',
+                                                       'code': 'str'
+                                                   },
                                                    'telegramLink': 'str',
                                                    'timezone': 3,
                                                    'university': {
@@ -191,7 +193,6 @@ class ProfileView(generics.GenericAPIView):
                                                        'name': 'str',
                                                        'university': 'uuid'
                                                    },
-                                                   "educationProgram": 'str',
                                                    'vkLink': 'str',
                                                    'skills': [
                                                        {'id': 'uuid', 'name': 'str'},
@@ -375,7 +376,12 @@ class GetMyProfileView(generics.GenericAPIView):
                                                    'lastName': 'str',
                                                    'logoImg': 'bool',
                                                    'phoneVisibility': 'bool',
-                                                   'speciality': 'str',
+                                                   'specialty': {
+                                                       'id': 'uuid',
+                                                       'name': 'str',
+                                                       'type': 'str',
+                                                       'code': 'str'
+                                                   },
                                                    'telegramLink': 'str',
                                                    'timezone': 3,
                                                    'university': {
@@ -391,7 +397,6 @@ class GetMyProfileView(generics.GenericAPIView):
                                                        'name': 'str',
                                                        'university': 'uuid'
                                                    },
-                                                   "educationProgram": 'str',
                                                    'vkLink': 'str',
                                                    'skills': [
                                                        {'id': 'uuid', 'name': 'str'},
@@ -498,7 +503,12 @@ class GetProfileView(generics.GenericAPIView):
                                                    'isVerified': 'bool',
                                                    'lastName': 'str',
                                                    'logoImg': 'bool',
-                                                   'speciality': 'str',
+                                                   'specialty': {
+                                                       'id': 'uuid',
+                                                       'name': 'str',
+                                                       'type': 'str',
+                                                       'code': 'str'
+                                                   },
                                                    'telegramLink': 'str',
                                                    'timezone': 3,
                                                    'university': {
@@ -514,7 +524,6 @@ class GetProfileView(generics.GenericAPIView):
                                                        'name': 'str',
                                                        'university': 'uuid'
                                                    },
-                                                   "educationProgram": 'str',
                                                    'vkLink': 'str',
                                                    'skills': [
                                                        {'id': 'uuid', 'name': 'str'},

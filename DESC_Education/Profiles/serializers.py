@@ -8,8 +8,15 @@ from Profiles.models import (
     Skill,
     University,
     Faculty,
-    City
+    City,
+    Specialty
 )
+
+
+class SpecialtySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Specialty
+        fields = '__all__'
 
 
 class CitySerializer(serializers.ModelSerializer):
@@ -63,20 +70,19 @@ class SkillSerializer(serializers.ModelSerializer):
 
 class CreateStudentProfileSerializer(BaseProfileSerializer):
     formOfEducation = serializers.CharField(source="form_of_education", required=True)
-    educationProgram = serializers.CharField(source="education_program", required=True)
     admissionYear = serializers.IntegerField(source="admission_year", required=True)
     skills_ids = serializers.PrimaryKeyRelatedField(many=True, write_only=True,
                                                     queryset=Skill.objects.all(),
                                                     source="skills")
     university = serializers.PrimaryKeyRelatedField(queryset=University.objects.all(), required=True)
     faculty = serializers.PrimaryKeyRelatedField(queryset=Faculty.objects.all(), required=True)
-
+    specialty = serializers.PrimaryKeyRelatedField(queryset=Specialty.objects.all(), required=True)
 
     class Meta(BaseProfileSerializer.Meta):
         model = StudentProfile
         fields = BaseProfileSerializer.Meta.fields + \
-                 ('formOfEducation', 'university', 'faculty', 'speciality', 'admissionYear', 'skills_ids',
-                  'educationProgram')
+                 ('formOfEducation', 'university', 'faculty', 'admissionYear', 'skills_ids',
+                  'specialty')
 
 
 class CreateCompanyProfileSerializer(BaseProfileSerializer):
@@ -105,19 +111,19 @@ class GetCompanyProfileSerializer(BaseProfileSerializer):
 
 class GetStudentProfileSerializer(BaseProfileSerializer):
     formOfEducation = serializers.CharField(source="get_form_of_education_display")
-    educationProgram = serializers.CharField(source="get_education_program_display")
     admissionYear = serializers.IntegerField(source="admission_year")
     university = UniversitySerializer()
     faculty = FacultySerializer()
     skills = SkillSerializer(many=True)
+    specialty = SpecialtySerializer()
 
     # skills = serializers.SerializerMethodField()
 
     class Meta(BaseProfileSerializer.Meta):
         model = StudentProfile
         fields = BaseProfileSerializer.Meta.fields + \
-                 ('formOfEducation', 'admissionYear', 'university', 'faculty', 'speciality', 'skills',
-                  'educationProgram')
+                 ('formOfEducation', 'admissionYear', 'university', 'faculty', 'skills',
+                  'specialty', )
 
     # def get_skills(self, obj):
     #     return [SkillSerializer(skill) for skill in obj.skills.filter(is_verified=True)]

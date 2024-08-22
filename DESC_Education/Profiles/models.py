@@ -140,6 +140,24 @@ class BaseProfile(models.Model):
         return self.user.email
 
 
+class Specialty(models.Model):
+    BACHELOR = "bachelor"
+    MAGISTRACY = "magistracy"
+    SPECIALTY = "specialty"
+    EDUCATION_PROGRAMS = [
+        (BACHELOR, "Бакалавриат"),
+        (MAGISTRACY, "Магистратура"),
+        (SPECIALTY, "Специалитет")
+    ]
+    id = models.UUIDField(primary_key=True,
+                          default=uuid.uuid4,
+                          editable=False,
+                          unique=True)
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=150)
+    type = models.CharField(choices=EDUCATION_PROGRAMS, max_length=11, null=True)
+
+
 class StudentProfile(BaseProfile):
     FULL_TIME_EDUCATION = "full_time"
     PART_TIME_EDUCATION = "part_time"
@@ -150,20 +168,11 @@ class StudentProfile(BaseProfile):
         (PART_TIME_EDUCATION, "Заочная форма обучения"),
         (FULL_TIME_AND_PART_TIME_EDUCATION, "Очно-Заочная форма обучения")
     ]
-    BACHELOR = "bachelor"
-    MAGISTRACY = "magistracy"
-    SPECIALTY = "specialty"
-    EDUCATION_PROGRAMS = [
-        (BACHELOR, "Бакалавриат"),
-        (MAGISTRACY, "Магистратура"),
-        (SPECIALTY, "Специалитет")
-    ]
 
-    education_program = models.CharField(choices=EDUCATION_PROGRAMS, max_length=11, null=True)
     form_of_education = models.CharField(choices=EDUCATION_CHOISES, max_length=15, null=True)
     university = models.ForeignKey(University, on_delete=models.CASCADE, null=True, related_name='university')
     faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, null=True, related_name='faculty')
-    speciality = models.CharField(max_length=50, null=True)
+    specialty = models.ForeignKey(Specialty, on_delete=models.CASCADE, null=True, related_name='specialty')
     admission_year = models.IntegerField(null=True)
     skills = models.ManyToManyField(Skill, related_name="skills")
 

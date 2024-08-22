@@ -17,7 +17,8 @@ from Profiles.models import (
     File,
     Skill,
     City,
-    Faculty
+    Faculty,
+    Specialty,
 )
 from io import BytesIO
 from PIL import Image
@@ -28,6 +29,7 @@ from Profiles.serializers import (
     UniversitySerializer,
     SkillSerializer,
     FacultySerializer,
+    SpecialtySerializer
 )
 
 
@@ -78,6 +80,7 @@ class CreateProfileViewTest(APITestCase):
         skills = self.get_skils_ids()
         skills_ids = skills[0]
         self.skills = list(skills[1])
+        self.specialty = Specialty.objects.first()
         self.student_example_data = {
             "firstName": "John",
             "lastName": "Doe",
@@ -88,10 +91,9 @@ class CreateProfileViewTest(APITestCase):
             "vkLink": "https://vk.com/john_doe",
             "timezone": 3,
             "formOfEducation": StudentProfile.FULL_TIME_EDUCATION,
-            "speciality": "it",
-            'educationProgram': StudentProfile.BACHELOR,
             "admissionYear": 2020,
             "university": str(self.university.id),
+            "specialty": str(self.specialty.id),
             "faculty": str(self.faculty.id),
             "files": [self.create_test_image()],
             "skills_ids": skills_ids
@@ -115,7 +117,6 @@ class CreateProfileViewTest(APITestCase):
         res = self.client.post(reverse('profile_create'),
                                data=self.student_example_data,
                                headers={"Authorization": f"Bearer {self.token}"})
-
         profile: StudentProfile = StudentProfile.objects.first()
 
         expected_data = self.student_example_data
@@ -130,8 +131,8 @@ class CreateProfileViewTest(APITestCase):
             expected_skill_names.add(i.get('name'))
         expected_data['skills'] = expected_skill_names
         expected_data['formOfEducation'] = profile.get_form_of_education_display()
-        expected_data['educationProgram'] = profile.get_education_program_display()
         expected_data['university'] = dict(UniversitySerializer(self.university).data)
+        expected_data['specialty'] = dict(SpecialtySerializer(self.specialty).data)
         faculty = dict(FacultySerializer(self.faculty).data)
         faculty['university'] = str(faculty.get('university'))
         expected_data['faculty'] = faculty
@@ -211,11 +212,11 @@ class CreateProfileViewTest(APITestCase):
             expected_skill_names.add(i.get('name'))
         expected_data['skills'] = expected_skill_names
         expected_data['university'] = dict(UniversitySerializer(self.university).data)
-        expected_data['formOfEducation'] = profile.get_form_of_education_display()
-        expected_data['educationProgram'] = profile.get_education_program_display()
+        expected_data['specialty'] = dict(SpecialtySerializer(self.specialty).data)
         faculty = dict(FacultySerializer(self.faculty).data)
         faculty['university'] = str(faculty.get('university'))
         expected_data['faculty'] = faculty
+        expected_data['formOfEducation'] = profile.get_form_of_education_display()
 
         result = json.loads(res.content).get("data").get("studentProfile")
         res_skills_names = set()
@@ -342,6 +343,7 @@ class GetProfileTest(APITestCase):
 
         self.token = self.user.get_token()["accessToken"]
         self.university = University.objects.first()
+        self.specialty = Specialty.objects.first()
         skills = self.get_skils_ids()
         self.skills = skills[1]
         skills_ids = skills[0]
@@ -356,10 +358,9 @@ class GetProfileTest(APITestCase):
             "vkLink": "https://vk.com/john_doe",
             "timezone": 3,
             "formOfEducation": StudentProfile.FULL_TIME_EDUCATION,
-            "speciality": "it",
-            'educationProgram': StudentProfile.BACHELOR,
             "admissionYear": 2020,
             "university": str(self.university.id),
+            "specialty": str(self.specialty.id),
             "faculty": str(self.faculty.id),
             "files": [self.create_test_image()],
             "skills_ids": skills_ids
@@ -391,11 +392,12 @@ class GetProfileTest(APITestCase):
             expected_skill_names.add(i.get('name'))
         expected_data['skills'] = expected_skill_names
         expected_data['university'] = dict(UniversitySerializer(self.university).data)
+        expected_data['specialty'] = dict(SpecialtySerializer(self.specialty).data)
         faculty = dict(FacultySerializer(self.faculty).data)
         faculty['university'] = str(faculty.get('university'))
         expected_data['faculty'] = faculty
         expected_data['formOfEducation'] = profile.get_form_of_education_display()
-        expected_data['educationProgram'] = profile.get_education_program_display()
+
 
         result = json.loads(res.content).get("data").get("studentProfile")
 

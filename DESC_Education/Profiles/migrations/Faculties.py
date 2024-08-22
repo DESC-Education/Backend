@@ -10,7 +10,7 @@ def get_faculties(apps, schema_editor):
     faculties_data = []
 
     with open('Profiles/migrations/faculties.csv', newline='') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        reader = csv.reader(csvfile, delimiter=';', quotechar='|')
         for row in reader:
             id = row[0]
             name = row[1]
