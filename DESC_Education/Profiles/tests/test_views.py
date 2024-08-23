@@ -30,7 +30,9 @@ from Profiles.serializers import (
     UniversitySerializer,
     SkillSerializer,
     FacultySerializer,
-    SpecialtySerializer
+    SpecialtySerializer,
+    GetStudentProfileSerializer,
+    GetCompanyProfileSerializer
 )
 
 
@@ -662,6 +664,107 @@ class SetPhoneView(APITestCase):
 
         self.assertEqual(res.data.get('data').get('phone'), '+71876543210')
         self.assertEqual(res.status_code, 200)
+
+
+class EditProfileViewTest(APITestCase):
+    def setUp(self):
+        self.student = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE
+        )
+
+        self.student_token = self.student.get_token()['accessToken']
+
+        self.company = CustomUser.objects.create_user(
+            email='company@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE
+        )
+        self.company_token = self.company.get_token()['accessToken']
+
+    def test_edit_student_profile_200(self):
+        res = self.client.post(reverse('profile_edit'),
+                               {'vkLink': 'https://vk.com'},
+                               HTTP_AUTHORIZATION='Bearer ' + self.student_token)
+
+        self.assertEqual(json.loads(res.content).get('data').get('studentProfile').get('vkLink'), 'https://vk.com')
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('profile_edit'),
+                               {'telegramLink': 'https://tg.com'},
+                               HTTP_AUTHORIZATION='Bearer ' + self.student_token)
+
+        self.assertEqual(json.loads(res.content).get('data').get('studentProfile').get('telegramLink'), 'https://tg.com')
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('profile_edit'),
+                               {'emailVisibility': False},
+                               HTTP_AUTHORIZATION='Bearer ' + self.student_token)
+
+        self.assertEqual(json.loads(res.content).get('data').get('studentProfile').get('emailVisibility'),
+                         False)
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('profile_edit'),
+                               {'phoneVisibility': False},
+                               HTTP_AUTHORIZATION='Bearer ' + self.student_token)
+
+        self.assertEqual(json.loads(res.content).get('data').get('studentProfile').get('phoneVisibility'),
+                         False)
+        self.assertEqual(res.status_code, 200)
+
+
+    def test_edit_company_profile_200(self):
+        res = self.client.post(reverse('profile_edit'),
+                               {'vkLink': 'https://vk.com'},
+                               HTTP_AUTHORIZATION='Bearer ' + self.company_token)
+
+        self.assertEqual(json.loads(res.content).get('data').get('companyProfile').get('vkLink'), 'https://vk.com')
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('profile_edit'),
+                               {'telegramLink': 'https://tg.com'},
+                               HTTP_AUTHORIZATION='Bearer ' + self.company_token)
+
+        self.assertEqual(json.loads(res.content).get('data').get('companyProfile').get('telegramLink'), 'https://tg.com')
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('profile_edit'),
+                               {'emailVisibility': False},
+                               HTTP_AUTHORIZATION='Bearer ' + self.company_token)
+
+        self.assertEqual(json.loads(res.content).get('data').get('companyProfile').get('emailVisibility'),
+                         False)
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('profile_edit'),
+                               {'phoneVisibility': False},
+                               HTTP_AUTHORIZATION='Bearer ' + self.company_token)
+
+        self.assertEqual(json.loads(res.content).get('data').get('companyProfile').get('phoneVisibility'),
+                         False)
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('profile_edit'),
+                               {'linkToCompany': 'https://linktocompany.com'},
+                               HTTP_AUTHORIZATION='Bearer ' + self.company_token)
+
+        self.assertEqual(json.loads(res.content).get('data').get('companyProfile').get('linkToCompany'),
+                         'https://linktocompany.com')
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('profile_edit'),
+                               {'firstName': 'Andrew'},
+                               HTTP_AUTHORIZATION='Bearer ' + self.company_token)
+
+        self.assertEqual(json.loads(res.content).get('data').get('companyProfile').get('firstName'),
+                         '')
+        self.assertEqual(res.status_code, 200)
+
+
+
+
 
 
 

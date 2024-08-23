@@ -11,7 +11,8 @@ from Profiles.views import (
     SpecialtiesList,
     ChangeLogoImgView,
     SendPhoneCodeView,
-    SetPhoneView
+    SetPhoneView,
+    EditProfileView
 
 
 )
@@ -32,6 +33,7 @@ from Profiles.views import (
 urlpatterns = [
     path('profile', ProfileView.as_view(), name='profile_create'),
     path('profile/', GetMyProfileView.as_view(), name='profile_my'),
+    path('profile/edit', EditProfileView.as_view(), name='profile_edit'),
     path('profile/<uuid:pk>', GetProfileView.as_view(), name='profile_get'),
     path('profile/universities', UniversitiesList.as_view(), name='universities_list'),
     path('profile/skills', SkillsList.as_view(), name='skills_list'),

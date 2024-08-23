@@ -31,6 +31,9 @@ from Profiles.serializers import (
     ChangeLogoImgSerializer,
     SendPhoneCodeSerializer,
     SetPhoneSerializer,
+    EditStudentProfileSerializer,
+    EditCompanyProfileSerializer,
+
 )
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from Users.models import (
@@ -937,6 +940,167 @@ class SetPhoneView(generics.GenericAPIView):
                     'phone': profile.phone
                 },
                 "message": "Телефон подтвержден!"}, status=status.HTTP_200_OK)
+
+
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class EditProfileView(generics.GenericAPIView):
+    serializer_class = EditStudentProfileSerializer
+    permission_classes = [IsAuthenticated]
+    edit_profile_serializers = {
+        CustomUser.STUDENT_ROLE: EditStudentProfileSerializer,
+        CustomUser.COMPANY_ROLE: EditCompanyProfileSerializer
+    }
+    get_profile_serializers = {
+        CustomUser.STUDENT_ROLE: GetStudentProfileSerializer,
+        CustomUser.COMPANY_ROLE: GetCompanyProfileSerializer
+    }
+    profile_classes = {
+        CustomUser.STUDENT_ROLE: StudentProfile,
+        CustomUser.COMPANY_ROLE: CompanyProfile
+    }
+    str_profile_classes = {
+        CustomUser.STUDENT_ROLE: "studentProfile",
+        CustomUser.COMPANY_ROLE: "companyProfile"
+    }
+
+    @extend_schema(
+        tags=["Profiles"],
+        summary="Изменение данных профиля",
+        examples=[
+            OpenApiExample(
+                "Пример Студент",
+                value={
+                    "phoneVisibility": True,
+                    "emailVisibility": True,
+                    "telegramLink": "https://tg.com",
+                    "vkLink": "https://vk.com"
+                },
+            ),
+            OpenApiExample(
+                "Пример Компания",
+                value={
+                    "phoneVisibility": True,
+                    "emailVisibility": True,
+                    "telegramLink": "https://tg.com",
+                    "vkLink": "https://vk.com",
+                    "linkToCompany": "https://linkTocompany.com"
+                },
+            )
+        ],
+        responses={
+            200: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Успешно Студент",
+                        value={
+                            "data": {
+                                'studentProfile': {
+                                    'admissionYear': 'int',
+                                    'description': 'str',
+                                    'firstName': 'str',
+                                    'formOfEducation': 'str',
+                                    'id': 'uuid',
+                                    'isVerified': 'bool',
+                                    'lastName': 'str',
+                                    'logoImg': 'bool',
+                                    'specialty': {
+                                        'id': 'uuid',
+                                        'name': 'str',
+                                        'type': 'str',
+                                        'code': 'str'
+                                    },
+                                    'telegramLink': 'str',
+                                    'timezone': 3,
+                                    'university': {
+                                        'id': 'uuid',
+                                        'name': 'str',
+                                        'city': {
+                                            'id': 'uuid',
+                                            'name': 'str',
+                                            'region': 'str'}
+                                    },
+                                    "faculty": {
+                                        'id': 'uuid',
+                                        'name': 'str',
+                                        'university': 'uuid'
+                                    },
+                                    'vkLink': 'str',
+                                    'skills': [
+                                        {'id': 'uuid', 'name': 'str'},
+                                        {'id': 'uuid', 'name': 'str'}]
+                                }
+                            },
+                            "message": "Профиль успешно изменен"}
+                    ),
+                    OpenApiExample(
+                        "Успешно Компания",
+                        value={
+                            "data": {
+                                'companyProfile': {
+                                    'linkToCompany': "str",
+                                    "companyName": "str",
+                                    'description': 'str',
+                                    'firstName': 'str',
+                                    'id': 'uuid',
+                                    'isVerified': 'bool',
+                                    'lastName': 'str',
+                                    'logoImg': 'bool',
+                                    'phone': 'str',
+                                    'telegramLink': 'str',
+                                    'timezone': 3,
+                                    'vkLink': 'str'
+                                }
+                            },
+                            "message": "Профиль успешно изменен"}
+                    ),
+                ]
+            ),
+            400: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Прочие ошибки",
+                        value={
+                            "message": "Сообщение об ошибке"
+                        },
+                    )
+                ]
+            ),
+            401: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Не авторизован",
+                        value={
+                            "detail": "Учетные данные не были предоставлены."
+                        },
+                    )
+                ]
+            ),
+        }
+
+    )
+    def post(self, request):
+        try:
+            user = request.user
+            profile = self.profile_classes[user.role].objects.get(user=user)
+
+            serializer = self.edit_profile_serializers[user.role](data=request.data, instance=profile, partial=True)
+            serializer.is_valid(raise_exception=True)
+
+            serializer.save()
+
+            return Response({
+                "data": {
+                    self.str_profile_classes[user.role]: self.get_profile_serializers[user.role](profile).data
+                },
+                "message": "Профиль успешно изменен"}, status=status.HTTP_200_OK)
 
 
         except Exception as e:

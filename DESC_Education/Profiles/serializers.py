@@ -104,6 +104,17 @@ class CreateStudentProfileSerializer(BaseProfileSerializer):
                   'specialty')
 
 
+
+class EditStudentProfileSerializer(BaseProfileSerializer):
+    phoneVisibility = serializers.BooleanField(source="phone_visibility", required=False)
+    emailVisibility = serializers.BooleanField(source="email_visibility", required=False)
+
+    class Meta:
+        model = StudentProfile
+        fields = ('phoneVisibility', 'emailVisibility', 'telegramLink', 'vkLink', )
+
+
+
 class CreateCompanyProfileSerializer(BaseProfileSerializer):
     linkToCompany = serializers.URLField(source="link_to_company")
     companyName = serializers.CharField(source="company_name")
@@ -112,6 +123,19 @@ class CreateCompanyProfileSerializer(BaseProfileSerializer):
         model = CompanyProfile
         fields = BaseProfileSerializer.Meta.fields + \
                  ('linkToCompany', 'companyName',)
+
+
+
+class EditCompanyProfileSerializer(BaseProfileSerializer):
+    linkToCompany = serializers.URLField(source="link_to_company", required=False)
+    phoneVisibility = serializers.BooleanField(source="phone_visibility", required=False)
+    emailVisibility = serializers.BooleanField(source="email_visibility", required=False)
+
+    class Meta:
+        model = CompanyProfile
+        fields = ('phoneVisibility', 'emailVisibility', 'telegramLink', 'vkLink',
+                  'linkToCompany',)
+
 
 
 class EmptySerializer(serializers.Serializer):
