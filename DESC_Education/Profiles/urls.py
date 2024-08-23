@@ -11,6 +11,7 @@ from Profiles.views import (
     SpecialtiesList,
     ChangeLogoImgView,
     SendPhoneCodeView,
+    SetPhoneView
 
 
 )
@@ -39,5 +40,6 @@ urlpatterns = [
     path('profile/specialties', SpecialtiesList.as_view(), name='specialties_list'),
     path('profile/logo', ChangeLogoImgView.as_view(), name='logo_change'),
     path('profile/phone/code', SendPhoneCodeView.as_view(), name='send_phone_code'),
+    path('profile/phone', SetPhoneView.as_view(), name='set_phone'),
 
 ]

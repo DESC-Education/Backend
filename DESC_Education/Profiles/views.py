@@ -1,5 +1,7 @@
+import logging
 import random
 import re
+from django.utils import timezone
 from rest_framework.parsers import MultiPartParser
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -27,7 +29,8 @@ from Profiles.serializers import (
     CitySerializer,
     FacultySerializer,
     ChangeLogoImgSerializer,
-    SendPhoneCodeSerializer
+    SendPhoneCodeSerializer,
+    SetPhoneSerializer,
 )
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from Users.models import (
@@ -728,7 +731,7 @@ class SendPhoneCodeView(generics.GenericAPIView):
 
     @extend_schema(
         tags=["Profiles"],
-        summary="Отправить rjl подтверждения телефона",
+        summary="Отправить код подтверждения телефона",
         examples=[
             OpenApiExample(
                 "Пример",
@@ -793,6 +796,17 @@ class SendPhoneCodeView(generics.GenericAPIView):
                     )
                 ]
             ),
+            409: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Задержка между запросами",
+                        value={
+                            "message": "Код подтверждения уже был отправлен. Пожалуйста, повторите попытку позже."
+                        },
+                    )
+                ]
+            ),
         }
 
     )
@@ -801,21 +815,128 @@ class SendPhoneCodeView(generics.GenericAPIView):
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
 
-
             phone = serializer.validated_data['phone']
 
             if not re.match("^\\+?[1-9][0-9]{7,14}$", phone):
                 return Response({"message": "Неверный формат номера телефона"}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-
             if PhoneVerificationCode.objects.filter(phone=phone, is_used=True).exists():
                 return Response({"message": "Данный номер телефона уже привязан!"}, status=status.HTTP_404_NOT_FOUND)
 
+            try:
+                p = PhoneVerificationCode.objects.get(phone=phone, user=request.user, is_used=False)
+                if (timezone.now() - p.created_at).total_seconds() < 55:
+                    return Response({
+                        "message": "Код подтверждения уже был отправлен. Пожалуйста, повторите попытку позже."},
+                        status=status.HTTP_409_CONFLICT)
+            except ObjectDoesNotExist:
+                pass
 
-            PhoneVerificationCode.objects.create(phone=phone, code=PhoneVerificationCode.create_code())
+            PhoneVerificationCode.objects.create(phone=phone,
+                                                 code=PhoneVerificationCode.create_code(),
+                                                 user=request.user)
 
             return Response({
                 "message": "Код подтверждения отправлен"}, status=status.HTTP_200_OK)
+
+
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SetPhoneView(generics.GenericAPIView):
+    serializer_class = SetPhoneSerializer
+    permission_classes = [IsAuthenticated]
+    profile_classes = {
+        CustomUser.STUDENT_ROLE: StudentProfile,
+        CustomUser.COMPANY_ROLE: CompanyProfile
+    }
+
+    @extend_schema(
+        tags=["Profiles"],
+        summary="Подтверждение номера телефона",
+        examples=[
+            OpenApiExample(
+                "Пример",
+                value={
+                    'phone': '+79999999999',
+                    'code': 111111
+                },
+            )
+        ],
+        responses={
+            200: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Успешно",
+                        value={
+                            "data": {
+                                'phone': "+79999999999"
+                            },
+                            "message": "Телефон подтвержден!"}
+                    ),
+                ]
+            ),
+            400: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Прочие ошибки",
+                        value={
+                            "message": "Сообщение об ошибке"
+                        },
+                    )
+                ]
+            ),
+            401: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Не авторизован",
+                        value={
+                            "detail": "Учетные данные не были предоставлены."
+                        },
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Данный номер телефона уже привязан!",
+                        value={
+                            "message": "Неверный номер телефона или код"
+                        },
+                    )
+                ]
+            ),
+        }
+
+    )
+    def post(self, request):
+        try:
+            user = request.user
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            profile = self.profile_classes[user.role].objects.get(user=user)
+
+            try:
+                phone_verification_code = PhoneVerificationCode.objects.get(phone=serializer.validated_data['phone'],
+                                                                            is_used=False,
+                                                                            user=user)
+            except ObjectDoesNotExist:
+                return Response({"message": "Неверный номер телефона или код"}, status=status.HTTP_404_NOT_FOUND)
+
+            profile.phone = phone_verification_code.phone
+            profile.save()
+
+            return Response({
+                "data": {
+                    'phone': profile.phone
+                },
+                "message": "Телефон подтвержден!"}, status=status.HTTP_200_OK)
 
 
         except Exception as e:

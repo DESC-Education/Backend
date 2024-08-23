@@ -145,7 +145,6 @@ class CreateProfileViewTest(APITestCase):
         faculty['university'] = str(faculty.get('university'))
         expected_data['faculty'] = faculty
 
-
         result = json.loads(res.content).get("data").get("studentProfile")
         res_skills_names = set()
         for i in result.get("skills"):
@@ -235,7 +234,6 @@ class CreateProfileViewTest(APITestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data.get('message'), 'Профиль создан и отправлен на проверку!')
 
-
     def test_company_rejected_200(self, ):
         example_data = self.company_example_data.copy()
         example_data['firstName'] = "newFIrstName"
@@ -257,7 +255,6 @@ class CreateProfileViewTest(APITestCase):
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         expected_data.pop("files")
-
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data.get('message'), 'Профиль создан и отправлен на проверку!')
@@ -409,7 +406,6 @@ class GetProfileTest(APITestCase):
         expected_data['faculty'] = faculty
         expected_data['formOfEducation'] = profile.get_form_of_education_display()
 
-
         result = json.loads(res.content).get("data").get("studentProfile")
 
         res_skills_names = set()
@@ -536,7 +532,7 @@ class SpecialtiesListTest(APITestCase):
     def setUp(self):
         Specialty.objects.all().delete()
 
-        Specialty.objects.create(name='Информатика', code='1.0.1',type=Specialty.BACHELOR)
+        Specialty.objects.create(name='Информатика', code='1.0.1', type=Specialty.BACHELOR)
         Specialty.objects.create(name='Математика', code='1.0.2', type=Specialty.SPECIALTY)
         Specialty.objects.create(name='Программирование', code='1.0.3', type=Specialty.MAGISTRACY)
 
@@ -555,7 +551,6 @@ class SpecialtiesListTest(APITestCase):
         self.assertEqual(response.data.get('results')[0]['name'], "Математика")
 
 
-
 class ChangeLogoImgViewTest(APITestCase):
     @staticmethod
     def create_test_image():
@@ -571,17 +566,13 @@ class ChangeLogoImgViewTest(APITestCase):
         self.token = self.user.get_token()['accessToken']
         self.image = self.create_test_image()
 
-
     def test_change_logo_200(self):
         res = self.client.post(reverse('logo_change'), {'logo': self.image},
                                HTTP_AUTHORIZATION='Bearer ' + self.token)
         profile = StudentProfile.objects.get(user=self.user)
 
-
-
         self.assertEqual(f'logo_imgs/{self.image}', profile.logo_img)
         self.assertEqual(res.status_code, 200)
-
 
 
 class SendPhoneCodeViewTest(APITestCase):
@@ -591,15 +582,11 @@ class SendPhoneCodeViewTest(APITestCase):
                                                    role=CustomUser.STUDENT_ROLE)
         self.token = self.user.get_token()['accessToken']
 
-
     def test_send_v_code_200(self):
         res = self.client.post(reverse('send_phone_code'), {'phone': '+79991234567'},
                                HTTP_AUTHORIZATION='Bearer ' + self.token)
 
-
         p = PhoneVerificationCode.objects.first()
-
-
 
         self.assertEqual(p.phone, '+79991234567')
         self.assertEqual(res.data.get('message'), 'Код подтверждения отправлен')
@@ -609,10 +596,17 @@ class SendPhoneCodeViewTest(APITestCase):
         res = self.client.post(reverse('send_phone_code'), {'phone': '+793a456979'},
                                HTTP_AUTHORIZATION='Bearer ' + self.token)
 
-
         self.assertEqual(res.data.get('message'), 'Неверный формат номера телефона')
         self.assertEqual(res.status_code, 406)
 
+    def test_delay_409(self):
+        self.test_send_v_code_200()
+        res = self.client.post(reverse('send_phone_code'), {'phone': '+79991234567'},
+                               HTTP_AUTHORIZATION='Bearer ' + self.token)
+
+        self.assertEqual(res.data.get('message'), 'Код подтверждения уже был отправлен.'
+                                                  ' Пожалуйста, повторите попытку позже.')
+        self.assertEqual(res.status_code, 409)
 
     def test_duplicate_phone(self):
         self.test_send_v_code_200()
@@ -626,3 +620,49 @@ class SendPhoneCodeViewTest(APITestCase):
 
         self.assertEqual(res.data.get('message'), 'Данный номер телефона уже привязан!')
         self.assertEqual(res.status_code, 404)
+
+
+class SetPhoneView(APITestCase):
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(password='testuser',
+                                                   email='testuser@example.com',
+                                                   role=CustomUser.STUDENT_ROLE)
+        self.token = self.user.get_token()['accessToken']
+
+        PhoneVerificationCode.objects.create(user=self.user, code=123456,
+                                             phone='+79876543210',
+                                             is_used=False)
+
+        self.company = CustomUser.objects.create_user(password='testuser',
+                                                      email='testuser2@example.com',
+                                                      role=CustomUser.COMPANY_ROLE)
+        self.company_token = self.company.get_token()['accessToken']
+
+        PhoneVerificationCode.objects.create(user=self.company, code=123456,
+                                             phone='+71876543210',
+                                             is_used=False)
+
+    def test_student_set_phone_200(self):
+        res = self.client.post(reverse('set_phone'), {'phone': '+79876543210', 'code': 101010},
+                               HTTP_AUTHORIZATION='Bearer ' + self.token)
+
+        self.assertEqual(res.data.get('data').get('phone'), '+79876543210')
+        self.assertEqual(res.status_code, 200)
+
+    def test_student_incorrect_phone_404(self):
+        res = self.client.post(reverse('set_phone'), {'phone': '+7876543210', 'code': 101010},
+                               HTTP_AUTHORIZATION='Bearer ' + self.token)
+
+        self.assertEqual(res.data.get('message'), 'Неверный номер телефона или код')
+        self.assertEqual(res.status_code, 404)
+
+    def test_company_set_phone_200(self):
+        res = self.client.post(reverse('set_phone'), {'phone': '+71876543210', 'code': 101010},
+                               HTTP_AUTHORIZATION='Bearer ' + self.company_token)
+
+        self.assertEqual(res.data.get('data').get('phone'), '+71876543210')
+        self.assertEqual(res.status_code, 200)
+
+
+
+

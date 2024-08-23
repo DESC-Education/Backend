@@ -60,6 +60,7 @@ class PhoneVerificationCode(models.Model):
     code = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_used = models.BooleanField(default=False)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, editable=False, blank=True)
 
 
     @staticmethod
@@ -68,6 +69,10 @@ class PhoneVerificationCode(models.Model):
 
     def __str__(self):
         return self.phone
+
+    class Meta:
+        ordering = ['-created_at']
+
 
 
 class University(models.Model):

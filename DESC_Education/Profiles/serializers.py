@@ -26,6 +26,11 @@ class SendPhoneCodeSerializer(serializers.ModelSerializer):
         fields = ('phone',)
 
 
+class SetPhoneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PhoneVerificationCode
+        fields = ('phone', 'code')
+
 
 class SpecialtySerializer(serializers.ModelSerializer):
     class Meta:
