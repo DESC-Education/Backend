@@ -99,6 +99,7 @@ class ProfileView(generics.GenericAPIView):
                     "admissionYear": "int",
                     "university": 'uuid',
                     "faculty": "uuid",
+                    "city": "uuid",
                     'skills_ids': ["uuid", "uuid"],
                     "files": [{"file": "file"}]
                 },
@@ -120,6 +121,7 @@ class ProfileView(generics.GenericAPIView):
                     "admissionYear": 'int',
                     "university": 'uuid',
                     "faculty": "uuid",
+                    "city": "uuid",
                     'skills_ids': ["uuid", "uuid"],
                     "files": [{"file": "file"}]
                 },
@@ -141,6 +143,7 @@ class ProfileView(generics.GenericAPIView):
                     "admissionYear": 'int',
                     "university": 'uuid',
                     "faculty": "uuid",
+                    "city": "uuid",
                     'skills_ids': ["uuid", "uuid"],
                     "files": [{"file": "file"}]
                 },
@@ -158,9 +161,11 @@ class ProfileView(generics.GenericAPIView):
                     "timezone": 7,
                     'linkToCompany': "https://link.com/example",
                     "companyName": "str",
-                    "files": [{
-                        "file": "file"
-                    },
+                    "city": "uuid",
+                    "files": [
+                        {
+                            "file": "file"
+                        },
                         {
                             "file": "file"
                         },
@@ -196,6 +201,10 @@ class ProfileView(generics.GenericAPIView):
                                                    },
                                                    'telegramLink': 'str',
                                                    'timezone': 3,
+                                                   'city': {
+                                                       'id': 'uuid',
+                                                       'name': 'str',
+                                                       'region': 'str'},
                                                    'university': {
                                                        'id': 'uuid',
                                                        'name': 'str',
@@ -235,7 +244,12 @@ class ProfileView(generics.GenericAPIView):
                                     'phoneVisibility': 'bool',
                                     'telegramLink': 'str',
                                     'timezone': 3,
-                                    'vkLink': 'str'}
+                                    'vkLink': 'str',
+                                    'city': {
+                                        'id': 'uuid',
+                                        'name': 'str',
+                                        'region': 'str'}
+                                }
                             },
                             "message": "Профиль компании создан и отправлен на проверку!"}
                     )
@@ -413,6 +427,10 @@ class GetMyProfileView(generics.GenericAPIView):
                                                    },
                                                    'telegramLink': 'str',
                                                    'timezone': 3,
+                                                   'city': {
+                                                       'id': 'uuid',
+                                                       'name': 'str',
+                                                       'region': 'str'},
                                                    'university': {
                                                        'id': 'uuid',
                                                        'name': 'str',
@@ -452,7 +470,13 @@ class GetMyProfileView(generics.GenericAPIView):
                                     'phoneVisibility': 'bool',
                                     'telegramLink': 'str',
                                     'timezone': 3,
-                                    'vkLink': 'str'}
+                                    'vkLink': 'str',
+                                    'city': {
+                                        'id': 'uuid',
+                                        'name': 'str',
+                                        'region': 'str'}
+
+                                }
                             },
                             "message": "Успешно!"}
                     )
@@ -540,6 +564,10 @@ class GetProfileView(generics.GenericAPIView):
                                                    },
                                                    'telegramLink': 'str',
                                                    'timezone': 3,
+                                                   'city': {
+                                                       'id': 'uuid',
+                                                       'name': 'str',
+                                                       'region': 'str'},
                                                    'university': {
                                                        'id': 'uuid',
                                                        'name': 'str',
@@ -577,7 +605,12 @@ class GetProfileView(generics.GenericAPIView):
                                     'phone': 'str',
                                     'telegramLink': 'str',
                                     'timezone': 3,
-                                    'vkLink': 'str'}
+                                    'vkLink': 'str',
+                                    'city': {
+                                        'id': 'uuid',
+                                        'name': 'str',
+                                        'region': 'str'},
+                                }
                             },
                             "message": "Успешно!"}
                     )
@@ -1017,6 +1050,10 @@ class EditProfileView(generics.GenericAPIView):
                                     },
                                     'telegramLink': 'str',
                                     'timezone': 3,
+                                    'city': {
+                                        'id': 'uuid',
+                                        'name': 'str',
+                                        'region': 'str'},
                                     'university': {
                                         'id': 'uuid',
                                         'name': 'str',
@@ -1054,7 +1091,11 @@ class EditProfileView(generics.GenericAPIView):
                                     'phone': 'str',
                                     'telegramLink': 'str',
                                     'timezone': 3,
-                                    'vkLink': 'str'
+                                    'vkLink': 'str',
+                                    'city': {
+                                        'id': 'uuid',
+                                        'name': 'str',
+                                        'region': 'str'},
                                 }
                             },
                             "message": "Профиль успешно изменен"}

@@ -159,6 +159,7 @@ class BaseProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, editable=False, blank=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, null=True)
     description = models.TextField(blank=True, null=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
     phone_visibility = models.BooleanField(default=True)

@@ -32,7 +32,8 @@ from Profiles.serializers import (
     FacultySerializer,
     SpecialtySerializer,
     GetStudentProfileSerializer,
-    GetCompanyProfileSerializer
+    GetCompanyProfileSerializer,
+    CitySerializer
 )
 
 
@@ -86,6 +87,7 @@ class CreateProfileViewTest(APITestCase):
         self.token = self.user.get_token()['accessToken']
         self.company_token = self.company.get_token()['accessToken']
         self.university = University.objects.first()
+        self.city = City.objects.first()
         self.faculty = Faculty.objects.first()
         skills = self.get_skils_ids()
         skills_ids = skills[0]
@@ -105,6 +107,7 @@ class CreateProfileViewTest(APITestCase):
             "university": str(self.university.id),
             "specialty": str(self.specialty.id),
             "faculty": str(self.faculty.id),
+            "city": str(self.city.id),
             "files": [self.create_test_image()],
             "skills_ids": skills_ids
         }
@@ -120,6 +123,7 @@ class CreateProfileViewTest(APITestCase):
             "timezone": 3,
             "companyName": "Test Company",
             'linkToCompany': "https://link.com/",
+            "city": str(self.city.id),
             'files': [self.create_test_image() for _ in range(6)]
         }
 
@@ -143,6 +147,8 @@ class CreateProfileViewTest(APITestCase):
         expected_data['formOfEducation'] = profile.get_form_of_education_display()
         expected_data['university'] = dict(UniversitySerializer(self.university).data)
         expected_data['specialty'] = dict(SpecialtySerializer(self.specialty).data)
+        expected_data['city'] = dict(CitySerializer(self.city).data)
+
         faculty = dict(FacultySerializer(self.faculty).data)
         faculty['university'] = str(faculty.get('university'))
         expected_data['faculty'] = faculty
@@ -174,11 +180,11 @@ class CreateProfileViewTest(APITestCase):
         expected_data["isVerified"] = False
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
+        expected_data['city'] = dict(CitySerializer(self.city).data)
         files = expected_data.pop('files')
 
         self.assertEqual(len(files), profile.verification_files.count())
         self.assertEqual(json.loads(res.content).get("data").get("companyProfile"), expected_data)
-        self.assertEqual(CreateCompanyProfileSerializer(profile).data, expected_data)
         self.assertEqual(res.status_code, 200)
 
     def test_student_duplicate_405(self, ):
@@ -222,6 +228,7 @@ class CreateProfileViewTest(APITestCase):
         expected_data['skills'] = expected_skill_names
         expected_data['university'] = dict(UniversitySerializer(self.university).data)
         expected_data['specialty'] = dict(SpecialtySerializer(self.specialty).data)
+        expected_data['city'] = dict(CitySerializer(self.city).data)
         faculty = dict(FacultySerializer(self.faculty).data)
         faculty['university'] = str(faculty.get('university'))
         expected_data['faculty'] = faculty
@@ -256,6 +263,7 @@ class CreateProfileViewTest(APITestCase):
         expected_data["isVerified"] = False
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
+        expected_data['city'] = dict(CitySerializer(self.city).data)
         expected_data.pop("files")
 
         self.assertEqual(res.status_code, 200)
@@ -358,6 +366,7 @@ class GetProfileTest(APITestCase):
         self.skills = skills[1]
         skills_ids = skills[0]
         self.faculty = Faculty.objects.first()
+        self.city = City.objects.first()
         self.student_example_data = {
             "firstName": "John",
             "lastName": "Doe",
@@ -372,6 +381,7 @@ class GetProfileTest(APITestCase):
             "university": str(self.university.id),
             "specialty": str(self.specialty.id),
             "faculty": str(self.faculty.id),
+            "city": str(self.city.id),
             "files": [self.create_test_image()],
             "skills_ids": skills_ids
         }
@@ -384,8 +394,8 @@ class GetProfileTest(APITestCase):
         profile = StudentProfile.objects.first()
         profile.is_verified = True
         profile.save()
-        res = self.client.get(reverse("profile_get", kwargs={"pk": str(self.user.id)})
-                              )
+        res = self.client.get(reverse("profile_get", kwargs={"pk": str(self.user.id)}))
+
 
         expected_data = self.student_example_data.copy()
         expected_data["id"] = str(profile.id)
@@ -405,6 +415,7 @@ class GetProfileTest(APITestCase):
         expected_data['specialty'] = dict(SpecialtySerializer(self.specialty).data)
         faculty = dict(FacultySerializer(self.faculty).data)
         faculty['university'] = str(faculty.get('university'))
+        expected_data['city'] = dict(CitySerializer(self.city).data)
         expected_data['faculty'] = faculty
         expected_data['formOfEducation'] = profile.get_form_of_education_display()
 

@@ -78,7 +78,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = BaseProfile
         fields = ('id', 'firstName', 'lastName', 'description', 'phone', 'phoneVisibility', 'emailVisibility',
-                  'logoImg', 'telegramLink', 'vkLink', 'timezone', 'isVerified')
+                  'logoImg', 'telegramLink', 'vkLink', 'timezone', 'isVerified', 'city',)
 
 
 class SkillSerializer(serializers.ModelSerializer):
@@ -145,6 +145,7 @@ class EmptySerializer(serializers.Serializer):
 class GetCompanyProfileSerializer(BaseProfileSerializer):
     linkToCompany = serializers.URLField(source="link_to_company")
     companyName = serializers.CharField(source="company_name")
+    city = CitySerializer()
 
     class Meta(BaseProfileSerializer.Meta):
         model = CompanyProfile
@@ -156,6 +157,7 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
     formOfEducation = serializers.CharField(source="get_form_of_education_display")
     admissionYear = serializers.IntegerField(source="admission_year")
     university = UniversitySerializer()
+    city = CitySerializer()
     faculty = FacultySerializer()
     skills = SkillSerializer(many=True)
     specialty = SpecialtySerializer()
