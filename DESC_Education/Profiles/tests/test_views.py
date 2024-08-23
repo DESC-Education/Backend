@@ -19,6 +19,7 @@ from Profiles.models import (
     City,
     Faculty,
     Specialty,
+    PhoneVerificationCode
 )
 from io import BytesIO
 from PIL import Image
@@ -580,3 +581,48 @@ class ChangeLogoImgViewTest(APITestCase):
 
         self.assertEqual(f'logo_imgs/{self.image}', profile.logo_img)
         self.assertEqual(res.status_code, 200)
+
+
+
+class SendPhoneCodeViewTest(APITestCase):
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(password='testuser',
+                                                   email='testuser@example.com',
+                                                   role=CustomUser.STUDENT_ROLE)
+        self.token = self.user.get_token()['accessToken']
+
+
+    def test_send_v_code_200(self):
+        res = self.client.post(reverse('send_phone_code'), {'phone': '+79991234567'},
+                               HTTP_AUTHORIZATION='Bearer ' + self.token)
+
+
+        p = PhoneVerificationCode.objects.first()
+
+
+
+        self.assertEqual(p.phone, '+79991234567')
+        self.assertEqual(res.data.get('message'), 'Код подтверждения отправлен')
+        self.assertEqual(res.status_code, 200)
+
+    def test_incorrect_phone_405(self):
+        res = self.client.post(reverse('send_phone_code'), {'phone': '+793a456979'},
+                               HTTP_AUTHORIZATION='Bearer ' + self.token)
+
+
+        self.assertEqual(res.data.get('message'), 'Неверный формат номера телефона')
+        self.assertEqual(res.status_code, 406)
+
+
+    def test_duplicate_phone(self):
+        self.test_send_v_code_200()
+
+        p = PhoneVerificationCode.objects.first()
+        p.is_used = True
+        p.save()
+
+        res = self.client.post(reverse('send_phone_code'), {'phone': '+79991234567'},
+                               HTTP_AUTHORIZATION='Bearer ' + self.token)
+
+        self.assertEqual(res.data.get('message'), 'Данный номер телефона уже привязан!')
+        self.assertEqual(res.status_code, 404)

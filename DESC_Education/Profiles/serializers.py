@@ -1,3 +1,5 @@
+import random
+
 from rest_framework import serializers
 
 from Profiles.models import (
@@ -9,12 +11,20 @@ from Profiles.models import (
     University,
     Faculty,
     City,
-    Specialty
+    Specialty,
+    PhoneVerificationCode
 )
 
 
 class ChangeLogoImgSerializer(serializers.Serializer):
     logo = serializers.ImageField(required=True, allow_empty_file=False)
+
+
+class SendPhoneCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PhoneVerificationCode
+        fields = ('phone',)
+
 
 
 class SpecialtySerializer(serializers.ModelSerializer):
@@ -127,7 +137,7 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
         model = StudentProfile
         fields = BaseProfileSerializer.Meta.fields + \
                  ('formOfEducation', 'admissionYear', 'university', 'faculty', 'skills',
-                  'specialty', )
+                  'specialty',)
 
     # def get_skills(self, obj):
     #     return [SkillSerializer(skill) for skill in obj.skills.filter(is_verified=True)]

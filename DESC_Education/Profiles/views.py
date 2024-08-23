@@ -1,4 +1,5 @@
 import random
+import re
 from rest_framework.parsers import MultiPartParser
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -25,7 +26,8 @@ from Profiles.serializers import (
     SkillSerializer,
     CitySerializer,
     FacultySerializer,
-    ChangeLogoImgSerializer
+    ChangeLogoImgSerializer,
+    SendPhoneCodeSerializer
 )
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from Users.models import (
@@ -43,7 +45,8 @@ from Profiles.models import (
     Skill,
     City,
     Specialty,
-    Faculty
+    Faculty,
+    PhoneVerificationCode
 )
 from rest_framework import filters
 
@@ -310,7 +313,8 @@ class ProfileView(generics.GenericAPIView):
 
             profile: CompanyProfile = self.profile_class.objects.get(user=user)
             if profile.phone is None:
-                return Response({"message": "Необходимо сперва добавить телефон"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                return Response({"message": "Необходимо сперва добавить телефон"},
+                                status=status.HTTP_406_NOT_ACCEPTABLE)
 
             serializer = self.serializer_class(data=request.data, instance=profile)
 
@@ -607,7 +611,6 @@ class GetProfileView(generics.GenericAPIView):
                 return Response({"message": "Профиль не найден"}, status=status.HTTP_404_NOT_FOUND)
             profile_data = self.profile_serializer_class[user.role](profile).data
 
-
             Phone_V = profile_data.pop('phoneVisibility')
             if not Phone_V:
                 profile_data.pop('phone')
@@ -623,8 +626,6 @@ class GetProfileView(generics.GenericAPIView):
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 class ChangeLogoImgView(generics.GenericAPIView):
@@ -710,12 +711,111 @@ class ChangeLogoImgView(generics.GenericAPIView):
             profile.logo_img = serializer.validated_data['logo']
             profile.save()
 
-
             return Response({
                 "data": {
                     "logo": profile.logo_img.url
                 },
                 "message": "Изображение профиля успешно изменено"}, status=status.HTTP_200_OK)
+
+
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SendPhoneCodeView(generics.GenericAPIView):
+    serializer_class = SendPhoneCodeSerializer
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        tags=["Profiles"],
+        summary="Отправить rjl подтверждения телефона",
+        examples=[
+            OpenApiExample(
+                "Пример",
+                value={
+                    'phone': '+79999999999'
+                },
+            )
+        ],
+        responses={
+            200: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Успешно",
+                        value={
+                            "message": "Код подтверждения отправлен"}
+                    ),
+                ]
+            ),
+            400: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Прочие ошибки",
+                        value={
+                            "message": "Сообщение об ошибке"
+                        },
+                    )
+                ]
+            ),
+            401: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Не авторизован",
+                        value={
+                            "detail": "Учетные данные не были предоставлены."
+                        },
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Данный номер телефона уже привязан!",
+                        value={
+                            "message": "Данный номер телефона уже привязан!"
+                        },
+                    )
+                ]
+            ),
+
+            406: OpenApiResponse(
+                serializer_class,
+                examples=[
+                    OpenApiExample(
+                        "Неверный формат номера телефона",
+                        value={
+                            "message": "Неверный формат номера телефона"
+                        },
+                    )
+                ]
+            ),
+        }
+
+    )
+    def post(self, request):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+
+            phone = serializer.validated_data['phone']
+
+            if not re.match("^\\+?[1-9][0-9]{7,14}$", phone):
+                return Response({"message": "Неверный формат номера телефона"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+
+            if PhoneVerificationCode.objects.filter(phone=phone, is_used=True).exists():
+                return Response({"message": "Данный номер телефона уже привязан!"}, status=status.HTTP_404_NOT_FOUND)
+
+
+            PhoneVerificationCode.objects.create(phone=phone, code=PhoneVerificationCode.create_code())
+
+            return Response({
+                "message": "Код подтверждения отправлен"}, status=status.HTTP_200_OK)
 
 
         except Exception as e:

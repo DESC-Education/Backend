@@ -1,3 +1,5 @@
+import random
+
 from django.db import models
 from Users.models import CustomUser
 import uuid
@@ -47,6 +49,25 @@ class Skill(models.Model):
 
     class Meta:
         ordering = ['-id']
+
+
+class PhoneVerificationCode(models.Model):
+    id = models.UUIDField(primary_key=True,
+                          default=uuid.uuid4,
+                          editable=False,
+                          unique=True)
+    phone = models.CharField(max_length=15)
+    code = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+
+    @staticmethod
+    def create_code():
+        return random.randint(111111, 999999)
+
+    def __str__(self):
+        return self.phone
 
 
 class University(models.Model):

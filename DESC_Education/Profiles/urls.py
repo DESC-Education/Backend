@@ -10,6 +10,7 @@ from Profiles.views import (
     FacultiesList,
     SpecialtiesList,
     ChangeLogoImgView,
+    SendPhoneCodeView,
 
 
 )
@@ -37,5 +38,6 @@ urlpatterns = [
     path('profile/faculties', FacultiesList.as_view(), name='faculties_list'),
     path('profile/specialties', SpecialtiesList.as_view(), name='specialties_list'),
     path('profile/logo', ChangeLogoImgView.as_view(), name='logo_change'),
+    path('profile/phone/code', SendPhoneCodeView.as_view(), name='send_phone_code'),
 
 ]
