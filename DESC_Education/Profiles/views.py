@@ -154,6 +154,7 @@ class ProfileView(generics.GenericAPIView):
                     "firstName": 'str',
                     "lastName": 'str',
                     "description": "str",
+                    "phone": "str",
                     "phoneVisibility": True,
                     "emailVisibility": True,
                     "telegramLink": "https://t.me/example",
@@ -192,6 +193,7 @@ class ProfileView(generics.GenericAPIView):
                                                    'isVerified': 'bool',
                                                    'lastName': 'str',
                                                    'logoImg': 'bool',
+                                                   'phone': "str",
                                                    'phoneVisibility': 'bool',
                                                    'specialty': {
                                                        'id': 'uuid',
@@ -305,17 +307,6 @@ class ProfileView(generics.GenericAPIView):
                     )
                 ]
             ),
-            406: OpenApiResponse(
-                serializer_class,
-                examples=[
-                    OpenApiExample(
-                        "Отсутствует телефон",
-                        value={
-                            "message": "Необходимо сперва добавить телефон"
-                        },
-                    ),
-                ]
-            ),
 
         }
 
@@ -332,9 +323,6 @@ class ProfileView(generics.GenericAPIView):
             self.profile_class = classes[1]
 
             profile: CompanyProfile = self.profile_class.objects.get(user=user)
-            if profile.phone is None:
-                return Response({"message": "Необходимо сперва добавить телефон"},
-                                status=status.HTTP_406_NOT_ACCEPTABLE)
 
             serializer = self.serializer_class(data=request.data, instance=profile)
 
@@ -418,6 +406,7 @@ class GetMyProfileView(generics.GenericAPIView):
                                                    'isVerified': 'bool',
                                                    'lastName': 'str',
                                                    'logoImg': 'bool',
+                                                   'phone': "str",
                                                    'phoneVisibility': 'bool',
                                                    'specialty': {
                                                        'id': 'uuid',
@@ -556,6 +545,7 @@ class GetProfileView(generics.GenericAPIView):
                                                    'isVerified': 'bool',
                                                    'lastName': 'str',
                                                    'logoImg': 'bool',
+                                                   "phone": "str",
                                                    'specialty': {
                                                        'id': 'uuid',
                                                        'name': 'str',
@@ -1008,6 +998,7 @@ class EditProfileView(generics.GenericAPIView):
             OpenApiExample(
                 "Пример Студент",
                 value={
+                    'description': 'str',
                     "phoneVisibility": True,
                     "emailVisibility": True,
                     "telegramLink": "https://tg.com",
@@ -1017,6 +1008,7 @@ class EditProfileView(generics.GenericAPIView):
             OpenApiExample(
                 "Пример Компания",
                 value={
+                    "description": "str",
                     "phoneVisibility": True,
                     "emailVisibility": True,
                     "telegramLink": "https://tg.com",

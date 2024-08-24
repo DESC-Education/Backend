@@ -111,7 +111,7 @@ class EditStudentProfileSerializer(BaseProfileSerializer):
 
     class Meta:
         model = StudentProfile
-        fields = ('phoneVisibility', 'emailVisibility', 'telegramLink', 'vkLink', )
+        fields = ('phoneVisibility', 'emailVisibility', 'telegramLink', 'vkLink', 'description')
 
 
 
@@ -134,7 +134,7 @@ class EditCompanyProfileSerializer(BaseProfileSerializer):
     class Meta:
         model = CompanyProfile
         fields = ('phoneVisibility', 'emailVisibility', 'telegramLink', 'vkLink',
-                  'linkToCompany',)
+                  'linkToCompany', 'description')
 
 
 

@@ -397,6 +397,7 @@ class GetProfileTest(APITestCase):
         res = self.client.get(reverse("profile_get", kwargs={"pk": str(self.user.id)}))
 
 
+
         expected_data = self.student_example_data.copy()
         expected_data["id"] = str(profile.id)
         expected_data["isVerified"] = True
