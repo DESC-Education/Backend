@@ -12,10 +12,6 @@ def image_upload_to(instance, filename):
     return f'logo_imgs/{filename}'
 
 
-def student_card_upload(instance, filename):
-    return f'students/student_cards/{filename}'
-
-
 def verification_files_upload(instance, filename):
     return f'verification_files/{filename}'
 

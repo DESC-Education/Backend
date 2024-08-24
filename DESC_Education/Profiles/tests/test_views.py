@@ -530,13 +530,13 @@ class FacultiesListTest(APITestCase):
         self.assertEqual(response.data.get('results')[0]['name'], "Факультет экономики")
 
     def test_filter__by_university_id(self):
-        response = self.client.get(self.url, {'university_id': self.university2.id})
+        response = self.client.get(self.url, {'universityId': self.university2.id})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data.get('results')), 1)
         self.assertEqual(response.data.get('results')[0]['name'], "Факультет древологии")
 
     def test_filter_and_search_combined(self):
-        response = self.client.get(self.url, {'university_id': self.university.id, 'search': 'информа'})
+        response = self.client.get(self.url, {'universityId': self.university.id, 'search': 'информа'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data.get('results')), 1)
         self.assertEqual(response.data.get('results')[0]['name'], "Факультет информатики")

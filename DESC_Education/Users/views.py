@@ -79,7 +79,7 @@ class LoginView(generics.GenericAPIView):
                                     "refreshToken": "str"
                                 }
                             },
-                            "message": "Successfull"
+                            "message": "Успешно"
                         },
                     )
                 ]
@@ -90,7 +90,7 @@ class LoginView(generics.GenericAPIView):
                     OpenApiExample(
                         "Неверные данные",
                         value={
-                            "message": "Invalid email or password"
+                            "message": "Неверный адрес электронной почты или пароль"
                         },
                     )
                 ]
@@ -101,7 +101,7 @@ class LoginView(generics.GenericAPIView):
                     OpenApiExample(
                         "Почта не подтверждена",
                         value={
-                            "message": "Need to verify email"
+                            "message": "Вам нужно подтвердить адрес электронной почты"
                         },
                     )
                 ]
@@ -112,7 +112,7 @@ class LoginView(generics.GenericAPIView):
                     OpenApiExample(
                         "Прочие ошибки",
                         value={
-                            "message": "Other error message"
+                            "message": "Другое сообщение об ошибке"
                         },
                     )
                 ]
@@ -130,13 +130,13 @@ class LoginView(generics.GenericAPIView):
             try:
                 user: CustomUser = CustomUser.objects.get(email=email)
             except CustomUser.DoesNotExist:
-                return Response({'message': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'message': 'Неверный адрес электронной почты или пароль'}, status=status.HTTP_401_UNAUTHORIZED)
 
             if not user.check_password(serializer.validated_data['password']):
-                return Response({'message': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'message': 'Неверный адрес электронной почты или пароль'}, status=status.HTTP_401_UNAUTHORIZED)
 
             if not user.is_verified:
-                return Response({'message': 'Need to verify email'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                return Response({'message': 'Вам нужно подтвердить адрес электронной почты'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
             tokens = user.get_token()
 
@@ -146,7 +146,7 @@ class LoginView(generics.GenericAPIView):
                     "user": user_serializer.data,
                     "tokens": tokens
                 },
-                "message": "Successfull"
+                "message": "Успешно"
             },
                 status=status.HTTP_200_OK)
         except Exception as e:
@@ -188,7 +188,7 @@ class RegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                            "message": "Authorization code sent to email"
+                            "message": "Код подтверждения отправлен на электронную почту"
                         },
                     )
                 ]
@@ -199,7 +199,7 @@ class RegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Почта занята",
                         value={
-                            "message": "Email already registered"
+                            "message": "Адрес электронной почты уже зарегистрирован"
                         },
                     )
                 ]
@@ -210,7 +210,7 @@ class RegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Прочие ошибки",
                         value={
-                            "message": "Other error message"
+                            "message": "Другое сообщение об ошибке"
                         },
                     )
                 ]
@@ -229,7 +229,7 @@ class RegistrationView(generics.GenericAPIView):
 
             if len(CustomUser.objects.filter(email=email)) != 0:
                 return Response(
-                    {'message': 'Email already registered'},
+                    {'message': 'Адрес электронной почты уже зарегистрирован'},
                     status=status.HTTP_406_NOT_ACCEPTABLE)
 
             user = CustomUser.objects.create_user(
@@ -246,7 +246,7 @@ class RegistrationView(generics.GenericAPIView):
 
             send_auth_registration_code(email, Vcode.code)
 
-            return Response({"message": "Authorization code sent to email"},
+            return Response({"message": "Код подтверждения отправлен на электронную почту"},
                             status=status.HTTP_200_OK)
 
         except Exception as e:
@@ -284,7 +284,7 @@ class VerifyRegistrationView(generics.GenericAPIView):
                                     "refreshToken": "str"
                                 }
                             },
-                            "message": "User verified registration"
+                            "message": "Адрес электронной почты подтвержден"
                         },
                     )
                 ]
@@ -295,7 +295,7 @@ class VerifyRegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Код истек",
                         value={
-                            "message": "The verification code has expired, request a new one"
+                            "message": "Срок действия проверочного кода истек, запросите новый"
                         },
                     )
                 ]
@@ -306,7 +306,7 @@ class VerifyRegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Пользователь не найден",
                         value={
-                            "message": "The user was not found"
+                            "message": "Пользователь не найден"
                         },
                     )
                 ]
@@ -317,7 +317,7 @@ class VerifyRegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Неверный код",
                         value={
-                            "message": "The verification code does not exist or did not match"
+                            "message": "Проверочный код не существует или не соответствует"
                         },
                     )
                 ]
@@ -328,7 +328,7 @@ class VerifyRegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Прочие ошибки",
                         value={
-                            "message": "Other error message"
+                            "message": "Другое сообщение об ошибке"
                         },
                     )
                 ]
@@ -346,22 +346,22 @@ class VerifyRegistrationView(generics.GenericAPIView):
             try:
                 user: CustomUser = CustomUser.objects.get(email=email)
             except CustomUser.DoesNotExist:
-                return Response({"message": "The user was not found"},
+                return Response({"message": "Пользователь не найден"},
                                 status=status.HTTP_404_NOT_FOUND)
             try:
                 Vcode: VerificationCode = VerificationCode.objects.get(user=user,
                                                                        type=VerificationCode.REGISTRATION_TYPE,
                                                                        is_used=False)
             except VerificationCode.DoesNotExist:
-                return Response({"message": "The verification code does not exist or did not match"},
+                return Response({"message": "Проверочный код не существует или не соответствует"},
                                 status=status.HTTP_406_NOT_ACCEPTABLE)
 
             if Vcode.code != code:
-                return Response({"message": "The verification code does not exist or did not match"},
+                return Response({"message": "Проверочный код не существует или не соответствует"},
                                 status=status.HTTP_406_NOT_ACCEPTABLE)
 
             if not Vcode.is_valid():
-                return Response({"message": "The verification code has expired, request a new one"},
+                return Response({"message": "Срок действия проверочного кода истек, запросите новый"},
                                 status=status.HTTP_403_FORBIDDEN)
 
             user.is_verified = True
@@ -378,7 +378,7 @@ class VerifyRegistrationView(generics.GenericAPIView):
                     "user": user_serializer.data,
                     "tokens": tokens
                 },
-                "message": "User verified registration"},
+                "message": "Адрес электронной почты подтвержден"},
                             status=status.HTTP_200_OK)
 
 
@@ -446,7 +446,7 @@ class AuthView(generics.GenericAPIView):
                                     "isSuperuser": "bool"
                                 }
                             },
-                            "message": "Success"
+                            "message": "Успешно"
                         }
                     )
                 ]
@@ -457,7 +457,7 @@ class AuthView(generics.GenericAPIView):
                     OpenApiExample(
                         "Прочие ошибки",
                         value={
-                            "message": "Other error message"
+                            "message": "Другое сообщение об ошибке"
                         },
                     )
                 ]
@@ -486,7 +486,7 @@ class AuthView(generics.GenericAPIView):
                 "data": {
                     "user": serializer.data
                 },
-                "message": "Success"},
+                "message": "Успешно"},
                 status=status.HTTP_200_OK)
 
         except Exception as e:
@@ -537,7 +537,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                            "message": "Verification code sent to email"
+                            "message": "Код подтверждения отправлен на электронную почту"
                         }
                     )
                 ]
@@ -548,7 +548,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
                     OpenApiExample(
                         "Прочие ошибки",
                         value={
-                            "message": "Other error message"
+                            "message": "Другое сообщение об ошибке"
                         },
                     )
                 ]
@@ -559,7 +559,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
                     OpenApiExample(
                         "Не авторизован",
                         value={
-                            "message": "User is not authenticated."
+                            "message": "Пользователь не авторизован"
                         },
                     )
                 ]
@@ -570,7 +570,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
                     OpenApiExample(
                         "Пользователь не существует",
                         value={
-                            "message": "User not found."
+                            "message": "Пользователь не найден"
                         },
                     )
                 ]
@@ -581,7 +581,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
                     OpenApiExample(
                         "Пользователь уже верифицирован",
                         value={
-                            "message": "User already verified."
+                            "message": "Пользователь уже верифицирован"
                         },
                     )
                 ]
@@ -592,7 +592,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
                     OpenApiExample(
                         "Неверный тип кода",
                         value={
-                            "message": "Code type incorrect."
+                            "message": "Неверный тип кода"
                         },
                     )
                 ]
@@ -603,7 +603,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
                     OpenApiExample(
                         "Слишком часто",
                         value={
-                            "message": "The verification code is still active, try again later"
+                            "message": "Проверочный код по-прежнему активен, повторите попытку позже"
                         },
                     )
                 ]
@@ -626,17 +626,17 @@ class SendVerifyCodeView(generics.GenericAPIView):
                         user = CustomUser.objects.get(email=email)
 
                         if user.is_verified:
-                            return Response({"message": "User already verified"},
+                            return Response({"message": "Пользователь уже верифицирован"},
                                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
                     except CustomUser.DoesNotExist:
-                        return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+                        return Response({"message": "Пользователь не найден"}, status=status.HTTP_404_NOT_FOUND)
                     try:
                         code: VerificationCode = VerificationCode.objects.get(user=user,
                                                                               type=VerificationCode.REGISTRATION_TYPE,
                                                                               is_used=False)
                         if code.get_time() < 55:
-                            return Response({"message": "The verification code is still active, try again later"},
+                            return Response({"message": "Проверочный код по-прежнему активен, повторите попытку позже"},
                                             status=status.HTTP_409_CONFLICT)
                     except VerificationCode.DoesNotExist:
                         pass
@@ -647,20 +647,20 @@ class SendVerifyCodeView(generics.GenericAPIView):
 
                     send_auth_registration_code(email, Vcode_reg.code)
 
-                    return Response({"message": "Verification code sent to email"}, status=status.HTTP_200_OK)
+                    return Response({"message": "Код подтверждения отправлен на электронную почту"}, status=status.HTTP_200_OK)
 
                 case self.serializer_class.EMAIL_CHANGE_TYPE:
                     email = serializer.validated_data['email']
 
                     if not request.user.is_authenticated:
-                        return Response({"message": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+                        return Response({"message": "Пользователь не авторизован"}, status=status.HTTP_401_UNAUTHORIZED)
 
                     try:
                         code: VerificationCode = VerificationCode.objects.get(user=request.user,
                                                                               type=VerificationCode.REGISTRATION_TYPE,
                                                                               is_used=False)
                         if code.get_time() < 55:
-                            return Response({"message": "The verification code is still active, try again later"},
+                            return Response({"message": "Проверочный код по-прежнему активен, повторите попытку позже"},
                                             status=status.HTTP_409_CONFLICT)
                     except VerificationCode.DoesNotExist:
                         pass
@@ -671,7 +671,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
                                                                   new_email=email)
                     send_mail_change_code(email, Vcode_email.code)
 
-                    return Response({"message": "Verification code sent to email"}, status=status.HTTP_200_OK)
+                    return Response({"message": "Код подтверждения отправлен на электронную почту"}, status=status.HTTP_200_OK)
 
                 case self.serializer_class.PASSWORD_CHANGE_TYPE:
                     email = serializer.validated_data['email']
@@ -683,14 +683,14 @@ class SendVerifyCodeView(generics.GenericAPIView):
                                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
                     except CustomUser.DoesNotExist:
-                        return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+                        return Response({"message": "Пользователь не найден"}, status=status.HTTP_404_NOT_FOUND)
 
                     try:
                         code: VerificationCode = VerificationCode.objects.get(user=user,
                                                                               type=VerificationCode.REGISTRATION_TYPE,
                                                                               is_used=False)
                         if code.get_time() < 55:
-                            return Response({"message": "The verification code is still active, try again later"},
+                            return Response({"message": "Проверочный код по-прежнему активен, повторите попытку позже"},
                                             status=status.HTTP_409_CONFLICT)
                     except VerificationCode.DoesNotExist:
                         pass
@@ -701,10 +701,10 @@ class SendVerifyCodeView(generics.GenericAPIView):
 
                     send_password_change_code(user.email, Vcode_pass.code)
 
-                    return Response({"message": "Verification code sent to email"}, status=status.HTTP_200_OK)
+                    return Response({"message": "Код подтверждения отправлен на электронную почту"}, status=status.HTTP_200_OK)
 
                 case _:
-                    return Response({"message": "Code type incorrect"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                    return Response({"message": "Неверный тип кода"}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         except Exception as e:
             return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
@@ -725,7 +725,7 @@ class ChangePasswordView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                            "message": "Password has been changed"
+                            "message": "Пароль был изменен"
                         }
                     )
                 ]
@@ -736,7 +736,7 @@ class ChangePasswordView(generics.GenericAPIView):
                     OpenApiExample(
                         "Прочие ошибки",
                         value={
-                            "message": "Other error message"
+                            "message": "Другое сообщение об ошибке"
                         },
                     )
                 ]
@@ -747,7 +747,7 @@ class ChangePasswordView(generics.GenericAPIView):
                     OpenApiExample(
                         "Код не найден или истек",
                         value={
-                            "message": "Verification code not found or expired"
+                            "message": "Проверочный код не найден или срок действия истек"
                         },
                     )
                 ]
@@ -758,7 +758,7 @@ class ChangePasswordView(generics.GenericAPIView):
                     OpenApiExample(
                         "Неверный код",
                         value={
-                            "message": "Verification code is incorrect"
+                            "message": "Неверный проверочный код"
                         },
                     )
                 ]
@@ -769,7 +769,7 @@ class ChangePasswordView(generics.GenericAPIView):
                     OpenApiExample(
                         "Пользователь не найден",
                         value={
-                            "message": "User not found"
+                            "message": "Пользователь не найден"
                         },
                     )
                 ]
@@ -789,28 +789,28 @@ class ChangePasswordView(generics.GenericAPIView):
                 user: CustomUser = CustomUser.objects.get(email=email)
 
             except CustomUser.DoesNotExist:
-                return Response({"message": "User not found"}, status=status.HTTP_409_CONFLICT)
+                return Response({"message": "Пользователь не найден"}, status=status.HTTP_409_CONFLICT)
 
             try:
                 Vcode = VerificationCode.objects.get(user=user,
                                                      type=VerificationCode.PASSWORD_CHANGE_TYPE,
                                                      is_used=False)
             except VerificationCode.DoesNotExist:
-                return Response({"message": "Verification code not found or expired"},
+                return Response({"message": "Проверочный код не найден или срок действия истек"},
                                 status=status.HTTP_404_NOT_FOUND)
             #
             if not Vcode.is_valid():
-                return Response({"message": "Verification code not found or expired"},
+                return Response({"message": "Проверочный код не найден или срок действия истек"},
                                 status=status.HTTP_404_NOT_FOUND)
             #
             if Vcode.code != serializer.validated_data["code"]:
-                return Response({"message": "Verification code is incorrect"},
+                return Response({"message": "Неверный проверочный код"},
                                 status=status.HTTP_406_NOT_ACCEPTABLE)
 
             user.set_password(serializer.validated_data['new_password'])
             user.save()
 
-            return Response({"message": "Password has been changed"}, status=status.HTTP_200_OK)
+            return Response({"message": "Пароль был изменен"}, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
@@ -831,7 +831,7 @@ class ChangeEmailView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                            "message": "Email has been changed"
+                            "message": "Адрес электронной почты был изменен"
                         }
                     )
                 ]
@@ -842,7 +842,7 @@ class ChangeEmailView(generics.GenericAPIView):
                     OpenApiExample(
                         "Прочие ошибки",
                         value={
-                            "message": "Other error message"
+                            "message": "Другое сообщение об ошибке"
                         },
                     )
                 ]
@@ -853,7 +853,7 @@ class ChangeEmailView(generics.GenericAPIView):
                     OpenApiExample(
                         "Код не найден или истек",
                         value={
-                            "message": "Verification code not found or expired"
+                            "message": "Проверочный код не найден или срок действия истек"
                         },
                     )
                 ]
@@ -864,7 +864,7 @@ class ChangeEmailView(generics.GenericAPIView):
                     OpenApiExample(
                         "Неверный код",
                         value={
-                            "message": "Verification code is incorrect"
+                            "message": "Неверный проверочный код"
                         },
                     )
                 ]
@@ -883,21 +883,21 @@ class ChangeEmailView(generics.GenericAPIView):
                                                                        type=VerificationCode.EMAIL_CHANGE_TYPE,
                                                                        is_used=False)
             except VerificationCode.DoesNotExist:
-                return Response({"message": "Verification code not found or expired"},
+                return Response({"message": "Проверочный код не найден или срок действия истек"},
                                 status=status.HTTP_404_NOT_FOUND)
 
             if not Vcode.is_valid():
-                return Response({"message": "Verification code not found or expired"},
+                return Response({"message": "Проверочный код не найден или срок действия истек"},
                                 status=status.HTTP_404_NOT_FOUND)
 
             if Vcode.code != serializer.validated_data["code"]:
-                return Response({"message": "Verification code is incorrect"},
+                return Response({"message": "Неверный проверочный код"},
                                 status=status.HTTP_406_NOT_ACCEPTABLE)
 
             request.user.email = Vcode.new_email
             request.user.save()
 
-            return Response({"message": "Email has been changed"}, status=status.HTTP_200_OK)
+            return Response({"message": "Адрес электронной почты был изменен"}, status=status.HTTP_200_OK)
 
 
         except Exception as e:

@@ -26,7 +26,7 @@ class LoginViewTest(APITestCase):
                                content_type="application/json")
 
         self.assertEqual(res.status_code, 401)
-        self.assertEqual(res.data.get("message"), "Invalid email or password")
+        self.assertEqual(res.data.get("message"), "Неверный адрес электронной почты или пароль")
 
     def test_invalid_login_401_2(self):
         res = self.client.post(reverse('login'),
@@ -34,7 +34,7 @@ class LoginViewTest(APITestCase):
                                content_type="application/json")
 
         self.assertEqual(res.status_code, 401)
-        self.assertEqual(res.data.get("message"), "Invalid email or password")
+        self.assertEqual(res.data.get("message"), "Неверный адрес электронной почты или пароль")
 
     def test_invalid_auth_mail_406(self):
         self.user.is_verified = False
@@ -45,7 +45,7 @@ class LoginViewTest(APITestCase):
                                content_type="application/json")
 
         self.assertEqual(res.status_code, 406)
-        self.assertEqual(res.data.get("message"), "Need to verify email")
+        self.assertEqual(res.data.get("message"), "Вам нужно подтвердить адрес электронной почты")
 
     def test_login_200(self):
         CustomUser.objects.get(email="test@mail.com")
@@ -81,7 +81,7 @@ class RegistrationViewTest(APITestCase):
                                content_type="application/json")
 
         self.assertEqual(res.status_code, 406)
-        self.assertEqual(res.data, {'message': 'Email already registered'})
+        self.assertEqual(res.data, {'message': 'Адрес электронной почты уже зарегистрирован'})
 
     def test_registration_default_200(self):
         res = self.client.post(reverse('registration'),
@@ -91,7 +91,7 @@ class RegistrationViewTest(APITestCase):
         user: CustomUser = CustomUser.objects.get(email="test@mail.com")
 
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.data, {"message": "Authorization code sent to email"})
+        self.assertEqual(res.data, {"message": 'Код подтверждения отправлен на электронную почту'})
         self.assertEqual(user.role, user.STUDENT_ROLE)
         self.assertEqual(user.is_verified, False)
 
@@ -107,7 +107,7 @@ class RegistrationViewTest(APITestCase):
         user: CustomUser = CustomUser.objects.get(email="test@mail.com")
 
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.data, {"message": "Authorization code sent to email"})
+        self.assertEqual(res.data, {"message": 'Код подтверждения отправлен на электронную почту'})
         self.assertEqual(user.role, user.COMPANY_ROLE)
         self.assertEqual(user.is_verified, False)
 
@@ -192,7 +192,7 @@ class VerifyRegistrationViewTest(APITestCase):
                                                 "code": 1234}),
                                content_type="application/json")
         self.assertEqual(res.status_code, 404)
-        self.assertEqual(res.data, {"message": "The user was not found"})
+        self.assertEqual(res.data, {"message": "Пользователь не найден"})
 
     def test_invalid_code_DoesNotExist_406(self):
         res = self.client.post(reverse('verify_registration'),
@@ -200,7 +200,7 @@ class VerifyRegistrationViewTest(APITestCase):
                                                 "code": 1234}),
                                content_type="application/json")
         self.assertEqual(res.status_code, 406)
-        self.assertEqual(res.data, {"message": "The verification code does not exist or did not match"})
+        self.assertEqual(res.data, {"message": 'Проверочный код не существует или не соответствует'})
 
     def test_incorrect_code_406(self):
         res = self.client.post(reverse('verify_registration'),
@@ -209,7 +209,7 @@ class VerifyRegistrationViewTest(APITestCase):
                                content_type="application/json")
 
         self.assertEqual(res.status_code, 406)
-        self.assertEqual(res.data, {"message": "The verification code does not exist or did not match"})
+        self.assertEqual(res.data, {"message": 'Проверочный код не существует или не соответствует'})
 
     def test_expired_code_403(self):
         code: VerificationCode = VerificationCode.objects.get(user=self.user)
@@ -221,7 +221,7 @@ class VerifyRegistrationViewTest(APITestCase):
                                content_type="application/json")
 
         self.assertEqual(res.status_code, 403)
-        self.assertEqual(res.data, {"message": "The verification code has expired, request a new one"})
+        self.assertEqual(res.data, {"message": 'Срок действия проверочного кода истек, запросите новый'})
 
 
 class AuthViewTest(APITestCase):
@@ -249,7 +249,7 @@ class AuthViewTest(APITestCase):
                     "isSuperuser": self.user.is_superuser,
                 }
             },
-            "message": "Success"
+            "message": 'Успешно'
         })
 
     def test_invalid_auth_401(self):
@@ -299,14 +299,14 @@ class SendVerifyCodeViewTest(APITestCase):
 
         VerificationCode.objects.get(user=self.unverified_user, type=VerificationCode.REGISTRATION_TYPE)
 
-        self.assertEqual(res.data, {'message': 'Verification code sent to email'})
+        self.assertEqual(res.data, {'message': 'Код подтверждения отправлен на электронную почту'})
         self.assertEqual(res.status_code, 200)
 
     def test_rg_user_already_verified_405(self):
         res = self.client.post(reverse('send_verify_code'), data=json.dumps({"email": "test2@mail.com", "type": "RG"}),
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'User already verified'})
+        self.assertEqual(res.data, {'message': 'Пользователь уже верифицирован'})
         self.assertEqual(res.status_code, 405)
 
     def test_rg_user_not_found_405(self):
@@ -314,14 +314,14 @@ class SendVerifyCodeViewTest(APITestCase):
                                                                              "type": "RG"}),
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'User not found'})
+        self.assertEqual(res.data, {'message': 'Пользователь не найден'})
         self.assertEqual(res.status_code, 404)
 
     def test_rg_code_still_active_409(self):
         res = self.client.post(reverse('send_verify_code'), data=json.dumps({"email": "test3@mail.com", "type": "RG"}),
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'The verification code is still active, try again later'})
+        self.assertEqual(res.data, {'message': 'Проверочный код по-прежнему активен, повторите попытку позже'})
         self.assertEqual(res.status_code, 409)
 
     def test_em_code_200(self):
@@ -333,7 +333,7 @@ class SendVerifyCodeViewTest(APITestCase):
                                headers={"Authorization": f"Bearer {tokens.get('accessToken')}"},
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'Verification code sent to email'})
+        self.assertEqual(res.data, {'message': 'Код подтверждения отправлен на электронную почту'})
         self.assertEqual(res.status_code, 200)
 
     def test_em_not_authenticated_401(self):
@@ -343,7 +343,7 @@ class SendVerifyCodeViewTest(APITestCase):
                                    "type": "EM"}),
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'User is not authenticated'})
+        self.assertEqual(res.data, {'message': 'Пользователь не авторизован'})
         self.assertEqual(res.status_code, 401)
 
     def test_pw_code_200(self):
@@ -353,7 +353,7 @@ class SendVerifyCodeViewTest(APITestCase):
                                    "email": "test2@mail.com"}),
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'Verification code sent to email'})
+        self.assertEqual(res.data, {'message': 'Код подтверждения отправлен на электронную почту'})
         self.assertEqual(res.status_code, 200)
 
     def test_pw_user_not_found_404(self):
@@ -363,7 +363,7 @@ class SendVerifyCodeViewTest(APITestCase):
                                    "email": "test1232@mail.com"}),
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'User not found'})
+        self.assertEqual(res.data, {'message': 'Пользователь не найден'})
         self.assertEqual(res.status_code, 404)
 
 
@@ -374,7 +374,7 @@ class SendVerifyCodeViewTest(APITestCase):
                                    "email": "test2@mail.com"}),
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': "Code type incorrect"})
+        self.assertEqual(res.data, {'message': 'Неверный тип кода'})
         self.assertEqual(res.status_code, 406)
 
 
@@ -405,7 +405,7 @@ class ChangePasswordViewTest(APITestCase):
 
         user = CustomUser.objects.get(email="test@mail.com")
 
-        self.assertEqual(res.data, {'message': 'Password has been changed'})
+        self.assertEqual(res.data, {'message': 'Пароль был изменен'})
         self.assertEqual(res.status_code, 200)
         self.assertTrue(user.check_password("new_password"))
 
@@ -422,7 +422,7 @@ class ChangePasswordViewTest(APITestCase):
                                headers={"Authorization": f"Bearer {self.access_token}"},
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'Verification code not found or expired'})
+        self.assertEqual(res.data, {'message': 'Проверочный код не найден или срок действия истек'})
         self.assertEqual(res.status_code, 404)
 
     def test_code_not_valid_404(self):
@@ -438,7 +438,7 @@ class ChangePasswordViewTest(APITestCase):
                                headers={"Authorization": f"Bearer {self.access_token}"},
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'Verification code not found or expired'})
+        self.assertEqual(res.data, {'message': 'Проверочный код не найден или срок действия истек'})
         self.assertEqual(res.status_code, 404)
 
     def test_code_incorrect_406(self):
@@ -451,7 +451,7 @@ class ChangePasswordViewTest(APITestCase):
                                headers={"Authorization": f"Bearer {self.access_token}"},
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'Verification code is incorrect'})
+        self.assertEqual(res.data, {'message': 'Неверный проверочный код'})
         self.assertEqual(res.status_code, 406)
 
     def test_user_not_found_409(self):
@@ -464,7 +464,7 @@ class ChangePasswordViewTest(APITestCase):
                                headers={"Authorization": f"Bearer {self.access_token}"},
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'User not found'})
+        self.assertEqual(res.data, {'message': 'Пользователь не найден'})
         self.assertEqual(res.status_code, 409)
 
 
@@ -494,7 +494,7 @@ class ChangeEmailViewTest(APITestCase):
 
         user = CustomUser.objects.get(id=self.user.id)
 
-        self.assertEqual(res.data, {'message': 'Email has been changed'})
+        self.assertEqual(res.data, {'message': 'Адрес электронной почты был изменен'})
         self.assertEqual(res.status_code, 200)
         self.assertEqual(user.email, "new_email@mail.ru")
 
@@ -509,7 +509,7 @@ class ChangeEmailViewTest(APITestCase):
                                headers={"Authorization": f"Bearer {self.access_token}"},
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'Verification code not found or expired'})
+        self.assertEqual(res.data, {'message': 'Проверочный код не найден или срок действия истек'})
         self.assertEqual(res.status_code, 404)
 
     #
@@ -524,7 +524,7 @@ class ChangeEmailViewTest(APITestCase):
                                headers={"Authorization": f"Bearer {self.access_token}"},
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'Verification code not found or expired'})
+        self.assertEqual(res.data, {'message': 'Проверочный код не найден или срок действия истек'})
         self.assertEqual(res.status_code, 404)
 
     #
@@ -536,7 +536,7 @@ class ChangeEmailViewTest(APITestCase):
                                headers={"Authorization": f"Bearer {self.access_token}"},
                                content_type="application/json")
 
-        self.assertEqual(res.data, {'message': 'Verification code is incorrect'})
+        self.assertEqual(res.data, {'message': 'Неверный проверочный код'})
         self.assertEqual(res.status_code, 406)
 
 

@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django_filters',
     'Users',
     'Profiles',
+    'Tasks',
     'corsheaders',
     'rest_framework_simplejwt',
     'drf_spectacular',
