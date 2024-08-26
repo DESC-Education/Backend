@@ -54,10 +54,10 @@ class LoginViewTest(APITestCase):
                                data=json.dumps({"email": "test@mail.com", "password": "test123"}),
                                content_type="application/json")
 
-        tokens = res.data.get("data").get("tokens")
+        tokens = dict(res.data).get('tokens')
 
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.data.get("data").get("user"),
+        self.assertEqual(dict(res.data).get("user"),
                          {
                              "id": str(self.user.id),
                              "email": self.user.email,
@@ -127,7 +127,7 @@ class CustomTokenRefreshViewTest(APITestCase):
                                data=json.dumps({"email": "test@mail.com", "password": "test123"}),
                                content_type="application/json")
 
-        self.refresh_token = res.data.get("data").get("tokens").get("refreshToken")
+        self.refresh_token = dict(res.data).get("tokens").get("refreshToken")
 
     def test_token_refresh_200(self):
         res = self.client.post(reverse('token_refresh'),
@@ -172,7 +172,7 @@ class VerifyRegistrationViewTest(APITestCase):
         user: CustomUser = CustomUser.objects.get(email="test@mail.com")
         code: VerificationCode = VerificationCode.objects.get(user=user)
 
-        self.assertEqual(res.data.get("data").get("user"),
+        self.assertEqual(dict(res.data).get('user'),
                          {
                              "id": str(user.id),
                              "email": user.email,
@@ -180,8 +180,7 @@ class VerifyRegistrationViewTest(APITestCase):
                              "isActive": user.is_active,
                              "isStaff": user.is_staff,
                              "isSuperuser": user.is_superuser,
-                         }
-                         )
+                         })
         self.assertEqual(res.status_code, 200)
         self.assertTrue(user.is_verified)
         self.assertTrue(code.is_used)
@@ -239,8 +238,6 @@ class AuthViewTest(APITestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data, {
-            "data": {
-                "user": {
                     "id": str(self.user.id),
                     "email": self.user.email,
                     "role": self.user.role,
@@ -248,9 +245,7 @@ class AuthViewTest(APITestCase):
                     "isStaff": self.user.is_staff,
                     "isSuperuser": self.user.is_superuser,
                 }
-            },
-            "message": 'Успешно'
-        })
+            )
 
     def test_invalid_auth_401(self):
         res = self.client.get(reverse('auth'), content_type="application/json")

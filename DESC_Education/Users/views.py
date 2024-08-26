@@ -64,7 +64,6 @@ class LoginView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                            "data": {
                                 "user": {
                                     "id": "uuid",
                                     "email": "str",
@@ -78,9 +77,7 @@ class LoginView(generics.GenericAPIView):
                                     "accessToken": "str",
                                     "refreshToken": "str"
                                 }
-                            },
-                            "message": "Успешно"
-                        },
+                            }
                     )
                 ]
             ),
@@ -142,11 +139,8 @@ class LoginView(generics.GenericAPIView):
 
             user_serializer = CustomUserSerializer(user)
             return Response({
-                "data": {
                     "user": user_serializer.data,
                     "tokens": tokens
-                },
-                "message": "Успешно"
             },
                 status=status.HTTP_200_OK)
         except Exception as e:
@@ -269,7 +263,6 @@ class VerifyRegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                            "data": {
                                 "user": {
                                     "id": "uuid",
                                     "email": "str",
@@ -283,9 +276,7 @@ class VerifyRegistrationView(generics.GenericAPIView):
                                     "accessToken": "str",
                                     "refreshToken": "str"
                                 }
-                            },
-                            "message": "Адрес электронной почты подтвержден"
-                        },
+                            }
                     )
                 ]
             ),
@@ -374,12 +365,9 @@ class VerifyRegistrationView(generics.GenericAPIView):
             user_serializer = CustomUserSerializer(user)
 
             return Response({
-                "data": {
                     "user": user_serializer.data,
                     "tokens": tokens
-                },
-                "message": "Адрес электронной почты подтвержден"},
-                            status=status.HTTP_200_OK)
+                }, status=status.HTTP_200_OK)
 
 
         except Exception as e:
@@ -436,8 +424,6 @@ class AuthView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                            "data": {
-                                "user": {
                                     "id": "uuid",
                                     "email": "str",
                                     "role": "str",
@@ -445,9 +431,8 @@ class AuthView(generics.GenericAPIView):
                                     "isStaff": "bool",
                                     "isSuperuser": "bool"
                                 }
-                            },
-                            "message": "Успешно"
-                        }
+
+
                     )
                 ]
             ),
@@ -482,11 +467,7 @@ class AuthView(generics.GenericAPIView):
             user = request.user
             serializer = CustomUserSerializer(user)
 
-            return Response({
-                "data": {
-                    "user": serializer.data
-                },
-                "message": "Успешно"},
+            return Response(serializer.data,
                 status=status.HTTP_200_OK)
 
         except Exception as e:
