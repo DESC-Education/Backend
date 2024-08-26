@@ -9,11 +9,11 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 
 def image_upload_to(instance, filename):
-    return f'logo_imgs/{filename}'
+    return f'users/{instance.user.id}/logo/{filename}'
 
 
 def verification_files_upload(instance, filename):
-    return f'verification_files/{filename}'
+    return f'users/{instance.profile.user.id}/verification_files/{filename}'
 
 
 class City(models.Model):
@@ -38,7 +38,6 @@ class Skill(models.Model):
                           editable=False,
                           unique=True)
     name = models.CharField(unique=True, max_length=50)
-    is_verified = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -167,6 +166,7 @@ class BaseProfile(models.Model):
     is_verified = models.BooleanField(default=False)
     verification_requests = GenericRelation(ProfileVerifyRequest, related_name="v_requests")
     verification_files = GenericRelation(File, related_name='v_files')
+    skills = models.ManyToManyField(Skill, blank=True)
 
     class Meta:
         abstract = True
@@ -215,7 +215,6 @@ class StudentProfile(BaseProfile):
     faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, null=True, related_name='faculty')
     specialty = models.ForeignKey(Specialty, on_delete=models.CASCADE, null=True, related_name='specialty')
     admission_year = models.IntegerField(null=True)
-    skills = models.ManyToManyField(Skill, related_name="skills")
 
 
 class CompanyProfile(BaseProfile):

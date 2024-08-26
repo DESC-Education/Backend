@@ -64,6 +64,12 @@ class FacultySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class SkillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Skill
+        fields = ('id', 'name',)
+
+
 class BaseProfileSerializer(serializers.ModelSerializer):
     phoneVisibility = serializers.BooleanField(source="phone_visibility", required=True)
     emailVisibility = serializers.BooleanField(source="email_visibility", required=True)
@@ -74,25 +80,21 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     vkLink = serializers.URLField(source="vk_link", required=False)
     logoImg = serializers.ImageField(source="logo_img", read_only=True)
     isVerified = serializers.BooleanField(source="is_verified", read_only=True)
+    skills = serializers.PrimaryKeyRelatedField(many=True, queryset=Skill.objects.all(), required=True)
+
 
     class Meta:
         model = BaseProfile
         fields = ('id', 'firstName', 'lastName', 'description', 'phone', 'phoneVisibility', 'emailVisibility',
-                  'logoImg', 'telegramLink', 'vkLink', 'timezone', 'isVerified', 'city',)
+                  'logoImg', 'telegramLink', 'vkLink', 'timezone', 'isVerified', 'city', 'skills')
+        read_only_fields = ['id', 'user']
 
 
-class SkillSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Skill
-        fields = ('id', 'name',)
 
 
-class CreateStudentProfileSerializer(BaseProfileSerializer):
+class StudentProfileSerializer(BaseProfileSerializer):
     formOfEducation = serializers.CharField(source="form_of_education", required=True)
     admissionYear = serializers.IntegerField(source="admission_year", required=True)
-    skills_ids = serializers.PrimaryKeyRelatedField(many=True, write_only=True,
-                                                    queryset=Skill.objects.all(),
-                                                    source="skills")
     university = serializers.PrimaryKeyRelatedField(queryset=University.objects.all(), required=True)
     faculty = serializers.PrimaryKeyRelatedField(queryset=Faculty.objects.all(), required=True)
     specialty = serializers.PrimaryKeyRelatedField(queryset=Specialty.objects.all(), required=True)
@@ -100,7 +102,7 @@ class CreateStudentProfileSerializer(BaseProfileSerializer):
     class Meta(BaseProfileSerializer.Meta):
         model = StudentProfile
         fields = BaseProfileSerializer.Meta.fields + \
-                 ('formOfEducation', 'university', 'faculty', 'admissionYear', 'skills_ids',
+                 ('formOfEducation', 'university', 'faculty', 'admissionYear',
                   'specialty')
 
 
@@ -108,10 +110,11 @@ class CreateStudentProfileSerializer(BaseProfileSerializer):
 class EditStudentProfileSerializer(BaseProfileSerializer):
     phoneVisibility = serializers.BooleanField(source="phone_visibility", required=False)
     emailVisibility = serializers.BooleanField(source="email_visibility", required=False)
+    skills = serializers.PrimaryKeyRelatedField(many=True, queryset=Skill.objects.all(), required=True)
 
     class Meta:
         model = StudentProfile
-        fields = ('phoneVisibility', 'emailVisibility', 'telegramLink', 'vkLink', 'description')
+        fields = ("skills", 'phoneVisibility', 'emailVisibility', 'telegramLink', 'vkLink', 'description')
 
 
 
@@ -130,11 +133,12 @@ class EditCompanyProfileSerializer(BaseProfileSerializer):
     linkToCompany = serializers.URLField(source="link_to_company", required=False)
     phoneVisibility = serializers.BooleanField(source="phone_visibility", required=False)
     emailVisibility = serializers.BooleanField(source="email_visibility", required=False)
+    skills = serializers.PrimaryKeyRelatedField(many=True, queryset=Skill.objects.all(), required=True)
 
     class Meta:
         model = CompanyProfile
         fields = ('phoneVisibility', 'emailVisibility', 'telegramLink', 'vkLink',
-                  'linkToCompany', 'description')
+                  'linkToCompany', 'description', 'skills')
 
 
 
@@ -146,11 +150,12 @@ class GetCompanyProfileSerializer(BaseProfileSerializer):
     linkToCompany = serializers.URLField(source="link_to_company")
     companyName = serializers.CharField(source="company_name")
     city = CitySerializer()
+    skills = SkillSerializer(many=True)
 
     class Meta(BaseProfileSerializer.Meta):
         model = CompanyProfile
         fields = BaseProfileSerializer.Meta.fields + \
-                 ('linkToCompany', 'companyName',)
+                 ('linkToCompany', 'companyName', 'skills')
 
 
 class GetStudentProfileSerializer(BaseProfileSerializer):

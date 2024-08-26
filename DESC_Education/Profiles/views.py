@@ -5,6 +5,7 @@ from django.utils import timezone
 from rest_framework.parsers import MultiPartParser
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from Profiles.permissions import IsCompanyOrStudentRole
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
@@ -19,7 +20,7 @@ from drf_spectacular.utils import (
     inline_serializer)
 from drf_spectacular.types import OpenApiTypes
 from Profiles.serializers import (
-    CreateStudentProfileSerializer,
+    StudentProfileSerializer,
     CreateCompanyProfileSerializer,
     EmptySerializer,
     GetCompanyProfileSerializer,
@@ -58,10 +59,10 @@ from rest_framework import filters
 
 
 class ProfileView(generics.GenericAPIView):
-    serializer_class = CreateStudentProfileSerializer
+    serializer_class = StudentProfileSerializer
     authentication_classes = [JWTAuthentication]
     # parser_classes = (MultiPartParser,)
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCompanyOrStudentRole]
     profile_class = None
     profile_str_name = {
         StudentProfile: 'studentProfile',
@@ -70,7 +71,7 @@ class ProfileView(generics.GenericAPIView):
 
     serializer_classes = {
         CustomUser.COMPANY_ROLE: (CreateCompanyProfileSerializer, CompanyProfile),
-        CustomUser.STUDENT_ROLE: (CreateStudentProfileSerializer, StudentProfile)
+        CustomUser.STUDENT_ROLE: (StudentProfileSerializer, StudentProfile)
     }
 
     get_serializer_classes = {
@@ -100,7 +101,7 @@ class ProfileView(generics.GenericAPIView):
                     "university": 'uuid',
                     "faculty": "uuid",
                     "city": "uuid",
-                    'skills_ids': ["uuid", "uuid"],
+                    'skills': ["uuid", "uuid"],
                     "files": [{"file": "file"}]
                 },
             ),
@@ -122,7 +123,7 @@ class ProfileView(generics.GenericAPIView):
                     "university": 'uuid',
                     "faculty": "uuid",
                     "city": "uuid",
-                    'skills_ids': ["uuid", "uuid"],
+                    'skills': ["uuid", "uuid"],
                     "files": [{"file": "file"}]
                 },
             ),
@@ -144,7 +145,7 @@ class ProfileView(generics.GenericAPIView):
                     "university": 'uuid',
                     "faculty": "uuid",
                     "city": "uuid",
-                    'skills_ids': ["uuid", "uuid"],
+                    'skills': ["uuid", "uuid"],
                     "files": [{"file": "file"}]
                 },
             ),
@@ -163,6 +164,7 @@ class ProfileView(generics.GenericAPIView):
                     'linkToCompany': "https://link.com/example",
                     "companyName": "str",
                     "city": "uuid",
+                    'skills': ["uuid", "uuid"],
                     "files": [
                         {
                             "file": "file"
@@ -183,77 +185,74 @@ class ProfileView(generics.GenericAPIView):
                     OpenApiExample(
                         "Студент Успешно",
                         value={
-                            "data": {
-                                "studentProfile": {'admissionYear': 'int',
-                                                   'description': 'str',
-                                                   'emailVisibility': "bool",
-                                                   'firstName': 'str',
-                                                   'formOfEducation': 'str',
-                                                   'id': 'uuid',
-                                                   'isVerified': 'bool',
-                                                   'lastName': 'str',
-                                                   'logoImg': 'bool',
-                                                   'phone': "str",
-                                                   'phoneVisibility': 'bool',
-                                                   'specialty': {
-                                                       'id': 'uuid',
-                                                       'name': 'str',
-                                                       'type': 'str',
-                                                       'code': 'str'
-                                                   },
-                                                   'telegramLink': 'str',
-                                                   'timezone': 3,
-                                                   'city': {
-                                                       'id': 'uuid',
-                                                       'name': 'str',
-                                                       'region': 'str'},
-                                                   'university': {
-                                                       'id': 'uuid',
-                                                       'name': 'str',
-                                                       'city': {
-                                                           'id': 'uuid',
-                                                           'name': 'str',
-                                                           'region': 'str'}
-                                                   },
-                                                   "faculty": {
-                                                       'id': 'uuid',
-                                                       'name': 'str',
-                                                       'university': 'uuid'
-                                                   },
-                                                   'vkLink': 'str',
-                                                   'skills': [
-                                                       {'id': 'uuid', 'name': 'str'},
-                                                       {'id': 'uuid', 'name': 'str'}]
-                                                   }
+                            'admissionYear': 'int',
+                            'description': 'str',
+                            'emailVisibility': "bool",
+                            'firstName': 'str',
+                            'formOfEducation': 'str',
+                            'id': 'uuid',
+                            'isVerified': 'bool',
+                            'lastName': 'str',
+                            'logoImg': 'bool',
+                            'phone': "str",
+                            'phoneVisibility': 'bool',
+                            'specialty': {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'type': 'str',
+                                'code': 'str'
                             },
-                            "message": "Профиль студента создан и отправлен на проверку!"}
+                            'telegramLink': 'str',
+                            'timezone': 3,
+                            'city': {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'region': 'str'},
+                            'university': {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'city': {
+                                    'id': 'uuid',
+                                    'name': 'str',
+                                    'region': 'str'}
+                            },
+                            "faculty": {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'university': 'uuid'
+                            },
+                            'vkLink': 'str',
+                            'skills': [
+                                {'id': 'uuid', 'name': 'str'},
+                                {'id': 'uuid', 'name': 'str'}]
+                        }
                     ),
                     OpenApiExample(
                         "Компания Успешно",
                         value={
-                            "data": {
-                                "companyProfile": {
-                                    'linkToCompany': "str",
-                                    "companyName": "str",
-                                    'description': 'str',
-                                    'emailVisibility': "bool",
-                                    'firstName': 'str',
-                                    'id': 'uuid',
-                                    'isVerified': 'bool',
-                                    'lastName': 'str',
-                                    'logoImg': 'bool',
-                                    'phone': 'str',
-                                    'phoneVisibility': 'bool',
-                                    'telegramLink': 'str',
-                                    'timezone': 3,
-                                    'vkLink': 'str',
-                                    'city': {
-                                        'id': 'uuid',
-                                        'name': 'str',
-                                        'region': 'str'}
-                                }
-                            },
-                            "message": "Профиль компании создан и отправлен на проверку!"}
+                            'linkToCompany': "str",
+                            "companyName": "str",
+                            'description': 'str',
+                            'emailVisibility': "bool",
+                            'firstName': 'str',
+                            'id': 'uuid',
+                            'isVerified': 'bool',
+                            'lastName': 'str',
+                            'logoImg': 'bool',
+                            'phone': 'str',
+                            'phoneVisibility': 'bool',
+                            'telegramLink': 'str',
+                            'timezone': 3,
+                            'vkLink': 'str',
+                            'city': {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'region': 'str'},
+                            'skills': [
+                                {'id': 'uuid', 'name': 'str'},
+                                {'id': 'uuid', 'name': 'str'}]
+                        }
+
                     )
                 ]
             ),
@@ -275,17 +274,6 @@ class ProfileView(generics.GenericAPIView):
                         "Не авторизован",
                         value={
                             "detail": "Учетные данные не были предоставлены."
-                        },
-                    )
-                ]
-            ),
-            403: OpenApiResponse(
-                serializer_class,
-                examples=[
-                    OpenApiExample(
-                        "Неверная роль",
-                        value={
-                            "message": "Вы можете создать профиль только для студента или компании!"
                         },
                     )
                 ]
@@ -315,10 +303,8 @@ class ProfileView(generics.GenericAPIView):
         try:
 
             user = request.user
-            classes = self.serializer_classes.get(user.role, None)
-            if classes is None:
-                return Response({"message": "Вы можете создать профиль только для студента или компании!"},
-                                status=status.HTTP_403_FORBIDDEN)
+            classes = self.serializer_classes.get(user.role)
+
             self.serializer_class = classes[0]
             self.profile_class = classes[1]
 
@@ -356,11 +342,7 @@ class ProfileView(generics.GenericAPIView):
 
             res_serializer = self.get_serializer_classes[user.role](profile)
 
-            return Response({
-                "data": {
-                    self.profile_str_name[self.profile_class]: res_serializer.data
-                },
-                "message": "Профиль создан и отправлен на проверку!"})
+            return Response(res_serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -369,7 +351,7 @@ class ProfileView(generics.GenericAPIView):
 class GetMyProfileView(generics.GenericAPIView):
     serializer_class = EmptySerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCompanyOrStudentRole]
     profile_classes = {
         CustomUser.STUDENT_ROLE: StudentProfile,
         CustomUser.COMPANY_ROLE: CompanyProfile
@@ -396,78 +378,77 @@ class GetMyProfileView(generics.GenericAPIView):
                     OpenApiExample(
                         "Студент Успешно",
                         value={
-                            "data": {
-                                "studentProfile": {'admissionYear': 'int',
-                                                   'description': 'str',
-                                                   'emailVisibility': "bool",
-                                                   'firstName': 'str',
-                                                   'formOfEducation': 'str',
-                                                   'id': 'uuid',
-                                                   'isVerified': 'bool',
-                                                   'lastName': 'str',
-                                                   'logoImg': 'bool',
-                                                   'phone': "str",
-                                                   'phoneVisibility': 'bool',
-                                                   'specialty': {
-                                                       'id': 'uuid',
-                                                       'name': 'str',
-                                                       'type': 'str',
-                                                       'code': 'str'
-                                                   },
-                                                   'telegramLink': 'str',
-                                                   'timezone': 3,
-                                                   'city': {
-                                                       'id': 'uuid',
-                                                       'name': 'str',
-                                                       'region': 'str'},
-                                                   'university': {
-                                                       'id': 'uuid',
-                                                       'name': 'str',
-                                                       'city': {
-                                                           'id': 'uuid',
-                                                           'name': 'str',
-                                                           'region': 'str'}
-                                                   },
-                                                   "faculty": {
-                                                       'id': 'uuid',
-                                                       'name': 'str',
-                                                       'university': 'uuid'
-                                                   },
-                                                   'vkLink': 'str',
-                                                   'skills': [
-                                                       {'id': 'uuid', 'name': 'str'},
-                                                       {'id': 'uuid', 'name': 'str'}]
-                                                   }
+                            'admissionYear': 'int',
+                            'description': 'str',
+                            'emailVisibility': "bool",
+                            'firstName': 'str',
+                            'formOfEducation': 'str',
+                            'id': 'uuid',
+                            'isVerified': 'bool',
+                            'lastName': 'str',
+                            'logoImg': 'bool',
+                            'phone': "str",
+                            'phoneVisibility': 'bool',
+                            'specialty': {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'type': 'str',
+                                'code': 'str'
                             },
-                            "message": "Успешно!"}
+                            'telegramLink': 'str',
+                            'timezone': 3,
+                            'city': {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'region': 'str'},
+                            'university': {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'city': {
+                                    'id': 'uuid',
+                                    'name': 'str',
+                                    'region': 'str'}
+                            },
+                            "faculty": {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'university': 'uuid'
+                            },
+                            'vkLink': 'str',
+                            'skills': [
+                                {'id': 'uuid', 'name': 'str'},
+                                {'id': 'uuid', 'name': 'str'}]
+                        }
+
                     ),
                     OpenApiExample(
                         "Компания Успешно",
                         value={
-                            "data": {
-                                "companyProfile": {
-                                    'linkToCompany': "str",
-                                    "companyName": "str",
-                                    'description': 'str',
-                                    'emailVisibility': "bool",
-                                    'firstName': 'str',
-                                    'id': 'uuid',
-                                    'isVerified': 'bool',
-                                    'lastName': 'str',
-                                    'logoImg': 'bool',
-                                    'phone': 'str',
-                                    'phoneVisibility': 'bool',
-                                    'telegramLink': 'str',
-                                    'timezone': 3,
-                                    'vkLink': 'str',
-                                    'city': {
-                                        'id': 'uuid',
-                                        'name': 'str',
-                                        'region': 'str'}
 
-                                }
-                            },
-                            "message": "Успешно!"}
+                            'linkToCompany': "str",
+                            "companyName": "str",
+                            'description': 'str',
+                            'emailVisibility': "bool",
+                            'firstName': 'str',
+                            'id': 'uuid',
+                            'isVerified': 'bool',
+                            'lastName': 'str',
+                            'logoImg': 'bool',
+                            'phone': 'str',
+                            'phoneVisibility': 'bool',
+                            'telegramLink': 'str',
+                            'timezone': 3,
+                            'vkLink': 'str',
+                            'city': {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'region': 'str'},
+                            'skills': [
+                                {'id': 'uuid', 'name': 'str'},
+                                {'id': 'uuid', 'name': 'str'}]
+
+                        }
+
                     )
                 ]
             ),
@@ -502,8 +483,7 @@ class GetMyProfileView(generics.GenericAPIView):
             user = request.user
             profile = self.profile_classes[user.role].objects.get(user=user)
             serializer = self.profile_serializer_class[user.role](profile)
-            return Response({"data": {self.str_profile_classes[user.role]: serializer.data, "message": "Успешно!"}},
-                            status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -535,74 +515,72 @@ class GetProfileView(generics.GenericAPIView):
                 examples=[
                     OpenApiExample(
                         "Студент Успешно",
-                        value={
-                            "data": {
-                                "studentProfile": {'admissionYear': 'int',
-                                                   'description': 'str',
-                                                   'firstName': 'str',
-                                                   'formOfEducation': 'str',
-                                                   'id': 'uuid',
-                                                   'isVerified': 'bool',
-                                                   'lastName': 'str',
-                                                   'logoImg': 'bool',
-                                                   "phone": "str",
-                                                   'specialty': {
-                                                       'id': 'uuid',
-                                                       'name': 'str',
-                                                       'type': 'str',
-                                                       'code': 'str'
-                                                   },
-                                                   'telegramLink': 'str',
-                                                   'timezone': 3,
-                                                   'city': {
-                                                       'id': 'uuid',
-                                                       'name': 'str',
-                                                       'region': 'str'},
-                                                   'university': {
-                                                       'id': 'uuid',
-                                                       'name': 'str',
-                                                       'city': {
-                                                           'id': 'uuid',
-                                                           'name': 'str',
-                                                           'region': 'str'}
-                                                   },
-                                                   "faculty": {
-                                                       'id': 'uuid',
-                                                       'name': 'str',
-                                                       'university': 'uuid'
-                                                   },
-                                                   'vkLink': 'str',
-                                                   'skills': [
-                                                       {'id': 'uuid', 'name': 'str'},
-                                                       {'id': 'uuid', 'name': 'str'}]
-                                                   }
-                            },
-                            "message": "Успешно!"}
+                        value={'admissionYear': 'int',
+                               'description': 'str',
+                               'firstName': 'str',
+                               'formOfEducation': 'str',
+                               'id': 'uuid',
+                               'isVerified': 'bool',
+                               'lastName': 'str',
+                               'logoImg': 'bool',
+                               "phone": "str",
+                               'specialty': {
+                                   'id': 'uuid',
+                                   'name': 'str',
+                                   'type': 'str',
+                                   'code': 'str'
+                               },
+                               'telegramLink': 'str',
+                               'timezone': 3,
+                               'city': {
+                                   'id': 'uuid',
+                                   'name': 'str',
+                                   'region': 'str'},
+                               'university': {
+                                   'id': 'uuid',
+                                   'name': 'str',
+                                   'city': {
+                                       'id': 'uuid',
+                                       'name': 'str',
+                                       'region': 'str'}
+                               },
+                               "faculty": {
+                                   'id': 'uuid',
+                                   'name': 'str',
+                                   'university': 'uuid'
+                               },
+                               'vkLink': 'str',
+                               'skills': [
+                                   {'id': 'uuid', 'name': 'str'},
+                                   {'id': 'uuid', 'name': 'str'}]
+                               }
+
                     ),
                     OpenApiExample(
                         "Компания Успешно",
                         value={
-                            "data": {
-                                "companyProfile": {
-                                    'linkToCompany': "str",
-                                    "companyName": "str",
-                                    'description': 'str',
-                                    'firstName': 'str',
-                                    'id': 'uuid',
-                                    'isVerified': 'bool',
-                                    'lastName': 'str',
-                                    'logoImg': 'bool',
-                                    'phone': 'str',
-                                    'telegramLink': 'str',
-                                    'timezone': 3,
-                                    'vkLink': 'str',
-                                    'city': {
-                                        'id': 'uuid',
-                                        'name': 'str',
-                                        'region': 'str'},
-                                }
-                            },
-                            "message": "Успешно!"}
+
+                            'linkToCompany': "str",
+                            "companyName": "str",
+                            'description': 'str',
+                            'firstName': 'str',
+                            'id': 'uuid',
+                            'isVerified': 'bool',
+                            'lastName': 'str',
+                            'logoImg': 'bool',
+                            'phone': 'str',
+                            'telegramLink': 'str',
+                            'timezone': 3,
+                            'vkLink': 'str',
+                            'city': {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'region': 'str'},
+                            'skills': [
+                                {'id': 'uuid', 'name': 'str'},
+                                {'id': 'uuid', 'name': 'str'}]
+                        }
+
                     )
                 ]
             ),
@@ -647,11 +625,7 @@ class GetProfileView(generics.GenericAPIView):
             if Email_V:
                 profile_data['email'] = user.email
 
-            return Response({
-                "data": {
-                    self.str_profile_classes[user.role]: profile_data
-                },
-                "message": 'Усппешно!'}, status=status.HTTP_200_OK)
+            return Response(profile_data, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -659,7 +633,7 @@ class GetProfileView(generics.GenericAPIView):
 
 class ChangeLogoImgView(generics.GenericAPIView):
     serializer_class = ChangeLogoImgSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCompanyOrStudentRole]
 
     profile_classes = {
         CustomUser.STUDENT_ROLE: StudentProfile,
@@ -684,10 +658,9 @@ class ChangeLogoImgView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                            "data": {
-                                'logo': 'urlpath'
-                            },
-                            "message": "Изображение профиля успешно изменено!"}
+                            'logo': 'urlpath'
+                        },
+
                     ),
                 ]
             ),
@@ -740,12 +713,7 @@ class ChangeLogoImgView(generics.GenericAPIView):
             profile.logo_img = serializer.validated_data['logo']
             profile.save()
 
-            return Response({
-                "data": {
-                    "logo": profile.logo_img.url
-                },
-                "message": "Изображение профиля успешно изменено"}, status=status.HTTP_200_OK)
-
+            return Response({"logo": profile.logo_img.url}, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -753,7 +721,7 @@ class ChangeLogoImgView(generics.GenericAPIView):
 
 class SendPhoneCodeView(generics.GenericAPIView):
     serializer_class = SendPhoneCodeSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCompanyOrStudentRole]
 
     @extend_schema(
         tags=["Profiles"],
@@ -872,7 +840,7 @@ class SendPhoneCodeView(generics.GenericAPIView):
 
 class SetPhoneView(generics.GenericAPIView):
     serializer_class = SetPhoneSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCompanyOrStudentRole]
     profile_classes = {
         CustomUser.STUDENT_ROLE: StudentProfile,
         CustomUser.COMPANY_ROLE: CompanyProfile
@@ -897,10 +865,8 @@ class SetPhoneView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                            "data": {
-                                'phone': "+79999999999"
-                            },
-                            "message": "Телефон подтвержден!"}
+                            'phone': "+79999999999"
+                        }
                     ),
                 ]
             ),
@@ -958,22 +924,15 @@ class SetPhoneView(generics.GenericAPIView):
             profile.phone = phone_verification_code.phone
             profile.save()
 
-            return Response({
-                "data": {
-                    'phone': profile.phone
-                },
-                "message": "Телефон подтвержден!"}, status=status.HTTP_200_OK)
-
+            return Response({'phone': profile.phone}, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 class EditProfileView(generics.GenericAPIView):
     serializer_class = EditStudentProfileSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCompanyOrStudentRole]
     edit_profile_serializers = {
         CustomUser.STUDENT_ROLE: EditStudentProfileSerializer,
         CustomUser.COMPANY_ROLE: EditCompanyProfileSerializer
@@ -1002,7 +961,11 @@ class EditProfileView(generics.GenericAPIView):
                     "phoneVisibility": True,
                     "emailVisibility": True,
                     "telegramLink": "https://tg.com",
-                    "vkLink": "https://vk.com"
+                    "vkLink": "https://vk.com",
+                    'skills': [
+                        'uuid',
+                        'uuid',
+                    ]
                 },
             ),
             OpenApiExample(
@@ -1013,7 +976,11 @@ class EditProfileView(generics.GenericAPIView):
                     "emailVisibility": True,
                     "telegramLink": "https://tg.com",
                     "vkLink": "https://vk.com",
-                    "linkToCompany": "https://linkTocompany.com"
+                    "linkToCompany": "https://linkTocompany.com",
+                    'skills': [
+                        'uuid',
+                        'uuid',
+                    ]
                 },
             )
         ],
@@ -1024,73 +991,70 @@ class EditProfileView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно Студент",
                         value={
-                            "data": {
-                                'studentProfile': {
-                                    'admissionYear': 'int',
-                                    'description': 'str',
-                                    'firstName': 'str',
-                                    'formOfEducation': 'str',
-                                    'id': 'uuid',
-                                    'isVerified': 'bool',
-                                    'lastName': 'str',
-                                    'logoImg': 'bool',
-                                    'specialty': {
-                                        'id': 'uuid',
-                                        'name': 'str',
-                                        'type': 'str',
-                                        'code': 'str'
-                                    },
-                                    'telegramLink': 'str',
-                                    'timezone': 3,
-                                    'city': {
-                                        'id': 'uuid',
-                                        'name': 'str',
-                                        'region': 'str'},
-                                    'university': {
-                                        'id': 'uuid',
-                                        'name': 'str',
-                                        'city': {
-                                            'id': 'uuid',
-                                            'name': 'str',
-                                            'region': 'str'}
-                                    },
-                                    "faculty": {
-                                        'id': 'uuid',
-                                        'name': 'str',
-                                        'university': 'uuid'
-                                    },
-                                    'vkLink': 'str',
-                                    'skills': [
-                                        {'id': 'uuid', 'name': 'str'},
-                                        {'id': 'uuid', 'name': 'str'}]
-                                }
+                            'admissionYear': 'int',
+                            'description': 'str',
+                            'firstName': 'str',
+                            'formOfEducation': 'str',
+                            'id': 'uuid',
+                            'isVerified': 'bool',
+                            'lastName': 'str',
+                            'logoImg': 'bool',
+                            'specialty': {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'type': 'str',
+                                'code': 'str'
                             },
-                            "message": "Профиль успешно изменен"}
+                            'telegramLink': 'str',
+                            'timezone': 3,
+                            'city': {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'region': 'str'},
+                            'university': {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'city': {
+                                    'id': 'uuid',
+                                    'name': 'str',
+                                    'region': 'str'}
+                            },
+                            "faculty": {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'university': 'uuid'
+                            },
+                            'vkLink': 'str',
+                            'skills': [
+                                {'id': 'uuid', 'name': 'str'},
+                                {'id': 'uuid', 'name': 'str'}]
+                        }
+
                     ),
                     OpenApiExample(
                         "Успешно Компания",
                         value={
-                            "data": {
-                                'companyProfile': {
-                                    'linkToCompany': "str",
-                                    "companyName": "str",
-                                    'description': 'str',
-                                    'firstName': 'str',
-                                    'id': 'uuid',
-                                    'isVerified': 'bool',
-                                    'lastName': 'str',
-                                    'logoImg': 'bool',
-                                    'phone': 'str',
-                                    'telegramLink': 'str',
-                                    'timezone': 3,
-                                    'vkLink': 'str',
-                                    'city': {
-                                        'id': 'uuid',
-                                        'name': 'str',
-                                        'region': 'str'},
-                                }
-                            },
-                            "message": "Профиль успешно изменен"}
+                            'linkToCompany': "str",
+                            "companyName": "str",
+                            'description': 'str',
+                            'firstName': 'str',
+                            'id': 'uuid',
+                            'isVerified': 'bool',
+                            'lastName': 'str',
+                            'logoImg': 'bool',
+                            'phone': 'str',
+                            'telegramLink': 'str',
+                            'timezone': 3,
+                            'vkLink': 'str',
+                            'city': {
+                                'id': 'uuid',
+                                'name': 'str',
+                                'region': 'str'},
+                            'skills': [
+                                {'id': 'uuid', 'name': 'str'},
+                                {'id': 'uuid', 'name': 'str'}]
+                        }
+
                     ),
                 ]
             ),
@@ -1129,12 +1093,7 @@ class EditProfileView(generics.GenericAPIView):
 
             serializer.save()
 
-            return Response({
-                "data": {
-                    self.str_profile_classes[user.role]: self.get_profile_serializers[user.role](profile).data
-                },
-                "message": "Профиль успешно изменен"}, status=status.HTTP_200_OK)
-
+            return Response(self.get_profile_serializers[user.role](profile).data, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -1155,7 +1114,7 @@ class UniversitiesList(generics.ListAPIView):
 
 
 class SkillsList(generics.ListAPIView):
-    queryset = Skill.objects.filter(is_verified=True)
+    queryset = Skill.objects.all()
     serializer_class = SkillSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']

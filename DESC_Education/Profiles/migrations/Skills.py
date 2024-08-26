@@ -1,20 +1,21 @@
 from django.db import migrations
 import requests
 from Settings.env_config import config
-
+import csv
 
 def get_skills(apps, schema_editor):
     Skill = apps.get_model('Profiles', 'Skill')
 
-    skills_data = [
-        {'name': "Python", 'is_verified': True},
-        {'name': "C#", 'is_verified': True},
-        {'name': "C++", 'is_verified': True},
-        {'name': "Photoshop", 'is_verified': True},
-        {'name': "Figma", 'is_verified': True},
-        {'name': "Adobe Illustrator", 'is_verified': True},
-        {'name': "Анимация", 'is_verified': True},
-    ]
+    skills_data = []
+
+    with open('Profiles/migrations/skills.csv', newline='') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        for row in reader:
+            id = row[0]
+            name = row[1]
+            skills_data.append({"id": id, "name": name})
+
+
 
     skills = [Skill(**data) for data in skills_data]
 

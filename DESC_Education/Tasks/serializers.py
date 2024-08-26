@@ -12,19 +12,38 @@ class FilterSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
+class TaskDetailSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Task
+        fields = '__all__'
+        read_only_fields = ['id', 'user', 'deadline']
+
+    def __init__(self, *args, **kwargs):
+        super(TaskDetailSerializer, self).__init__(*args, **kwargs)
+        request = self.context.get('request')
+
+        if request and request.method == 'PATCH':
+            for field in self.fields:
+                self.fields[field].required = False
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        if request and request.method == 'PATCH':
+            if not attrs:
+                raise serializers.ValidationError({"data": "Необходимо передать хотя бы одно поле для изменения."})
+
+        return attrs
+
+
+
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = '__all__'
         read_only_fields = ['id', 'user']
 
-
-    def update(self, instance, validated_data):
-        for field in ['title', 'description', 'deadline']:
-            if field in validated_data:
-                setattr(instance, field, validated_data[field])
-        instance.save()
-        return instance
 
 
 

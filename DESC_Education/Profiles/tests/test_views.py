@@ -1,4 +1,5 @@
 import random
+import uuid
 
 import rest_framework.generics
 from django.urls import reverse
@@ -26,7 +27,7 @@ from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
 from Profiles.serializers import (
     CreateCompanyProfileSerializer,
-    CreateStudentProfileSerializer,
+    StudentProfileSerializer,
     UniversitySerializer,
     SkillSerializer,
     FacultySerializer,
@@ -109,7 +110,7 @@ class CreateProfileViewTest(APITestCase):
             "faculty": str(self.faculty.id),
             "city": str(self.city.id),
             "files": [self.create_test_image()],
-            "skills_ids": skills_ids
+            "skills": skills_ids
         }
 
         self.company_example_data = {
@@ -124,13 +125,15 @@ class CreateProfileViewTest(APITestCase):
             "companyName": "Test Company",
             'linkToCompany': "https://link.com/",
             "city": str(self.city.id),
-            'files': [self.create_test_image() for _ in range(6)]
+            'files': [self.create_test_image() for _ in range(6)],
+            "skills": skills_ids
         }
 
-    def test_create_student_profile_200(self):
+    def test_create_student_profile_201(self):
         res = self.client.post(reverse('profile_create'),
                                data=self.student_example_data,
                                headers={"Authorization": f"Bearer {self.token}"})
+
         profile: StudentProfile = StudentProfile.objects.first()
 
         expected_data = self.student_example_data
@@ -139,7 +142,7 @@ class CreateProfileViewTest(APITestCase):
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         files = expected_data.pop('files')
-        skills_ids = expected_data.pop('skills_ids')
+        skills = expected_data.pop('skills')
         expected_skill_names = set()
         for i in self.skills:
             expected_skill_names.add(i.get('name'))
@@ -150,24 +153,24 @@ class CreateProfileViewTest(APITestCase):
         expected_data['city'] = dict(CitySerializer(self.city).data)
 
         faculty = dict(FacultySerializer(self.faculty).data)
-        faculty['university'] = str(faculty.get('university'))
+        faculty['university'] = faculty.get('university')
         expected_data['faculty'] = faculty
 
-        result = json.loads(res.content).get("data").get("studentProfile")
+        result = dict(res.data)
         res_skills_names = set()
         for i in result.get("skills"):
             res_skills_names.add(i.get('name'))
         result['skills'] = res_skills_names
         self.assertEqual(result, expected_data)
         self.assertEqual(len(files), profile.verification_files.count())
-        self.assertEqual(profile.skills.count(), len(skills_ids))
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(profile.skills.count(), len(skills))
+        self.assertEqual(res.status_code, 201)
         v_request: ProfileVerifyRequest = ProfileVerifyRequest.objects.first()
 
         self.assertEqual(v_request.profile, profile)
         self.assertEqual(v_request.status, v_request.PENDING)
 
-    def test_create_company_profile_200(self):
+    def test_create_company_profile_201(self):
         res = self.client.post(reverse('profile_create'),
                                data=self.company_example_data,
                                format='multipart',
@@ -181,17 +184,29 @@ class CreateProfileViewTest(APITestCase):
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         expected_data['city'] = dict(CitySerializer(self.city).data)
+        skills = expected_data.pop('skills')
+        expected_skill_names = set()
+        for i in self.skills:
+            expected_skill_names.add(i.get('name'))
+        expected_data['skills'] = expected_skill_names
         files = expected_data.pop('files')
 
+        result = dict(res.data)
+        res_skills_names = set()
+        for i in result.get("skills"):
+            res_skills_names.add(i.get('name'))
+        result['skills'] = res_skills_names
+        self.assertEqual(result, expected_data)
+
         self.assertEqual(len(files), profile.verification_files.count())
-        self.assertEqual(json.loads(res.content).get("data").get("companyProfile"), expected_data)
-        self.assertEqual(res.status_code, 200)
+
+        self.assertEqual(res.status_code, 201)
 
     def test_student_duplicate_405(self, ):
         example_data = self.student_example_data.copy()
         example_data['studentCard'] = self.create_test_image()
 
-        self.test_create_student_profile_200()
+        self.test_create_student_profile_201()
         res = self.client.post(reverse("profile_create"),
                                data=example_data,
                                headers={"Authorization": f"Bearer {self.token}"},
@@ -204,7 +219,7 @@ class CreateProfileViewTest(APITestCase):
         example_data = self.student_example_data.copy()
         example_data['firstName'] = "newFIrstName"
 
-        self.test_create_student_profile_200()
+        self.test_create_student_profile_201()
         ProfileVerifyRequest.objects.filter(object_id=StudentProfile.objects.first().id) \
             .update(status=ProfileVerifyRequest.REJECTED)
 
@@ -221,7 +236,7 @@ class CreateProfileViewTest(APITestCase):
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         expected_data.pop('files')
-        expected_data.pop('skills_ids')
+        expected_data.pop('skills')
         expected_skill_names = set()
         for i in self.skills:
             expected_skill_names.add(i.get('name'))
@@ -230,24 +245,23 @@ class CreateProfileViewTest(APITestCase):
         expected_data['specialty'] = dict(SpecialtySerializer(self.specialty).data)
         expected_data['city'] = dict(CitySerializer(self.city).data)
         faculty = dict(FacultySerializer(self.faculty).data)
-        faculty['university'] = str(faculty.get('university'))
+        faculty['university'] = faculty.get('university')
         expected_data['faculty'] = faculty
         expected_data['formOfEducation'] = profile.get_form_of_education_display()
 
-        result = json.loads(res.content).get("data").get("studentProfile")
+        result = dict(res.data)
         res_skills_names = set()
         for i in result.get("skills"):
             res_skills_names.add(i.get('name'))
         result['skills'] = res_skills_names
         self.assertEqual(result, expected_data)
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.data.get('message'), 'Профиль создан и отправлен на проверку!')
+        self.assertEqual(res.status_code, 201)
 
     def test_company_rejected_200(self, ):
         example_data = self.company_example_data.copy()
         example_data['firstName'] = "newFIrstName"
 
-        self.test_create_company_profile_200()
+        self.test_create_company_profile_201()
         ProfileVerifyRequest.objects.filter(object_id=CompanyProfile.objects.first().id) \
             .update(status=ProfileVerifyRequest.REJECTED)
 
@@ -264,16 +278,28 @@ class CreateProfileViewTest(APITestCase):
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         expected_data['city'] = dict(CitySerializer(self.city).data)
+        skills = expected_data.pop('skills')
+        expected_skill_names = set()
+        for i in self.skills:
+            expected_skill_names.add(i.get('name'))
+        expected_data['skills'] = expected_skill_names
         expected_data.pop("files")
 
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.data.get('message'), 'Профиль создан и отправлен на проверку!')
-        self.assertEqual(json.loads(res.content).get("data").get("companyProfile"), expected_data)
+
+        result = dict(res.data)
+        res_skills_names = set()
+        for i in result.get("skills"):
+            res_skills_names.add(i.get('name'))
+        result['skills'] = res_skills_names
+
+        self.assertEqual(result, expected_data)
+        self.assertEqual(res.status_code, 201)
+
 
     def test_company_not_verified_405(self, ):
         example_data = self.company_example_data.copy()
 
-        self.test_create_company_profile_200()
+        self.test_create_company_profile_201()
         res = self.client.post(reverse("profile_create"),
                                data=example_data,
                                headers={"Authorization": f"Bearer {self.company_token}"},
@@ -284,7 +310,7 @@ class CreateProfileViewTest(APITestCase):
 
     def test_company_verified_405(self, ):
         example_data = self.company_example_data.copy()
-        self.test_create_company_profile_200()
+        self.test_create_company_profile_201()
         profile = CompanyProfile.objects.first()
         profile.is_verified = True
         profile.save()
@@ -302,7 +328,7 @@ class CreateProfileViewTest(APITestCase):
                                headers={"Authorization": f"Bearer {self.admin_token}"})
 
         self.assertEqual(res.status_code, 403)
-        self.assertEqual(res.data.get('message'), 'Вы можете создать профиль только для студента или компании!')
+
 
 
 class GetMyProfileTest(APITestCase):
@@ -322,10 +348,10 @@ class GetMyProfileTest(APITestCase):
                               headers={"Authorization": f"Bearer {self.token}"})
 
         profile = StudentProfile.objects.get()
-        expected_data = dict(CreateStudentProfileSerializer(profile).data)
+        expected_data = dict(StudentProfileSerializer(profile).data)
         expected_data['skills'] = []
 
-        self.assertEqual(json.loads(res.content).get('data').get('studentProfile'), expected_data)
+        self.assertEqual(dict(res.data), expected_data)
         self.assertEqual(res.status_code, 200)
 
 
@@ -383,7 +409,7 @@ class GetProfileTest(APITestCase):
             "faculty": str(self.faculty.id),
             "city": str(self.city.id),
             "files": [self.create_test_image()],
-            "skills_ids": skills_ids
+            "skills": skills_ids
         }
 
     def test_get_profile_200(self):
@@ -407,7 +433,7 @@ class GetProfileTest(APITestCase):
         expected_data.pop('phoneVisibility')
 
         expected_data.pop('files')
-        expected_data.pop('skills_ids')
+        expected_data.pop('skills')
         expected_skill_names = set()
         for i in self.skills:
             expected_skill_names.add(i.get('name'))
@@ -415,17 +441,18 @@ class GetProfileTest(APITestCase):
         expected_data['university'] = dict(UniversitySerializer(self.university).data)
         expected_data['specialty'] = dict(SpecialtySerializer(self.specialty).data)
         faculty = dict(FacultySerializer(self.faculty).data)
-        faculty['university'] = str(faculty.get('university'))
+        faculty['university'] = faculty.get('university')
         expected_data['city'] = dict(CitySerializer(self.city).data)
         expected_data['faculty'] = faculty
         expected_data['formOfEducation'] = profile.get_form_of_education_display()
 
-        result = json.loads(res.content).get("data").get("studentProfile")
+        result = dict(res.data)
 
         res_skills_names = set()
         for i in result.get("skills"):
             res_skills_names.add(i.get('name'))
         result['skills'] = res_skills_names
+
         self.assertEqual(result, expected_data)
         self.assertEqual(res.status_code, 200)
 
@@ -466,9 +493,9 @@ class UniversitiesListTest(APITestCase):
 class SkillListTest(APITestCase):
     def setUp(self):
         Skill.objects.all().delete()
-        Skill.objects.create(name='Python', is_verified=True)
-        Skill.objects.create(name='C#', is_verified=True)
-        Skill.objects.create(name='Illustrator', is_verified=True)
+        Skill.objects.create(name='Python')
+        Skill.objects.create(name='C#')
+        Skill.objects.create(name='Illustrator')
 
     def test_get(self):
         res = self.client.get(reverse('skills_list'), {'search': "ill"})
@@ -585,7 +612,7 @@ class ChangeLogoImgViewTest(APITestCase):
                                HTTP_AUTHORIZATION='Bearer ' + self.token)
         profile = StudentProfile.objects.get(user=self.user)
 
-        self.assertEqual(f'logo_imgs/{self.image}', profile.logo_img)
+        self.assertEqual(f'/api/media/users/{profile.user.id}/logo/{self.image}', profile.logo_img.url)
         self.assertEqual(res.status_code, 200)
 
 
@@ -660,7 +687,7 @@ class SetPhoneView(APITestCase):
         res = self.client.post(reverse('set_phone'), {'phone': '+79876543210', 'code': 101010},
                                HTTP_AUTHORIZATION='Bearer ' + self.token)
 
-        self.assertEqual(res.data.get('data').get('phone'), '+79876543210')
+        self.assertEqual(res.data.get('phone'), '+79876543210')
         self.assertEqual(res.status_code, 200)
 
     def test_student_incorrect_phone_404(self):
@@ -674,7 +701,7 @@ class SetPhoneView(APITestCase):
         res = self.client.post(reverse('set_phone'), {'phone': '+71876543210', 'code': 101010},
                                HTTP_AUTHORIZATION='Bearer ' + self.company_token)
 
-        self.assertEqual(res.data.get('data').get('phone'), '+71876543210')
+        self.assertEqual(res.data.get('phone'), '+71876543210')
         self.assertEqual(res.status_code, 200)
 
 
@@ -700,21 +727,21 @@ class EditProfileViewTest(APITestCase):
                                {'vkLink': 'https://vk.com'},
                                HTTP_AUTHORIZATION='Bearer ' + self.student_token)
 
-        self.assertEqual(json.loads(res.content).get('data').get('studentProfile').get('vkLink'), 'https://vk.com')
+        self.assertEqual(dict(res.data).get('vkLink'), 'https://vk.com')
         self.assertEqual(res.status_code, 200)
 
         res = self.client.post(reverse('profile_edit'),
                                {'telegramLink': 'https://tg.com'},
                                HTTP_AUTHORIZATION='Bearer ' + self.student_token)
 
-        self.assertEqual(json.loads(res.content).get('data').get('studentProfile').get('telegramLink'), 'https://tg.com')
+        self.assertEqual(dict(res.data).get('telegramLink'), 'https://tg.com')
         self.assertEqual(res.status_code, 200)
 
         res = self.client.post(reverse('profile_edit'),
                                {'emailVisibility': False},
                                HTTP_AUTHORIZATION='Bearer ' + self.student_token)
 
-        self.assertEqual(json.loads(res.content).get('data').get('studentProfile').get('emailVisibility'),
+        self.assertEqual(dict(res.data).get('emailVisibility'),
                          False)
         self.assertEqual(res.status_code, 200)
 
@@ -722,7 +749,7 @@ class EditProfileViewTest(APITestCase):
                                {'phoneVisibility': False},
                                HTTP_AUTHORIZATION='Bearer ' + self.student_token)
 
-        self.assertEqual(json.loads(res.content).get('data').get('studentProfile').get('phoneVisibility'),
+        self.assertEqual(dict(res.data).get('phoneVisibility'),
                          False)
         self.assertEqual(res.status_code, 200)
 
@@ -732,21 +759,23 @@ class EditProfileViewTest(APITestCase):
                                {'vkLink': 'https://vk.com'},
                                HTTP_AUTHORIZATION='Bearer ' + self.company_token)
 
-        self.assertEqual(json.loads(res.content).get('data').get('companyProfile').get('vkLink'), 'https://vk.com')
+
+
+        self.assertEqual(res.data.get('vkLink'), 'https://vk.com')
         self.assertEqual(res.status_code, 200)
 
         res = self.client.post(reverse('profile_edit'),
                                {'telegramLink': 'https://tg.com'},
                                HTTP_AUTHORIZATION='Bearer ' + self.company_token)
 
-        self.assertEqual(json.loads(res.content).get('data').get('companyProfile').get('telegramLink'), 'https://tg.com')
+        self.assertEqual(dict(res.data).get('telegramLink'), 'https://tg.com')
         self.assertEqual(res.status_code, 200)
 
         res = self.client.post(reverse('profile_edit'),
                                {'emailVisibility': False},
                                HTTP_AUTHORIZATION='Bearer ' + self.company_token)
 
-        self.assertEqual(json.loads(res.content).get('data').get('companyProfile').get('emailVisibility'),
+        self.assertEqual(dict(res.data).get('emailVisibility'),
                          False)
         self.assertEqual(res.status_code, 200)
 
@@ -754,7 +783,7 @@ class EditProfileViewTest(APITestCase):
                                {'phoneVisibility': False},
                                HTTP_AUTHORIZATION='Bearer ' + self.company_token)
 
-        self.assertEqual(json.loads(res.content).get('data').get('companyProfile').get('phoneVisibility'),
+        self.assertEqual(dict(res.data).get('phoneVisibility'),
                          False)
         self.assertEqual(res.status_code, 200)
 
@@ -762,7 +791,7 @@ class EditProfileViewTest(APITestCase):
                                {'linkToCompany': 'https://linktocompany.com'},
                                HTTP_AUTHORIZATION='Bearer ' + self.company_token)
 
-        self.assertEqual(json.loads(res.content).get('data').get('companyProfile').get('linkToCompany'),
+        self.assertEqual(dict(res.data).get('linkToCompany'),
                          'https://linktocompany.com')
         self.assertEqual(res.status_code, 200)
 
@@ -770,7 +799,7 @@ class EditProfileViewTest(APITestCase):
                                {'firstName': 'Andrew'},
                                HTTP_AUTHORIZATION='Bearer ' + self.company_token)
 
-        self.assertEqual(json.loads(res.content).get('data').get('companyProfile').get('firstName'),
+        self.assertEqual(dict(res.data).get('firstName'),
                          '')
         self.assertEqual(res.status_code, 200)
 

@@ -9,7 +9,7 @@ from django.apps import apps
 
 
 def user_task_directory_path(instance, filename):
-    return ''
+    return f'users/{instance.user.id}/tasks/{instance.id}/{filename}'
 
 
 class Task(models.Model):
@@ -18,7 +18,7 @@ class Task(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField(max_length=2000)
     deadline = models.DateTimeField()
-    file = models.FileField()
+    file = models.FileField(upload_to=user_task_directory_path)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
 
     def __str__(self):
