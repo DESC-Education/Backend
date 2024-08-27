@@ -26,6 +26,7 @@ COPY mediafiles /usr/src/mediafiles
 
 CMD python manage.py makemigrations \
     && python manage.py migrate \
+    && python manage.py collectstatic \
 #    && python manage.py test\
 #    && python manage.py runserver 0.0.0.0:4000
     && gunicorn Settings.wsgi:application -c gunicorn_conf.py
