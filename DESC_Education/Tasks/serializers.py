@@ -45,17 +45,21 @@ class TaskSerializer(serializers.ModelSerializer):
 
 
 class ProfileTaskSerializer(serializers.ModelSerializer):
+    companyName = serializers.CharField(source='company_name', read_only=True)
+    logoImg = serializers.ImageField(source='logo_img', read_only=True)
+
     class Meta:
         model = apps.get_model('Profiles', 'CompanyProfile')
-        fields = ('company_name', 'logo_img')
+        fields = ('companyName', 'logoImg')
 
 
 class TaskListSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
+    createdAt = serializers.DateTimeField(source='created_at')
 
     class Meta:
         model = Task
-        fields = ('title', 'description', 'deadline', 'created_at', 'profile')
+        fields = ('title', 'description', 'deadline', 'createdAt', 'profile')
 
     @staticmethod
     def get_profile(obj):
