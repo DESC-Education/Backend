@@ -26,8 +26,8 @@ COPY DESC_Education /usr/src/app/
 CMD python manage.py makemigrations \
     && python manage.py migrate \
 #    && python manage.py test\
-    && python manage.py runserver 0.0.0.0:4000
-
+#    && python manage.py runserver 0.0.0.0:4000
+    && gunicorn Settings.wsgi:application -c gunicorn_conf.py
 
 
 
