@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from django.conf import settings
+from django.apps import apps
 from Tasks.models import (
     Filter,
     Category,
@@ -12,9 +14,7 @@ class FilterSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
 class TaskDetailSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Task
         fields = '__all__'
@@ -37,7 +37,6 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         return attrs
 
 
-
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
@@ -45,6 +44,26 @@ class TaskSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user']
 
 
+class ProfileTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = apps.get_model('Profiles', 'CompanyProfile')
+        fields = ('company_name', 'logo_img')
+
+
+class TaskListSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Task
+        fields = ('title', 'description', 'deadline', 'created_at', 'profile')
+
+    @staticmethod
+    def get_profile(obj):
+        try:
+            profile = apps.get_model('Profiles', 'CompanyProfile').objects.get(user=obj.user)
+            return ProfileTaskSerializer(profile).data
+        except:
+            return None
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -53,5 +72,3 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
-
-
