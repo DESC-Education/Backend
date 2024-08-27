@@ -183,6 +183,12 @@ MEDIA_URL = '/api/media/'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
+ADMINS = (
+    ('admin', 'yaroslavpavlenko2@gmail.com'),
+    # ('admin', 'yaroslavpavlenko2@gmail.com'),
+)
+
+
 EMAIL_HOST = 'smtp.yandex.ru'
 EMAIL_PORT = 465
 EMAIL_HOST_USER = config.EMAIL_USER.get_secret_value()
@@ -205,3 +211,46 @@ if 'test' in sys.argv:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'gunicorn_format': {
+            'format': '[%(asctime)s] [%(process)d] [%(levelname)s] %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        }
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'gunicorn_format',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            # 'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+            'include_html': True,
+        },
+    },
+    'loggers': {
+        "django": {
+            'handlers': ["console", 'mail_admins'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        "": {
+            'handlers': ["console", 'mail_admins'],
+            'level': 'INFO',
+            'propagate': False,
+        }
+    },
+    'root': {
+        'level': 'INFO',
+        'handlers': ["console", 'mail_admins'],
+        'propagate': False,
+    },
+
+}
