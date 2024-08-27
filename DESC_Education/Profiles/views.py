@@ -28,6 +28,7 @@ from Profiles.serializers import (
     UniversitySerializer,
     SkillSerializer,
     CitySerializer,
+    SpecialtySerializer,
     FacultySerializer,
     ChangeLogoImgSerializer,
     SendPhoneCodeSerializer,
@@ -1143,7 +1144,7 @@ class CitiesList(generics.ListAPIView):
 
 class SpecialtiesList(generics.ListAPIView):
     queryset = Specialty.objects.all()
-    serializer_class = CitySerializer
+    serializer_class = SpecialtySerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'code']
 

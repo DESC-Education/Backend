@@ -94,7 +94,7 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'Settings.pagination.CustomPageNumberPagination',
     'PAGE_SIZE': 50,
 
 }
@@ -117,7 +117,7 @@ SPECTACULAR_SETTINGS = {
     # OTHER SETTINGS
 }
 
-NEW_RELIC_CONFIG_FILE = '/Settings/newrelic.ini'
+
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
