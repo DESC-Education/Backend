@@ -2,19 +2,25 @@ from rest_framework import serializers
 from django.conf import settings
 from django.apps import apps
 from Tasks.models import (
+    TaskCategory,
+    FilterCategory,
     Filter,
-    Category,
-    Task
+    Task,
+
 )
 
 
 class FilterSerializer(serializers.ModelSerializer):
+    filterCategory = serializers.CharField(source='filter_category')
+
     class Meta:
         model = Filter
-        fields = '__all__'
+        fields = ('id', 'name', 'filterCategory')
 
 
 class TaskDetailSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(queryset=TaskCategory.objects.all(), )
+
     class Meta:
         model = Task
         fields = '__all__'
@@ -37,7 +43,26 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class TaskCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskCategory
+        fields = '__all__'
+
+
+class TaskCreateSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(queryset=TaskCategory.objects.all(), )
+    filters = serializers.PrimaryKeyRelatedField(queryset=Filter.objects.all(), many=True)
+
+    class Meta:
+        model = Task
+        fields = '__all__'
+        read_only_fields = ['id', 'user']
+
+
 class TaskSerializer(serializers.ModelSerializer):
+    category = TaskCategorySerializer(read_only=True)
+    filters = FilterSerializer(many=True, read_only=True)
+
     class Meta:
         model = Task
         fields = '__all__'
@@ -59,7 +84,7 @@ class TaskListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ('title', 'description', 'deadline', 'createdAt', 'profile')
+        fields = ('title', 'description', 'deadline', 'createdAt', 'profile', 'category')
 
     @staticmethod
     def get_profile(obj):
@@ -68,11 +93,3 @@ class TaskListSerializer(serializers.ModelSerializer):
             return ProfileTaskSerializer(profile).data
         except:
             return None
-
-
-class CategorySerializer(serializers.ModelSerializer):
-    filters = FilterSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Category
-        fields = '__all__'

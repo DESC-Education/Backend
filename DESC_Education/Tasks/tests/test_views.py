@@ -11,11 +11,15 @@ from io import BytesIO
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
 from Tasks.models import (
-    Task
+    Task,
+    TaskCategory,
+    FilterCategory,
+    Filter
 )
 
 from Tasks.serializers import (
-    TaskSerializer
+    TaskSerializer,
+    TaskCategorySerializer
 )
 
 
@@ -32,11 +36,12 @@ class TaskViewTest(APITestCase):
         expected_data.user = str(self.company.id)
         expected_data.is_valid()
         expected_data = dict(expected_data.data)
-        expected_data["file"] = f"http://testserver{expected_data.get('file')}"
+
         return expected_data
 
 
     def setUp(self):
+        self.maxDiff = None
         self.student = CustomUser.objects.create_user(
             email='example@example.com',
             password='password',
@@ -58,11 +63,25 @@ class TaskViewTest(APITestCase):
         )
         self.company_token = self.company.get_token()['accessToken']
 
+
+        task_category = TaskCategory.objects.first()
+        filter_category: FilterCategory = FilterCategory.objects.create(
+            name="Языки прогрмирования",
+        )
+        filter_category.task_category.add(task_category)
+        filter_python: Filter = Filter.objects.create(
+            name="Python",
+            filter_category=filter_category
+        )
+
         self.example_data = {
             "title": "Test Task",
             "description": "Test Task Description",
             "deadline": (timezone.now() + timezone.timedelta(days=1)).isoformat(),
-            'file': self.create_test_image()
+            'file': self.create_test_image(),
+            'category': task_category.id,
+            'filters': [filter_python.id, ]
+
         }
 
     def test_student_403(self):
@@ -79,11 +98,15 @@ class TaskViewTest(APITestCase):
                                self.example_data,
                                HTTP_AUTHORIZATION='Bearer ' + self.company_token)
 
+        import pprint
+        pprint.pprint(dict(res.data))
+
         task = Task.objects.first()
 
         expected_data = self.get_expected_data(task)
 
         res_data = json.loads(res.content)
+
         res_data['user'] = uuid.UUID(res_data.get('user'))
 
         self.assertEqual(res_data, expected_data)

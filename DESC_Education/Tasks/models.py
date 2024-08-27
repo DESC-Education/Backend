@@ -9,6 +9,41 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.apps import apps
 
 
+class TaskCategory(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['-id']
+
+
+class FilterCategory(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    task_category = models.ManyToManyField(TaskCategory, related_name='filter_categories')
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['-id']
+
+
+class Filter(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    filter_category = models.ForeignKey(FilterCategory, related_name='filters', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['-id']
+
+
 def user_task_directory_path(instance, filename):
     return f'users/{instance.user.id}/tasks/{instance.id}/{filename}'
 
@@ -22,33 +57,11 @@ class Task(models.Model):
     file = models.FileField(upload_to=user_task_directory_path)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
 
+    category = models.ForeignKey(TaskCategory, on_delete=models.CASCADE, related_name='tasks')
+    filters = models.ManyToManyField(Filter, related_name='tasks', blank=True)
+
     def __str__(self):
         return self.title
 
     class Meta:
         ordering = ['-created_at']
-
-
-class Category(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
-    name = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ['-id']
-
-
-class Filter(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
-    category = models.ForeignKey(Category, related_name='filters', on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ['-id']
-
-
