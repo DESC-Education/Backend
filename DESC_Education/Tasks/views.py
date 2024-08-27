@@ -11,19 +11,18 @@ from Settings.pagination import CustomPageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from Tasks.serializers import (
-    CategorySerializer,
     TaskSerializer,
     TaskDetailSerializer,
-    TaskListSerializer
+    TaskListSerializer,
+    TaskCreateSerializer
 )
 from Tasks.models import (
-    Category,
     Task
 )
 
 
 class TaskView(generics.GenericAPIView):
-    serializer_class = TaskSerializer
+    serializer_class = TaskCreateSerializer
     permission_classes = [IsCompanyRole]
 
     @extend_schema(
@@ -34,8 +33,9 @@ class TaskView(generics.GenericAPIView):
         try:
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            instance = serializer.save(user=request.user)
+
+            return Response(TaskSerializer(instance).data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -72,8 +72,8 @@ class TaskDetailView(generics.GenericAPIView):
             self.check_object_permissions(request, instance)
             serializer = self.get_serializer(data=request.data, instance=instance)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            instance = serializer.save()
 
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(TaskSerializer(instance).data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
