@@ -18,7 +18,8 @@ RUN pip install -r requirements.txt
 
 COPY DESC_Education /usr/src/app/
 
-
+COPY static /usr/src/static
+COPY mediafiles /usr/src/mediafiles
 
 
 
