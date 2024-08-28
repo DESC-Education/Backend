@@ -14,4 +14,4 @@ requests==2.32.3
 dj-inmemorystorage==2.1.0
 django-filter==24.3
 django-silk==5.2.0
-
+sentry-sdk==2.13.0
