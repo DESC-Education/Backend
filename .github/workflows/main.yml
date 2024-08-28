@@ -21,6 +21,7 @@ jobs:
       BROKER_PASSWORD: rmpassword
       EMAIL_USER: ${{ secrets.TEST_EMAIL_USER }}
       EMAIL_PASSWORD: ${{ secrets.TEST_EMAIL_PASSWORD}}
+      SENTRY_ENV: test
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
