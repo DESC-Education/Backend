@@ -79,7 +79,7 @@ class TaskViewTest(APITestCase):
             "description": "Test Task Description",
             "deadline": (timezone.now() + timezone.timedelta(days=1)).isoformat(),
             'file': self.create_test_image(),
-            'category': task_category.id,
+            'categoryId': task_category.id,
             'filters': [filter_python.id, ]
 
         }
@@ -98,9 +98,6 @@ class TaskViewTest(APITestCase):
                                self.example_data,
                                HTTP_AUTHORIZATION='Bearer ' + self.company_token)
 
-        import pprint
-        pprint.pprint(dict(res.data))
-
         task = Task.objects.first()
 
         expected_data = self.get_expected_data(task)
@@ -116,7 +113,7 @@ class TaskViewTest(APITestCase):
         self.test_create_task_200()
         task = Task.objects.first()
 
-        another_company_put = self.client.patch(reverse('task_edit',
+        another_company_put = self.client.patch(reverse('task_detail',
                                                         kwargs={'pk': task.id}),
                                                 {'title': "new Title"},
                                                 HTTP_AUTHORIZATION='Bearer ' + self.another_company_token)
@@ -131,7 +128,7 @@ class TaskViewTest(APITestCase):
         task = Task.objects.first()
 
 
-        test_put = self.client.patch(reverse('task_edit',
+        test_put = self.client.patch(reverse('task_detail',
                                              kwargs={'pk': task.id}),
                                      {'title': "new Title"},
                                      HTTP_AUTHORIZATION='Bearer ' + self.company_token, )
@@ -143,5 +140,74 @@ class TaskViewTest(APITestCase):
         expected_data['title'] = 'new Title'
         self.assertEqual(put_res, expected_data)
         self.assertEqual(test_put.status_code, 200)
+
+
+class TaskDetailViewTest(APITestCase):
+
+    def get_expected_data(self, task):
+        expected_data = TaskSerializer(data=self.example_data, instance=task)
+        expected_data.user = str(self.company.id)
+        expected_data.is_valid(raise_exception=True)
+        expected_data = dict(expected_data.data)
+
+        return expected_data
+
+    @staticmethod
+    def create_test_image():
+        bts = BytesIO()
+        img = Image.new("RGB", (100, 100))
+        img.save(bts, 'jpeg')
+        return SimpleUploadedFile(f"test_{random.randint(1, 25)}.jpg", bts.getvalue())
+    def setUp(self):
+        self.maxDiff = None
+        self.company = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+
+        self.company_token = self.company.get_token()['accessToken']
+
+        self.example_data = {
+            "title": "Test Task",
+            "description": "Test Task Description",
+            "deadline": (timezone.now() + timezone.timedelta(days=1)).isoformat(),
+            'file': self.create_test_image(),
+            "categoryId": TaskCategory.objects.first().id
+        }
+        self.task = Task.objects.create(
+            user=self.company,
+            title=self.example_data['title'],
+            description=self.example_data['description'],
+            deadline=self.example_data['deadline'],
+            file=self.example_data['file'],
+            category=TaskCategory.objects.first()
+        )
+
+
+    def test_get_200(self):
+        res = self.client.get(reverse('task_detail', kwargs={'pk': self.task.id}),
+                              HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
+
+        task = Task.objects.first()
+        expected_data = self.get_expected_data(task)
+
+
+        self.assertEqual(dict(res.data), expected_data)
+        self.assertEqual(res.status_code, 200)
+
+    def test_get_400(self):
+        task_id = list(str(self.task.id))
+        t = task_id[-1]
+        task_id[-1] = task_id[0]
+        task_id[0] = t
+        task_id = ''.join(task_id)
+
+        res = self.client.get(reverse('task_detail', kwargs={'pk': task_id}),
+                              HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
+
+        self.assertEqual(dict(res.data).get('detail'), 'No Task matches the given query.')
+        self.assertEqual(res.status_code, 404)
 
 

@@ -5,8 +5,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
-
-
+import time
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+import logging
 from Users.models import (
     CustomUser,
     VerificationCode,
@@ -221,10 +222,14 @@ class RegistrationView(generics.GenericAPIView):
             password = serializer.validated_data['password']
             role = serializer.validated_data['role']
 
-            if len(CustomUser.objects.filter(email=email)) != 0:
+            try:
+                CustomUser.objects.get(email=email)
                 return Response(
-                    {'message': 'Адрес электронной почты уже зарегистрирован'},
-                    status=status.HTTP_406_NOT_ACCEPTABLE)
+                        {'message': 'Адрес электронной почты уже зарегистрирован'},
+                        status=status.HTTP_406_NOT_ACCEPTABLE)
+            except ObjectDoesNotExist:
+                pass
+
 
             user = CustomUser.objects.create_user(
                 email=email,
