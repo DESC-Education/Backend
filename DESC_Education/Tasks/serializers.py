@@ -6,7 +6,6 @@ from Tasks.models import (
     FilterCategory,
     Filter,
     Task,
-
 )
 
 
@@ -18,21 +17,51 @@ class FilterSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'filterCategory')
 
 
-class TaskDetailSerializer(serializers.ModelSerializer):
-    category = serializers.PrimaryKeyRelatedField(queryset=TaskCategory.objects.all(), )
+
+class TaskCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskCategory
+        fields = '__all__'
+
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    filtersId = serializers.PrimaryKeyRelatedField(source="filters", queryset=Filter.objects.all(),
+                                                   many=True, required=False, write_only=True)
+    categoryId = serializers.PrimaryKeyRelatedField(source="category", queryset=TaskCategory.objects.all(),
+                                                    write_only=True)
+    category = TaskCategorySerializer(read_only=True)
+    filters = FilterSerializer(many=True, read_only=True)
+    profile = serializers.SerializerMethodField(read_only=True)
+    createdAt = serializers.DateTimeField(source='created_at', read_only=True)
+
+
 
     class Meta:
         model = Task
-        fields = '__all__'
-        read_only_fields = ['id', 'user', 'deadline']
+        fields = ('id', 'user', 'createdAt', 'title', 'description', 'deadline', 'file', 'category',
+                  'filters', 'profile', "categoryId", "filtersId")
+        read_only_fields = ['id', 'user']
+
+    @staticmethod
+    def get_profile(obj):
+        try:
+            profile = apps.get_model('Profiles', 'CompanyProfile').objects.get(user=obj.user)
+            return ProfileTaskSerializer(profile).data
+        except:
+            return None
 
     def __init__(self, *args, **kwargs):
-        super(TaskDetailSerializer, self).__init__(*args, **kwargs)
+        super(TaskSerializer, self).__init__(*args, **kwargs)
         request = self.context.get('request')
 
         if request and request.method == 'PATCH':
             for field in self.fields:
                 self.fields[field].required = False
+        if request and request.method == 'GET':
+            for field in self.fields:
+                self.fields[field].required = False
+
 
     def validate(self, attrs):
         request = self.context.get('request')
@@ -41,32 +70,6 @@ class TaskDetailSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"data": "Необходимо передать хотя бы одно поле для изменения."})
 
         return attrs
-
-
-class TaskCategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TaskCategory
-        fields = '__all__'
-
-
-class TaskCreateSerializer(serializers.ModelSerializer):
-    category = serializers.PrimaryKeyRelatedField(queryset=TaskCategory.objects.all(), )
-    filters = serializers.PrimaryKeyRelatedField(queryset=Filter.objects.all(), many=True)
-
-    class Meta:
-        model = Task
-        fields = '__all__'
-        read_only_fields = ['id', 'user']
-
-
-class TaskSerializer(serializers.ModelSerializer):
-    category = TaskCategorySerializer(read_only=True)
-    filters = FilterSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Task
-        fields = '__all__'
-        read_only_fields = ['id', 'user']
 
 
 class ProfileTaskSerializer(serializers.ModelSerializer):

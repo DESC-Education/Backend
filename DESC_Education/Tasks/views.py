@@ -12,9 +12,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from Tasks.serializers import (
     TaskSerializer,
-    TaskDetailSerializer,
     TaskListSerializer,
-    TaskCreateSerializer
 )
 from Tasks.models import (
     Task
@@ -22,7 +20,7 @@ from Tasks.models import (
 
 
 class TaskView(generics.GenericAPIView):
-    serializer_class = TaskCreateSerializer
+    serializer_class = TaskSerializer
     permission_classes = [IsCompanyRole]
 
     @extend_schema(
@@ -56,7 +54,7 @@ class TaskListView(generics.ListAPIView):
 
 
 class TaskDetailView(generics.GenericAPIView):
-    serializer_class = TaskDetailSerializer
+    serializer_class = TaskSerializer
     permission_classes = [IsCompanyRole]
 
     def get_object(self, pk):
@@ -77,3 +75,13 @@ class TaskDetailView(generics.GenericAPIView):
             return Response(TaskSerializer(instance).data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @extend_schema(
+        tags=["Tasks"],
+        summary="Получение Задания по его ID"
+    )
+    def get(self, request, pk):
+        instance = self.get_object(pk)
+        return Response(TaskSerializer(instance).data, status=status.HTTP_200_OK)
+
+
