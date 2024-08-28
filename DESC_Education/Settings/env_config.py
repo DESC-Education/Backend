@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     DB_PASSWORD: SecretStr
     EMAIL_USER: SecretStr
     EMAIL_PASSWORD: SecretStr
+    SENTRY_ENV: str
 
     # Начиная со второй версии pydantic, настройки класса настроек задаются
     # через model_config
