@@ -2,7 +2,7 @@ import logging
 import random
 import re
 from django.utils import timezone
-from rest_framework.parsers import MultiPartParser
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from Profiles.permissions import IsCompanyOrStudentRole
