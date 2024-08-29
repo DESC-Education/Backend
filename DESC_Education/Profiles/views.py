@@ -346,6 +346,7 @@ class ProfileView(generics.GenericAPIView):
             return Response(res_serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
+            logging.exception(e)
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -487,6 +488,7 @@ class GetMyProfileView(generics.GenericAPIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         except Exception as e:
+            logging.exception(e)
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -629,6 +631,7 @@ class GetProfileView(generics.GenericAPIView):
             return Response(profile_data, status=status.HTTP_200_OK)
 
         except Exception as e:
+            logging.exception(e)
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -717,6 +720,7 @@ class ChangeLogoImgView(generics.GenericAPIView):
             return Response({"logo": profile.logo_img.url}, status=status.HTTP_200_OK)
 
         except Exception as e:
+            logging.exception(e)
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -836,6 +840,7 @@ class SendPhoneCodeView(generics.GenericAPIView):
 
 
         except Exception as e:
+            logging.exception(e)
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -928,6 +933,7 @@ class SetPhoneView(generics.GenericAPIView):
             return Response({'phone': profile.phone}, status=status.HTTP_200_OK)
 
         except Exception as e:
+            logging.exception(e)
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -1097,6 +1103,7 @@ class EditProfileView(generics.GenericAPIView):
             return Response(self.get_profile_serializers[user.role](profile).data, status=status.HTTP_200_OK)
 
         except Exception as e:
+            logging.exception(e)
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
