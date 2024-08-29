@@ -346,13 +346,14 @@ class VerifyRegistrationView(generics.GenericAPIView):
             except CustomUser.DoesNotExist:
                 return Response({"message": "Пользователь не найден"},
                                 status=status.HTTP_404_NOT_FOUND)
-            try:
-                Vcode: VerificationCode = VerificationCode.objects.filter(user=user,
-                                                                          type=VerificationCode.REGISTRATION_TYPE,
-                                                                          is_used=False).first()
-            except VerificationCode.DoesNotExist:
+
+            Vcode: VerificationCode = VerificationCode.objects.filter(user=user,
+                                                                      type=VerificationCode.REGISTRATION_TYPE,
+                                                                      is_used=False)
+            if len(Vcode) == 0:
                 return Response({"message": "Проверочный код не существует или не соответствует"},
                                 status=status.HTTP_406_NOT_ACCEPTABLE)
+            Vcode = Vcode.first()
 
             if Vcode.code != code:
                 return Response({"message": "Проверочный код не существует или не соответствует"},
@@ -781,13 +782,14 @@ class ChangePasswordView(generics.GenericAPIView):
             except CustomUser.DoesNotExist:
                 return Response({"message": "Пользователь не найден"}, status=status.HTTP_409_CONFLICT)
 
-            try:
-                Vcode = VerificationCode.objects.get(user=user,
-                                                     type=VerificationCode.PASSWORD_CHANGE_TYPE,
-                                                     is_used=False)
-            except VerificationCode.DoesNotExist:
+
+            Vcode = VerificationCode.objects.filter(user=user,
+                                                 type=VerificationCode.PASSWORD_CHANGE_TYPE,
+                                                 is_used=False)
+            if len(Vcode) == 0:
                 return Response({"message": "Проверочный код не найден или срок действия истек"},
                                 status=status.HTTP_404_NOT_FOUND)
+            Vcode = Vcode.first()
             #
             if not Vcode.is_valid():
                 return Response({"message": "Проверочный код не найден или срок действия истек"},

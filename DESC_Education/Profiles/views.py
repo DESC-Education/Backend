@@ -62,7 +62,7 @@ from rest_framework import filters
 class ProfileView(generics.GenericAPIView):
     serializer_class = StudentProfileSerializer
     authentication_classes = [JWTAuthentication]
-    # parser_classes = (MultiPartParser,)
+    parser_classes = (MultiPartParser, FormParser)
     permission_classes = [IsCompanyOrStudentRole]
     profile_class = None
     profile_str_name = {
@@ -326,6 +326,8 @@ class ProfileView(generics.GenericAPIView):
 
             profile = serializer.save()
 
+            print(serializer.validated_data['skills'])
+            print(self.request.data.getlist('skills'))
             files_data = self.request.data.getlist('files')
 
             if profile.verification_files.count() != 0:

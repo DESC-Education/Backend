@@ -122,4 +122,7 @@ class VerificationCode(models.Model):
     def get_time(self):
         return (timezone.now() - self.created_at).total_seconds()
 
+    class Meta:
+        ordering = ['-created_at']
+
 
