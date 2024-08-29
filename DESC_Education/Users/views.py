@@ -65,20 +65,20 @@ class LoginView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                                "user": {
-                                    "id": "uuid",
-                                    "email": "str",
-                                    "role": "str",
-                                    "isActive": "bool",
-                                    "isStaff": "bool",
-                                    "isSuperuser": "bool"
-                                }
-                                ,
-                                "tokens": {
-                                    "accessToken": "str",
-                                    "refreshToken": "str"
-                                }
+                            "user": {
+                                "id": "uuid",
+                                "email": "str",
+                                "role": "str",
+                                "isActive": "bool",
+                                "isStaff": "bool",
+                                "isSuperuser": "bool"
                             }
+                            ,
+                            "tokens": {
+                                "accessToken": "str",
+                                "refreshToken": "str"
+                            }
+                        }
                     )
                 ]
             ),
@@ -128,20 +128,23 @@ class LoginView(generics.GenericAPIView):
             try:
                 user: CustomUser = CustomUser.objects.get(email=email)
             except CustomUser.DoesNotExist:
-                return Response({'message': 'Неверный адрес электронной почты или пароль'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'message': 'Неверный адрес электронной почты или пароль'},
+                                status=status.HTTP_401_UNAUTHORIZED)
 
             if not user.check_password(serializer.validated_data['password']):
-                return Response({'message': 'Неверный адрес электронной почты или пароль'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'message': 'Неверный адрес электронной почты или пароль'},
+                                status=status.HTTP_401_UNAUTHORIZED)
 
             if not user.is_verified:
-                return Response({'message': 'Вам нужно подтвердить адрес электронной почты'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                return Response({'message': 'Вам нужно подтвердить адрес электронной почты'},
+                                status=status.HTTP_406_NOT_ACCEPTABLE)
 
             tokens = user.get_token()
 
             user_serializer = CustomUserSerializer(user)
             return Response({
-                    "user": user_serializer.data,
-                    "tokens": tokens
+                "user": user_serializer.data,
+                "tokens": tokens
             },
                 status=status.HTTP_200_OK)
         except Exception as e:
@@ -162,17 +165,17 @@ class RegistrationView(generics.GenericAPIView):
                 "Регистрация студента",
                 description='Дефолтный вариант, можно не указывать role',
                 value={
-                  "email": "user@example.com",
-                  "password": "string",
-                  "role": "student"
+                    "email": "user@example.com",
+                    "password": "string",
+                    "role": "student"
                 },
             ),
             OpenApiExample(
                 "Регистрация компании",
                 value={
-                  "email": "user@example.com",
-                  "password": "string",
-                  "role": "company"
+                    "email": "user@example.com",
+                    "password": "string",
+                    "role": "company"
                 },
             ),
         ],
@@ -225,11 +228,10 @@ class RegistrationView(generics.GenericAPIView):
             try:
                 CustomUser.objects.get(email=email)
                 return Response(
-                        {'message': 'Адрес электронной почты уже зарегистрирован'},
-                        status=status.HTTP_406_NOT_ACCEPTABLE)
+                    {'message': 'Адрес электронной почты уже зарегистрирован'},
+                    status=status.HTTP_406_NOT_ACCEPTABLE)
             except ObjectDoesNotExist:
                 pass
-
 
             user = CustomUser.objects.create_user(
                 email=email,
@@ -268,20 +270,20 @@ class VerifyRegistrationView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                                "user": {
-                                    "id": "uuid",
-                                    "email": "str",
-                                    "role": "str",
-                                    "isActive": "bool",
-                                    "isStaff": "bool",
-                                    "isSuperuser": "bool"
-                                }
-                                ,
-                                "tokens": {
-                                    "accessToken": "str",
-                                    "refreshToken": "str"
-                                }
+                            "user": {
+                                "id": "uuid",
+                                "email": "str",
+                                "role": "str",
+                                "isActive": "bool",
+                                "isStaff": "bool",
+                                "isSuperuser": "bool"
                             }
+                            ,
+                            "tokens": {
+                                "accessToken": "str",
+                                "refreshToken": "str"
+                            }
+                        }
                     )
                 ]
             ),
@@ -344,13 +346,14 @@ class VerifyRegistrationView(generics.GenericAPIView):
             except CustomUser.DoesNotExist:
                 return Response({"message": "Пользователь не найден"},
                                 status=status.HTTP_404_NOT_FOUND)
-            try:
-                Vcode: VerificationCode = VerificationCode.objects.get(user=user,
-                                                                       type=VerificationCode.REGISTRATION_TYPE,
-                                                                       is_used=False)
-            except VerificationCode.DoesNotExist:
+
+            Vcode: VerificationCode = VerificationCode.objects.filter(user=user,
+                                                                      type=VerificationCode.REGISTRATION_TYPE,
+                                                                      is_used=False)
+            if len(Vcode) == 0:
                 return Response({"message": "Проверочный код не существует или не соответствует"},
                                 status=status.HTTP_406_NOT_ACCEPTABLE)
+            Vcode = Vcode.first()
 
             if Vcode.code != code:
                 return Response({"message": "Проверочный код не существует или не соответствует"},
@@ -370,9 +373,9 @@ class VerifyRegistrationView(generics.GenericAPIView):
             user_serializer = CustomUserSerializer(user)
 
             return Response({
-                    "user": user_serializer.data,
-                    "tokens": tokens
-                }, status=status.HTTP_200_OK)
+                "user": user_serializer.data,
+                "tokens": tokens
+            }, status=status.HTTP_200_OK)
 
 
         except Exception as e:
@@ -429,14 +432,13 @@ class AuthView(generics.GenericAPIView):
                     OpenApiExample(
                         "Успешно",
                         value={
-                                    "id": "uuid",
-                                    "email": "str",
-                                    "role": "str",
-                                    "isActive": "bool",
-                                    "isStaff": "bool",
-                                    "isSuperuser": "bool"
-                                }
-
+                            "id": "uuid",
+                            "email": "str",
+                            "role": "str",
+                            "isActive": "bool",
+                            "isStaff": "bool",
+                            "isSuperuser": "bool"
+                        }
 
                     )
                 ]
@@ -473,7 +475,7 @@ class AuthView(generics.GenericAPIView):
             serializer = CustomUserSerializer(user)
 
             return Response(serializer.data,
-                status=status.HTTP_200_OK)
+                            status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
@@ -633,7 +635,8 @@ class SendVerifyCodeView(generics.GenericAPIView):
 
                     send_auth_registration_code(email, Vcode_reg.code)
 
-                    return Response({"message": "Код подтверждения отправлен на электронную почту"}, status=status.HTTP_200_OK)
+                    return Response({"message": "Код подтверждения отправлен на электронную почту"},
+                                    status=status.HTTP_200_OK)
 
                 case self.serializer_class.EMAIL_CHANGE_TYPE:
                     email = serializer.validated_data['email']
@@ -657,7 +660,8 @@ class SendVerifyCodeView(generics.GenericAPIView):
                                                                   new_email=email)
                     send_mail_change_code(email, Vcode_email.code)
 
-                    return Response({"message": "Код подтверждения отправлен на электронную почту"}, status=status.HTTP_200_OK)
+                    return Response({"message": "Код подтверждения отправлен на электронную почту"},
+                                    status=status.HTTP_200_OK)
 
                 case self.serializer_class.PASSWORD_CHANGE_TYPE:
                     email = serializer.validated_data['email']
@@ -687,7 +691,8 @@ class SendVerifyCodeView(generics.GenericAPIView):
 
                     send_password_change_code(user.email, Vcode_pass.code)
 
-                    return Response({"message": "Код подтверждения отправлен на электронную почту"}, status=status.HTTP_200_OK)
+                    return Response({"message": "Код подтверждения отправлен на электронную почту"},
+                                    status=status.HTTP_200_OK)
 
                 case _:
                     return Response({"message": "Неверный тип кода"}, status=status.HTTP_406_NOT_ACCEPTABLE)
@@ -777,13 +782,14 @@ class ChangePasswordView(generics.GenericAPIView):
             except CustomUser.DoesNotExist:
                 return Response({"message": "Пользователь не найден"}, status=status.HTTP_409_CONFLICT)
 
-            try:
-                Vcode = VerificationCode.objects.get(user=user,
-                                                     type=VerificationCode.PASSWORD_CHANGE_TYPE,
-                                                     is_used=False)
-            except VerificationCode.DoesNotExist:
+
+            Vcode = VerificationCode.objects.filter(user=user,
+                                                 type=VerificationCode.PASSWORD_CHANGE_TYPE,
+                                                 is_used=False)
+            if len(Vcode) == 0:
                 return Response({"message": "Проверочный код не найден или срок действия истек"},
                                 status=status.HTTP_404_NOT_FOUND)
+            Vcode = Vcode.first()
             #
             if not Vcode.is_valid():
                 return Response({"message": "Проверочный код не найден или срок действия истек"},
