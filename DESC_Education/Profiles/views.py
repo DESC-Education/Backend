@@ -328,6 +328,8 @@ class ProfileView(generics.GenericAPIView):
 
             print(serializer.validated_data['skills'])
             print(self.request.data.getlist('skills'))
+            print(self.request.data)
+
             files_data = self.request.data.getlist('files')
 
             if profile.verification_files.count() != 0:

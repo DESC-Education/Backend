@@ -131,7 +131,7 @@ class File(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.UUIDField()
     profile = GenericForeignKey(ct_field='content_type', fk_field='object_id')
-    file = models.FileField(upload_to=verification_files_upload, max_length=10000)
+    file = models.FileField(upload_to=verification_files_upload, max_length=200)
 
 
 # Create your models here.
