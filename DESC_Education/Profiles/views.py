@@ -326,9 +326,6 @@ class ProfileView(generics.GenericAPIView):
 
             profile = serializer.save()
 
-            print(serializer.validated_data['skills'])
-            print(self.request.data.getlist('skills'))
-            print(self.request.data)
 
             files_data = self.request.data.getlist('files')
 

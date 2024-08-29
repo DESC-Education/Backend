@@ -114,7 +114,7 @@ class ProfileVerifyRequest(models.Model):
     object_id = models.UUIDField()
     profile = GenericForeignKey(ct_field='content_type', fk_field='object_id')
 
-    request_date = models.DateTimeField(auto_now_add=True, editable=False, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False, blank=True)
     status = models.CharField(max_length=20, choices=[
         (PENDING, 'Pending'),
         (APPROVED, 'Approved'),
