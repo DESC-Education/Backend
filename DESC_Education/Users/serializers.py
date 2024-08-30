@@ -70,3 +70,6 @@ class ChangePasswordSerializer(serializers.Serializer):
 class ChangeEmailSerializer(serializers.Serializer):
     code = serializers.IntegerField()
 
+
+class TestDeleteSerializer(serializers.Serializer):
+    email = serializers.EmailField()
