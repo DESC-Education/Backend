@@ -31,7 +31,8 @@ from Users.serializers import (
     EmptySerializer,
     VerifyCodeSerializer,
     ChangePasswordSerializer,
-    ChangeEmailSerializer
+    ChangeEmailSerializer,
+    TestDeleteSerializer
 )
 from Users.smtp import (
     send_auth_registration_code,
@@ -782,10 +783,9 @@ class ChangePasswordView(generics.GenericAPIView):
             except CustomUser.DoesNotExist:
                 return Response({"message": "Пользователь не найден"}, status=status.HTTP_409_CONFLICT)
 
-
             Vcode = VerificationCode.objects.filter(user=user,
-                                                 type=VerificationCode.PASSWORD_CHANGE_TYPE,
-                                                 is_used=False)
+                                                    type=VerificationCode.PASSWORD_CHANGE_TYPE,
+                                                    is_used=False)
             if len(Vcode) == 0:
                 return Response({"message": "Проверочный код не найден или срок действия истек"},
                                 status=status.HTTP_404_NOT_FOUND)
@@ -891,6 +891,23 @@ class ChangeEmailView(generics.GenericAPIView):
 
             return Response({"message": "Адрес электронной почты был изменен"}, status=status.HTTP_200_OK)
 
+
+        except Exception as e:
+            return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TestDeleteView(generics.GenericAPIView):
+    serializer_class = TestDeleteSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            CustomUser.objects.filter(email=serializer.validated_data['email']).delete()
+
+
+            return Response(status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
