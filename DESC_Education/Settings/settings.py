@@ -14,22 +14,14 @@ from pathlib import Path
 from Settings.env_config import config
 import os
 import sys
+import sentry_sdk
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-import sentry_sdk
 
-sentry_sdk.init(
-    dsn="https://7106f16a563ce0ba3f7b963353a1e479@o4507797688483840.ingest.de.sentry.io/4507856169926736",
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for tracing.
-    traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
-    environment=config.SENTRY_ENV,
-)
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -225,6 +217,7 @@ SERVER_EMAIL = EMAIL_HOST_USER
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
 if 'test' in sys.argv:
     # store files in memory, no cleanup after tests are finished
     DEFAULT_FILE_STORAGE = 'inmemorystorage.InMemoryStorage'
@@ -235,6 +228,18 @@ if 'test' in sys.argv:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+else:
+    sentry_sdk.init(
+        dsn="https://7106f16a563ce0ba3f7b963353a1e479@o4507797688483840.ingest.de.sentry.io/4507856169926736",
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
+        environment=config.SENTRY_ENV,
+    )
 
 
 LOGGING = {

@@ -162,7 +162,7 @@ class GetCompanyProfileSerializer(BaseProfileSerializer):
 
 
 class GetStudentProfileSerializer(BaseProfileSerializer):
-    formOfEducation = serializers.CharField(source="get_form_of_education_display")
+    formOfEducation = serializers.CharField(source="form_of_education")
     admissionYear = serializers.IntegerField(source="admission_year")
     university = UniversitySerializer()
     city = CitySerializer()
@@ -170,7 +170,6 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
     skills = SkillSerializer(many=True)
     specialty = SpecialtySerializer()
 
-    # skills = serializers.SerializerMethodField()
 
     class Meta(BaseProfileSerializer.Meta):
         model = StudentProfile
@@ -178,5 +177,3 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
                  ('formOfEducation', 'admissionYear', 'university', 'faculty', 'skills',
                   'specialty',)
 
-    # def get_skills(self, obj):
-    #     return [SkillSerializer(skill) for skill in obj.skills.filter(is_verified=True)]
