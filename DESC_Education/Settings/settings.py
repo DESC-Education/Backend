@@ -63,10 +63,12 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt',
     'drf_spectacular',
+    "django_prometheus",
     # 'silk'
 ]
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -75,6 +77,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
     # 'silk.middleware.SilkyMiddleware',
 ]
 
@@ -147,6 +150,11 @@ DATABASES = {
         "PORT": config.DB_PORT
     }
 }
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_prometheus.cache.backends.redis.RedisCache",
+#     }
+# }
 # DATABASES = {
 #         'default': {
 #             'ENGINE': 'django.db.backends.sqlite3',
