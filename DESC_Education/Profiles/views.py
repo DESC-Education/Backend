@@ -45,6 +45,7 @@ from Profiles.filters import (
     FacultiesFilter
 )
 from Profiles.models import (
+    BaseProfile,
     StudentProfile,
     CompanyProfile,
     ProfileVerifyRequest,
@@ -315,7 +316,7 @@ class ProfileView(generics.GenericAPIView):
 
             serializer.is_valid(raise_exception=True)
 
-            if profile.is_verified:
+            if profile.verification == profile.VERIFIED:
                 return Response({"message": "Профиль уже подтвержден"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
             try:
@@ -617,7 +618,7 @@ class GetProfileView(generics.GenericAPIView):
         try:
             try:
                 user = CustomUser.objects.get(id=pk)
-                profile = self.profile_classes[user.role].objects.get(user=user, is_verified=True)
+                profile = self.profile_classes[user.role].objects.get(user=user, verification=BaseProfile.VERIFIED)
             except ObjectDoesNotExist:
                 return Response({"message": "Профиль не найден"}, status=status.HTTP_404_NOT_FOUND)
             profile_data = self.profile_serializer_class[user.role](profile).data

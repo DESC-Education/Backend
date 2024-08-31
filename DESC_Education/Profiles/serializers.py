@@ -79,15 +79,18 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     telegramLink = serializers.URLField(source="telegram_link", required=False)
     vkLink = serializers.URLField(source="vk_link", required=False)
     logoImg = serializers.ImageField(source="logo_img", read_only=True)
-    isVerified = serializers.BooleanField(source="is_verified", read_only=True)
     skills = serializers.PrimaryKeyRelatedField(many=True, queryset=Skill.objects.all(), required=True)
-
+    verification = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = BaseProfile
         fields = ('id', 'firstName', 'lastName', 'description', 'phone', 'phoneVisibility', 'emailVisibility',
-                  'logoImg', 'telegramLink', 'vkLink', 'timezone', 'isVerified', 'city', 'skills')
+                  'logoImg', 'telegramLink', 'vkLink', 'timezone', 'city', 'skills', 'verification')
         read_only_fields = ['id', 'user']
+
+
+    def get_verification(self, obj):
+        return obj.get_verification_status()
 
 
 

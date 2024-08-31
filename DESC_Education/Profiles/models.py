@@ -57,7 +57,6 @@ class PhoneVerificationCode(models.Model):
     is_used = models.BooleanField(default=False)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, editable=False, blank=True)
 
-
     @staticmethod
     def create_code():
         return random.randint(111111, 999999)
@@ -67,7 +66,6 @@ class PhoneVerificationCode(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-
 
 
 class University(models.Model):
@@ -113,6 +111,7 @@ class ProfileVerifyRequest(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.UUIDField()
     profile = GenericForeignKey(ct_field='content_type', fk_field='object_id')
+    admin = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True, editable=False, blank=True)
     status = models.CharField(max_length=20, choices=[
@@ -121,6 +120,11 @@ class ProfileVerifyRequest(models.Model):
         (REJECTED, 'Rejected'),
     ], default=PENDING)
     comments = models.TextField(null=True, blank=True)
+
+
+    class Meta:
+        ordering = ['-created_at']
+
 
 
 class File(models.Model):
@@ -163,16 +167,49 @@ class BaseProfile(models.Model):
     telegram_link = models.URLField(blank=True, null=True)
     vk_link = models.URLField(blank=True, null=True)
     timezone = models.IntegerField(null=True)
-    is_verified = models.BooleanField(default=False)
     verification_requests = GenericRelation(ProfileVerifyRequest, related_name="v_requests")
     verification_files = GenericRelation(File, related_name='v_files')
     skills = models.ManyToManyField(Skill, blank=True)
+    verification = models.CharField(max_length=20, choices=VERIFICATION_CHOISES, default=NOT_VERIFIED)
 
     class Meta:
         abstract = True
 
     def __str__(self):
         return self.user.email
+
+    def get_verification_status(self):
+        statuses = {
+            ProfileVerifyRequest.APPROVED: self.VERIFIED,
+            ProfileVerifyRequest.REJECTED: self.REJECTED,
+            ProfileVerifyRequest.PENDING: self.ON_VERIFICATION
+        }
+        if self.verification == self.VERIFIED:
+            return self.VERIFIED
+
+        v_requests: ProfileVerifyRequest = self.verification_requests
+
+        if v_requests.exists():
+            v_request: ProfileVerifyRequest = v_requests.first()
+            if v_request.status == ProfileVerifyRequest.REJECTED:
+                return {
+                    'status': v_request.status,
+                    'comments': v_request.comments
+                }
+            elif v_request.status == ProfileVerifyRequest.APPROVED:
+                if self.verification != self.VERIFIED:
+                    self.verification = self.VERIFIED
+                    self.save()
+                return self.VERIFIED
+
+            return statuses.get(v_request.status)
+
+        return self.NOT_VERIFIED
+
+
+
+
+
 
 
 class Specialty(models.Model):
