@@ -139,13 +139,13 @@ class BaseProfile(models.Model):
     VERIFIED = "verified"
     ON_VERIFICATION = "on_verification"
     NOT_VERIFIED = "not_verified"
-    NOT_ACCEPTED = "not_accepted"
+    REJECTED = "rejected"
 
     VERIFICATION_CHOISES = [
         (VERIFIED, "Профиль подтвержден"),
         (ON_VERIFICATION, "Профиль на проверке"),
         (NOT_VERIFIED, "Профиль не подтвержден"),
-        (NOT_ACCEPTED, "Профиль не прошел проверку")
+        (REJECTED, "Профиль не прошел проверку")
     ]
     id = models.UUIDField(primary_key=True,
                           default=uuid.uuid4,
