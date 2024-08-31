@@ -147,7 +147,6 @@ class CreateProfileViewTest(APITestCase):
         for i in self.skills:
             expected_skill_names.add(i.get('name'))
         expected_data['skills'] = expected_skill_names
-        expected_data['formOfEducation'] = profile.get_form_of_education_display()
         expected_data['university'] = dict(UniversitySerializer(self.university).data)
         expected_data['specialty'] = dict(SpecialtySerializer(self.specialty).data)
         expected_data['city'] = dict(CitySerializer(self.city).data)
@@ -247,7 +246,6 @@ class CreateProfileViewTest(APITestCase):
         faculty = dict(FacultySerializer(self.faculty).data)
         faculty['university'] = faculty.get('university')
         expected_data['faculty'] = faculty
-        expected_data['formOfEducation'] = profile.get_form_of_education_display()
 
         result = dict(res.data)
         res_skills_names = set()
@@ -444,7 +442,7 @@ class GetProfileTest(APITestCase):
         faculty['university'] = faculty.get('university')
         expected_data['city'] = dict(CitySerializer(self.city).data)
         expected_data['faculty'] = faculty
-        expected_data['formOfEducation'] = profile.get_form_of_education_display()
+
 
         result = dict(res.data)
 
