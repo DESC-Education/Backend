@@ -142,7 +142,7 @@ SPECTACULAR_SETTINGS = {
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django_prometheus.db.backends.postgresql',
         'NAME': config.DB_NAME,
         'USER': config.DB_USER.get_secret_value(),
         'PASSWORD': config.DB_PASSWORD.get_secret_value(),
