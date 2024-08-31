@@ -138,7 +138,7 @@ class CreateProfileViewTest(APITestCase):
 
         expected_data = self.student_example_data
         expected_data["id"] = str(profile.id)
-        expected_data["isVerified"] = False
+        expected_data["verification"] = "on_verification"
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         files = expected_data.pop('files')
@@ -180,7 +180,7 @@ class CreateProfileViewTest(APITestCase):
 
         expected_data = self.company_example_data.copy()
         expected_data["id"] = str(profile.id)
-        expected_data["isVerified"] = False
+        expected_data["verification"] = "on_verification"
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         expected_data['city'] = dict(CitySerializer(self.city).data)
@@ -232,7 +232,7 @@ class CreateProfileViewTest(APITestCase):
 
         expected_data = example_data
         expected_data["id"] = str(profile.id)
-        expected_data["isVerified"] = False
+        expected_data["verification"] = "on_verification"
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         expected_data.pop('files')
@@ -274,7 +274,7 @@ class CreateProfileViewTest(APITestCase):
 
         expected_data = example_data
         expected_data["id"] = str(profile.id)
-        expected_data["isVerified"] = False
+        expected_data["verification"] = "on_verification"
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         expected_data['city'] = dict(CitySerializer(self.city).data)
@@ -312,7 +312,7 @@ class CreateProfileViewTest(APITestCase):
         example_data = self.company_example_data.copy()
         self.test_create_company_profile_201()
         profile = CompanyProfile.objects.first()
-        profile.is_verified = True
+        profile.verification = profile.VERIFIED
         profile.save()
         res = self.client.post(reverse("profile_create"),
                                data=example_data,
@@ -418,7 +418,7 @@ class GetProfileTest(APITestCase):
                                headers={"Authorization": f"Bearer {self.token}"})
 
         profile = StudentProfile.objects.first()
-        profile.is_verified = True
+        profile.verification = profile.VERIFIED
         profile.save()
         res = self.client.get(reverse("profile_get", kwargs={"pk": str(self.user.id)}))
 
@@ -426,7 +426,7 @@ class GetProfileTest(APITestCase):
 
         expected_data = self.student_example_data.copy()
         expected_data["id"] = str(profile.id)
-        expected_data["isVerified"] = True
+        expected_data["verification"] = "verified"
         expected_data["logoImg"] = None
         expected_data["email"] = profile.user.email
         expected_data.pop('emailVisibility')
