@@ -45,16 +45,16 @@ class ProfileModelTest(TestCase):
         self.assertEqual(v_request.status, v_request.PENDING)
 
         profile_verification_status = profile.get_verification_status()
-        self.assertEqual(profile_verification_status, profile.ON_VERIFICATION)
+        self.assertEqual(profile_verification_status.get('status'), profile.ON_VERIFICATION)
 
         v_request_3: ProfileVerifyRequest = ProfileVerifyRequest.objects.create(
-            profile=profile, status=v_request.REJECTED, comments="example comment")
+            profile=profile, status=v_request.REJECTED, comment="example comment")
         self.assertEqual(v_request_3.status, v_request.REJECTED)
 
         profile_verification_status = profile.get_verification_status()
         self.assertEqual(profile_verification_status, {
             "status": profile.REJECTED,
-            "comments": "example comment"
+            "comment": "example comment"
         })
 
         v_request_2: ProfileVerifyRequest = ProfileVerifyRequest.objects.create(
@@ -62,7 +62,7 @@ class ProfileModelTest(TestCase):
         self.assertEqual(v_request_2.status, v_request.APPROVED)
 
         profile_verification_status = profile.get_verification_status()
-        self.assertEqual(profile_verification_status, profile.VERIFIED)
+        self.assertEqual(profile_verification_status.get('status'), profile.VERIFIED)
         self.assertEqual(profile.verification, profile.VERIFIED)
 
 

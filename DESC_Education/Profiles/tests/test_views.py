@@ -139,7 +139,7 @@ class CreateProfileViewTest(APITestCase):
 
         expected_data = self.student_example_data
         expected_data["id"] = str(profile.id)
-        expected_data["verification"] = "on_verification"
+        expected_data["verification"] = {"status": "on_verification"}
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         files = expected_data.pop('files')
@@ -182,7 +182,7 @@ class CreateProfileViewTest(APITestCase):
 
         expected_data = self.company_example_data.copy()
         expected_data["id"] = str(profile.id)
-        expected_data["verification"] = "on_verification"
+        expected_data["verification"] = {"status": "on_verification"}
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         expected_data['city'] = dict(CitySerializer(self.city).data)
@@ -235,7 +235,7 @@ class CreateProfileViewTest(APITestCase):
 
         expected_data = example_data
         expected_data["id"] = str(profile.id)
-        expected_data["verification"] = "on_verification"
+        expected_data["verification"] = {"status": "on_verification"}
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         expected_data.pop('files')
@@ -278,7 +278,7 @@ class CreateProfileViewTest(APITestCase):
 
         expected_data = example_data
         expected_data["id"] = str(profile.id)
-        expected_data["verification"] = "on_verification"
+        expected_data["verification"] = {"status": "on_verification"}
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         expected_data['city'] = dict(CitySerializer(self.city).data)
@@ -431,7 +431,7 @@ class GetProfileTest(APITestCase):
 
         expected_data = self.student_example_data.copy()
         expected_data["id"] = str(profile.id)
-        expected_data["verification"] = "verified"
+        expected_data["verification"] = {"status": "verified"}
         expected_data["logoImg"] = None
         expected_data["email"] = profile.user.email
         expected_data["replyReloadDate"] = serializer.data['replyReloadDate']

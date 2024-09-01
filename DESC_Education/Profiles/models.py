@@ -119,12 +119,10 @@ class ProfileVerifyRequest(models.Model):
         (APPROVED, 'Approved'),
         (REJECTED, 'Rejected'),
     ], default=PENDING)
-    comments = models.TextField(null=True, blank=True)
-
+    comment = models.TextField(null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']
-
 
 
 class File(models.Model):
@@ -186,7 +184,7 @@ class BaseProfile(models.Model):
             ProfileVerifyRequest.PENDING: self.ON_VERIFICATION
         }
         if self.verification == self.VERIFIED:
-            return self.VERIFIED
+            return {"status": self.VERIFIED}
 
         v_requests: ProfileVerifyRequest = self.verification_requests
 
@@ -195,22 +193,17 @@ class BaseProfile(models.Model):
             if v_request.status == ProfileVerifyRequest.REJECTED:
                 return {
                     'status': v_request.status,
-                    'comments': v_request.comments
+                    'comment': v_request.comment
                 }
             elif v_request.status == ProfileVerifyRequest.APPROVED:
                 if self.verification != self.VERIFIED:
                     self.verification = self.VERIFIED
                     self.save()
-                return self.VERIFIED
+                return {"status": self.VERIFIED}
 
-            return statuses.get(v_request.status)
+            return {"status": statuses.get(v_request.status)}
 
-        return self.NOT_VERIFIED
-
-
-
-
-
+        return {"status": self.NOT_VERIFIED}
 
 
 class Specialty(models.Model):
@@ -251,18 +244,20 @@ class StudentProfile(BaseProfile):
         (FULL_TIME_AND_PART_TIME_EDUCATION, "Очно-Заочная форма обучения")
     ]
 
+
+
     form_of_education = models.CharField(choices=EDUCATION_CHOISES, max_length=15, null=True)
     university = models.ForeignKey(University, on_delete=models.CASCADE, null=True, related_name='university')
     faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, null=True, related_name='faculty')
     specialty = models.ForeignKey(Specialty, on_delete=models.CASCADE, null=True, related_name='specialty')
     admission_year = models.IntegerField(null=True)
     reply_count = models.IntegerField(default=REPLY_MONTH_COUNT, editable=False, blank=True)
-    reply_reload_date = models.DateTimeField(default=(tz.now() + tz.timedelta(days=REPLY_RELOAD_DAYS)), editable=False, blank=True)
-
+    reply_reload_date = models.DateTimeField(auto_now_add=True, editable=False,
+                                             blank=True)
 
     def get_reply_count(self):
         if tz.now() >= self.reply_reload_date:
-            self.reply_count = REPLY_MONTH_COUNT
+            self.reply_count = self.REPLY_MONTH_COUNT
             self.reply_reload_date = tz.now() + tz.timedelta(days=self.REPLY_RELOAD_DAYS)
             self.save()
         return self.reply_count
