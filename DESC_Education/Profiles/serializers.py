@@ -89,7 +89,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user']
 
 
-    def get_verification(self, obj):
+    def get_verification(self, obj) -> str:
         return obj.get_verification_status()
 
 
@@ -145,8 +145,8 @@ class EditCompanyProfileSerializer(BaseProfileSerializer):
 
 
 
-class EmptySerializer(serializers.Serializer):
-    empty = serializers.CharField(required=False)
+class EmptySerializer2(serializers.Serializer):
+    empty2 = serializers.CharField(required=False)
 
 
 class GetCompanyProfileSerializer(BaseProfileSerializer):
@@ -185,5 +185,5 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
         return obj.get_reply_count()
 
 
-class TestProfileVerifySerializer(BaseProfileSerializer):
+class TestProfileVerifySerializer(serializers.Serializer):
     email = serializers.EmailField()

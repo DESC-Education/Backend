@@ -41,7 +41,7 @@ class TaskSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user']
 
     @staticmethod
-    def get_profile(obj):
+    def get_profile(obj) -> dict:
         try:
             profile = apps.get_model('Profiles', 'CompanyProfile').objects.get(user=obj.user)
             return ProfileTaskSerializer(profile).data
@@ -87,7 +87,7 @@ class TaskListSerializer(serializers.ModelSerializer):
 
 
     @staticmethod
-    def get_profile(obj):
+    def get_profile(obj) -> str:
         try:
             profile = apps.get_model('Profiles', 'CompanyProfile').objects.get(user=obj.user)
             return ProfileTaskSerializer(profile).data

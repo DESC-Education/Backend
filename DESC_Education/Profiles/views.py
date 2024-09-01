@@ -22,7 +22,7 @@ from drf_spectacular.types import OpenApiTypes
 from Profiles.serializers import (
     StudentProfileSerializer,
     CreateCompanyProfileSerializer,
-    EmptySerializer,
+    EmptySerializer2,
     GetCompanyProfileSerializer,
     GetStudentProfileSerializer,
     UniversitySerializer,
@@ -356,7 +356,7 @@ class ProfileView(generics.GenericAPIView):
 
 
 class GetMyProfileView(generics.GenericAPIView):
-    serializer_class = EmptySerializer
+    serializer_class = EmptySerializer2
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsCompanyOrStudentRole]
     profile_classes = {
@@ -501,7 +501,7 @@ class GetMyProfileView(generics.GenericAPIView):
 
 
 class GetProfileView(generics.GenericAPIView):
-    serializer_class = EmptySerializer
+    serializer_class = EmptySerializer2
     permission_classes = [AllowAny]
     profile_classes = {
         CustomUser.STUDENT_ROLE: StudentProfile,
