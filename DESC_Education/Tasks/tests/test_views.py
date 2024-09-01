@@ -24,7 +24,8 @@ from Tasks.models import (
 from Tasks.serializers import (
     TaskSerializer,
     TaskCategorySerializer,
-    SolutionSerializer
+    SolutionSerializer,
+    FilterCategorySerializer
 )
 
 
@@ -73,7 +74,7 @@ class TaskViewTest(APITestCase):
         filter_category: FilterCategory = FilterCategory.objects.create(
             name="Языки прогрмирования",
         )
-        filter_category.task_category.add(task_category)
+        filter_category.task_categories.add(task_category)
         filter_python: Filter = Filter.objects.create(
             name="Python",
             filter_category=filter_category
@@ -296,4 +297,44 @@ class TaskCategoryListViewTest(APITestCase):
         self.assertEqual(dict(res.data).get('results'), [{'id': str(self.category2.id), 'name': self.category2.name},
                                                          {'id': str(self.category3.id), 'name': self.category3.name}])
         self.assertEqual(res.status_code, 200)
+
+
+
+class TaskCategoryListViewTest(APITestCase):
+    def setUp(self):
+        TaskCategory.objects.all().delete()
+        self.category1 = TaskCategory.objects.create(name='Web')
+        self.category2 = TaskCategory.objects.create(name='Phone')
+        self.category3 = TaskCategory.objects.create(name='Design')
+
+        FilterCategory.objects.all().delete()
+
+        self.filter1 = FilterCategory.objects.create(name='difficult')
+        self.filter2 = FilterCategory.objects.create(name='programming_language')
+        self.filter3 = FilterCategory.objects.create(name='items')
+
+        self.filter1.task_categories.add(self.category1)
+        self.filter1.task_categories.add(self.category2)
+        self.filter2.task_categories.add(self.category1)
+        self.filter2.task_categories.add(self.category2)
+        self.filter3.task_categories.add(self.category3)
+
+
+    def test_get_filter_categories(self):
+        res = self.client.get(reverse('filter_category_list'))
+        categories = FilterCategory.objects.all()
+        serializer = FilterCategorySerializer(many=True, data=categories)
+        serializer.is_valid()
+        self.assertEqual(dict(res.data).get('results'), serializer.data)
+        self.assertEqual(res.status_code, 200)
+
+
+    def test_get_filter_category_by_task_category(self):
+        res = self.client.get(reverse('filter_category_list'), {"taskCategoryId": self.category1.id})
+        categories = FilterCategory.objects.all().filter(task_categories=self.category1)
+        serializer = FilterCategorySerializer(many=True, data=categories)
+        serializer.is_valid()
+        self.assertEqual(dict(res.data).get('results'), serializer.data)
+
+
 
