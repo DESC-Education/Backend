@@ -13,9 +13,9 @@ from Tasks.serializers import (
     SolutionSerializer
 )
 from Tasks.models import (
-    Task
+    Task,
+    Solution
 )
-
 
 
 class TaskView(generics.GenericAPIView):
@@ -37,7 +37,6 @@ class TaskView(generics.GenericAPIView):
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class TaskListView(generics.ListAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskListSerializer
@@ -49,7 +48,6 @@ class TaskListView(generics.ListAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
-
 
 
 class TaskDetailView(generics.GenericAPIView):
@@ -85,23 +83,22 @@ class TaskDetailView(generics.GenericAPIView):
         return Response(TaskSerializer(instance).data, status=status.HTTP_200_OK)
 
 
-
 class SolutionView(generics.GenericAPIView):
     serializer_class = SolutionSerializer
     permission_classes = [IsStudentRole]
 
-
     def get_object(self) -> StudentProfile:
         return get_object_or_404(StudentProfile, user=self.request.user)
 
-
+    @extend_schema(
+        tags=["Tasks"],
+        summary="Создание решения студентом"
+    )
     def post(self, request):
         profile: StudentProfile = self.get_object()
         if profile.reply_count == 0:
             return Response({"message": "Недостаточно откликов для добавления решения"},
                             status=status.HTTP_403_FORBIDDEN)
-
-
 
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
@@ -114,5 +111,20 @@ class SolutionView(generics.GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class SolutionDetailView(generics.GenericAPIView):
+    serializer_class = SolutionSerializer
+    permission_classes = [IsStudentRole]
 
+    def get_object(self, pk):
+        obj = get_object_or_404(Solution, pk=pk)
+        self.check_object_permissions(self.request, obj)
+        return obj
 
+    @extend_schema(
+        tags=["Tasks"],
+        summary="Получение Решения по его ID"
+    )
+    def get(self, request, pk):
+        instance = self.get_object(pk)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
