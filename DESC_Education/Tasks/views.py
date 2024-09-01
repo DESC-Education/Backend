@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from django_filters.rest_framework import DjangoFilterBackend
-from Tasks.filters import CategoryFilterBackend
+# from Tasks.filters import CategoryFilterBackend
 from rest_framework import filters
 from Settings.pagination import CustomPageNumberPagination
 from Profiles.models import (
@@ -148,20 +148,6 @@ class TaskCategoryListView(generics.ListAPIView):
     @extend_schema(
         tags=["Tasks"],
         summary="Получение экземпляров Task Category"
-    )
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-
-class FilterCategoryListView(generics.ListAPIView):
-    queryset = FilterCategory.objects.all()
-    serializer_class = FilterCategorySerializer
-    filter_backends = [filters.SearchFilter, CategoryFilterBackend]
-    search_fields = ['name']
-
-    @extend_schema(
-        tags=["Tasks"],
-        summary="Получение экземпляров Filter Category"
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)

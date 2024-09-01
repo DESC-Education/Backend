@@ -10,23 +10,26 @@ from Tasks.models import (
 )
 
 
-class FilterCategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FilterCategory
-        fields = '__all__'
-
-
 class FilterSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Filter
-        fields = '__all__'
+        fields = ('id', 'name')
+
+
+class FilterCategorySerializer(serializers.ModelSerializer):
+    filters = FilterSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = FilterCategory
+        fields = ('id', 'name', 'filters')
 
 
 class TaskCategorySerializer(serializers.ModelSerializer):
+    filterCategories = FilterCategorySerializer(source='filter_categories', many=True)
+
     class Meta:
         model = TaskCategory
-        fields = '__all__'
+        fields = ('id', 'name', 'filterCategories')
 
 
 class TaskSerializer(serializers.ModelSerializer):
