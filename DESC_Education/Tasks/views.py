@@ -3,6 +3,8 @@ from Settings.permissions import IsCompanyRole, IsStudentRole
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 from Settings.pagination import CustomPageNumberPagination
 from Profiles.models import (
     StudentProfile
@@ -10,11 +12,15 @@ from Profiles.models import (
 from Tasks.serializers import (
     TaskSerializer,
     TaskListSerializer,
-    SolutionSerializer
+    SolutionSerializer,
+    TaskCategorySerializer
 )
 from Tasks.models import (
     Task,
-    Solution
+    Solution,
+    TaskCategory,
+    FilterCategory,
+    Filter
 )
 
 
@@ -128,3 +134,20 @@ class SolutionDetailView(generics.GenericAPIView):
         instance = self.get_object(pk)
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+class TaskCategoryListView(generics.ListAPIView):
+    queryset = TaskCategory.objects.all()
+    serializer_class = TaskCategorySerializer
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    search_fields = ['name']
+
+    @extend_schema(
+        tags=["Tasks"],
+        summary="Получение экземпляров Task Category"
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+

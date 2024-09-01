@@ -5,7 +5,8 @@ from Tasks.views import (
     TaskDetailView,
     TaskListView,
     SolutionView,
-    SolutionDetailView
+    SolutionDetailView,
+    TaskCategoryListView
 
 
 )
@@ -18,4 +19,5 @@ urlpatterns = [
     path('task/<uuid:pk>', TaskDetailView.as_view(), name='task_detail'),
     path('solution', SolutionView.as_view(), name='solution'),
     path('solution/<uuid:pk>', SolutionDetailView.as_view(), name='solution_detail'),
+    path('task/categories', TaskCategoryListView.as_view(), name='task_category_list'),
 ]

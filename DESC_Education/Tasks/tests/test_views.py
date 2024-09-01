@@ -265,3 +265,35 @@ class TestSolutionView(APITestCase):
         self.assertEqual(dict(res.data), expected_data)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(profile.reply_count, profile.REPLY_MONTH_COUNT-1)
+
+
+
+class TaskCategoryListViewTest(APITestCase):
+    def setUp(self):
+        TaskCategory.objects.all().delete()
+        self.category1 = TaskCategory.objects.create(name='Web')
+        self.category2 = TaskCategory.objects.create(name='Phone')
+        self.category3 = TaskCategory.objects.create(name='Node')
+        self.category4 = TaskCategory.objects.create(name='Design')
+
+
+    def test_get_categories(self):
+        res = self.client.get(reverse('task_category_list'))
+        categories = TaskCategory.objects.all()
+        expected_data = [{'id': str(category.id), 'name': category.name} for category in categories]
+        self.assertEqual(dict(res.data).get('results'), expected_data)
+        self.assertEqual(res.status_code, 200)
+
+
+
+    def get_category_by_name(self):
+        res = self.client.get(reverse('task_category_detail'), {'search': "pyt"})
+        self.assertEqual(dict(res.data).get('results'), {'id': str(self.category2.id), 'name': self.category2.name})
+        self.assertEqual(res.status_code, 200)
+
+    def get_category_by_name2(self):
+        res = self.client.get(reverse('task_category_detail'), {'search': "o"})
+        self.assertEqual(dict(res.data).get('results'), [{'id': str(self.category2.id), 'name': self.category2.name},
+                                                         {'id': str(self.category3.id), 'name': self.category3.name}])
+        self.assertEqual(res.status_code, 200)
+
