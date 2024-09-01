@@ -135,6 +135,7 @@ class CreateProfileViewTest(APITestCase):
                                headers={"Authorization": f"Bearer {self.token}"})
 
         profile: StudentProfile = StudentProfile.objects.first()
+        serializer = GetStudentProfileSerializer(instance=profile)
 
         expected_data = self.student_example_data
         expected_data["id"] = str(profile.id)
@@ -150,6 +151,8 @@ class CreateProfileViewTest(APITestCase):
         expected_data['university'] = dict(UniversitySerializer(self.university).data)
         expected_data['specialty'] = dict(SpecialtySerializer(self.specialty).data)
         expected_data['city'] = dict(CitySerializer(self.city).data)
+        expected_data["replyReloadDate"] = serializer.data['replyReloadDate']
+        expected_data["replyCount"] = profile.REPLY_MONTH_COUNT
 
         faculty = dict(FacultySerializer(self.faculty).data)
         faculty['university'] = faculty.get('university')
@@ -228,6 +231,7 @@ class CreateProfileViewTest(APITestCase):
                                )
 
         profile = StudentProfile.objects.first()
+        serializer = GetStudentProfileSerializer(instance=profile)
 
         expected_data = example_data
         expected_data["id"] = str(profile.id)
@@ -236,6 +240,8 @@ class CreateProfileViewTest(APITestCase):
         expected_data["phone"] = '+77777777777'
         expected_data.pop('files')
         expected_data.pop('skills')
+        expected_data["replyReloadDate"] = serializer.data['replyReloadDate']
+        expected_data["replyCount"] = profile.REPLY_MONTH_COUNT
         expected_skill_names = set()
         for i in self.skills:
             expected_skill_names.add(i.get('name'))
@@ -346,7 +352,7 @@ class GetMyProfileTest(APITestCase):
                               headers={"Authorization": f"Bearer {self.token}"})
 
         profile = StudentProfile.objects.get()
-        expected_data = dict(StudentProfileSerializer(profile).data)
+        expected_data = dict(GetStudentProfileSerializer(profile).data)
         expected_data['skills'] = []
 
         self.assertEqual(dict(res.data), expected_data)
@@ -415,8 +421,9 @@ class GetProfileTest(APITestCase):
                                data=self.student_example_data,
                                headers={"Authorization": f"Bearer {self.token}"})
 
-        profile = StudentProfile.objects.first()
+        profile: StudentProfile = StudentProfile.objects.first()
         profile.verification = profile.VERIFIED
+        serializer = GetStudentProfileSerializer(instance=profile)
         profile.save()
         res = self.client.get(reverse("profile_get", kwargs={"pk": str(self.user.id)}))
 
@@ -427,6 +434,8 @@ class GetProfileTest(APITestCase):
         expected_data["verification"] = "verified"
         expected_data["logoImg"] = None
         expected_data["email"] = profile.user.email
+        expected_data["replyReloadDate"] = serializer.data['replyReloadDate']
+        expected_data["replyCount"] = profile.REPLY_MONTH_COUNT
         expected_data.pop('emailVisibility')
         expected_data.pop('phoneVisibility')
 

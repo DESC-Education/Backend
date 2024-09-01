@@ -226,7 +226,9 @@ class ProfileView(generics.GenericAPIView):
                             'vkLink': 'str',
                             'skills': [
                                 {'id': 'uuid', 'name': 'str'},
-                                {'id': 'uuid', 'name': 'str'}]
+                                {'id': 'uuid', 'name': 'str'}],
+                            "replyCount": "int",
+                            "replyReloadDate": "datetime"
                         }
                     ),
                     OpenApiExample(
@@ -421,7 +423,10 @@ class GetMyProfileView(generics.GenericAPIView):
                             'vkLink': 'str',
                             'skills': [
                                 {'id': 'uuid', 'name': 'str'},
-                                {'id': 'uuid', 'name': 'str'}]
+                                {'id': 'uuid', 'name': 'str'},
+                            ],
+                            "replyCount": "int",
+                            "replyReloadDate": "datetime"
                         }
 
                     ),
@@ -557,7 +562,9 @@ class GetProfileView(generics.GenericAPIView):
                                'vkLink': 'str',
                                'skills': [
                                    {'id': 'uuid', 'name': 'str'},
-                                   {'id': 'uuid', 'name': 'str'}]
+                                   {'id': 'uuid', 'name': 'str'}],
+                            "replyCount": "int",
+                            "replyReloadDate": "datetime"
                                }
 
                     ),
@@ -1036,7 +1043,9 @@ class EditProfileView(generics.GenericAPIView):
                             'vkLink': 'str',
                             'skills': [
                                 {'id': 'uuid', 'name': 'str'},
-                                {'id': 'uuid', 'name': 'str'}]
+                                {'id': 'uuid', 'name': 'str'}],
+                            "replyCount": "int",
+                            "replyReloadDate": "datetime"
                         }
 
                     ),

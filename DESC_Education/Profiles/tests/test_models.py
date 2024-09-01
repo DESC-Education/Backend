@@ -73,3 +73,4 @@ class ProfileModelTest(TestCase):
         self.abstract_model_test(self.student_profile)
 
 
+
