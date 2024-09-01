@@ -10,12 +10,17 @@ from Tasks.models import (
 )
 
 
+class FilterCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FilterCategory
+        fields = '__all__'
+
+
 class FilterSerializer(serializers.ModelSerializer):
-    filterCategory = serializers.CharField(source='filter_category')
 
     class Meta:
         model = Filter
-        fields = ('id', 'name', 'filterCategory')
+        fields = '__all__'
 
 
 class TaskCategorySerializer(serializers.ModelSerializer):
@@ -85,7 +90,6 @@ class TaskListSerializer(serializers.ModelSerializer):
         model = Task
         fields = ('title', 'description', 'deadline', 'createdAt', 'profile', 'category')
 
-
     @staticmethod
     def get_profile(obj) -> str:
         try:
@@ -111,7 +115,6 @@ class SolutionSerializer(serializers.ModelSerializer):
     task = TaskSerializer(read_only=True)
 
     # read and write
-
 
     class Meta:
         model = Solution
