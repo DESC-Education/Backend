@@ -186,7 +186,7 @@ class BaseProfile(models.Model):
             ProfileVerifyRequest.PENDING: self.ON_VERIFICATION
         }
         if self.verification == self.VERIFIED:
-            return self.VERIFIED
+            return {"status": self.VERIFIED}
 
         v_requests: ProfileVerifyRequest = self.verification_requests
 
