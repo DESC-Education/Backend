@@ -183,3 +183,7 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
 
     def get_replyCount(self, obj):
         return obj.get_reply_count()
+
+
+class TestProfileVerifySerializer(BaseProfileSerializer):
+    email = serializers.EmailField()
