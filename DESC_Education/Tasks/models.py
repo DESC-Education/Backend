@@ -9,21 +9,8 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.apps import apps
 
 
-class TaskCategory(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
-
-    name = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ['-id']
-
-
 class FilterCategory(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
-    task_categories = models.ManyToManyField(TaskCategory, related_name='filter_categories')
     name = models.CharField(max_length=100)
 
     def __str__(self):
@@ -37,6 +24,18 @@ class Filter(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     filter_category = models.ForeignKey(FilterCategory, related_name='filters', on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['-id']
+
+
+class TaskCategory(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    name = models.CharField(max_length=100)
+    filter_categories = models.ManyToManyField(FilterCategory, related_name='task_category')
 
     def __str__(self):
         return self.name
@@ -91,7 +90,6 @@ class Solution(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     status = models.CharField(max_length=10, choices=STATUSES, default=PENDING)
     company_comment = models.TextField(max_length=1000, blank=True, null=True)
-
 
     class Meta:
         ordering = ['-created_at']
