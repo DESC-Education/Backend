@@ -121,10 +121,8 @@ class ProfileVerifyRequest(models.Model):
     ], default=PENDING)
     comment = models.TextField(null=True, blank=True)
 
-
     class Meta:
         ordering = ['-created_at']
-
 
 
 class File(models.Model):
@@ -208,11 +206,6 @@ class BaseProfile(models.Model):
         return {"status": self.NOT_VERIFIED}
 
 
-
-
-
-
-
 class Specialty(models.Model):
     BACHELOR = "bachelor"
     MAGISTRACY = "magistracy"
@@ -251,18 +244,20 @@ class StudentProfile(BaseProfile):
         (FULL_TIME_AND_PART_TIME_EDUCATION, "Очно-Заочная форма обучения")
     ]
 
+
+
     form_of_education = models.CharField(choices=EDUCATION_CHOISES, max_length=15, null=True)
     university = models.ForeignKey(University, on_delete=models.CASCADE, null=True, related_name='university')
     faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, null=True, related_name='faculty')
     specialty = models.ForeignKey(Specialty, on_delete=models.CASCADE, null=True, related_name='specialty')
     admission_year = models.IntegerField(null=True)
     reply_count = models.IntegerField(default=REPLY_MONTH_COUNT, editable=False, blank=True)
-    reply_reload_date = models.DateTimeField(default=(tz.now() + tz.timedelta(days=REPLY_RELOAD_DAYS)), editable=False, blank=True)
-
+    reply_reload_date = models.DateTimeField(auto_now_add=True, editable=False,
+                                             blank=True)
 
     def get_reply_count(self):
         if tz.now() >= self.reply_reload_date:
-            self.reply_count = REPLY_MONTH_COUNT
+            self.reply_count = self.REPLY_MONTH_COUNT
             self.reply_reload_date = tz.now() + tz.timedelta(days=self.REPLY_RELOAD_DAYS)
             self.save()
         return self.reply_count
