@@ -169,11 +169,21 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
     faculty = FacultySerializer()
     skills = SkillSerializer(many=True)
     specialty = SpecialtySerializer()
+    replyCount = serializers.SerializerMethodField()
+    replyReloadDate = serializers.DateTimeField(source="reply_reload_date", read_only=True)
+
 
 
     class Meta(BaseProfileSerializer.Meta):
         model = StudentProfile
         fields = BaseProfileSerializer.Meta.fields + \
                  ('formOfEducation', 'admissionYear', 'university', 'faculty', 'skills',
-                  'specialty',)
+                  'specialty', 'replyCount', 'replyReloadDate')
 
+
+    def get_replyCount(self, obj):
+        return obj.get_reply_count()
+
+
+class TestProfileVerifySerializer(BaseProfileSerializer):
+    email = serializers.EmailField()

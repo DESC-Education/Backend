@@ -1,5 +1,5 @@
 import random
-
+from django.utils import timezone as tz
 from django.db import models
 from Users.models import CustomUser
 import uuid
@@ -156,6 +156,7 @@ class BaseProfile(models.Model):
                           editable=False,
                           unique=True)
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, editable=False, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False, blank=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True)
@@ -237,6 +238,9 @@ class Specialty(models.Model):
 
 
 class StudentProfile(BaseProfile):
+    REPLY_MONTH_COUNT = 30
+    REPLY_RELOAD_DAYS = 30
+
     FULL_TIME_EDUCATION = "full_time"
     PART_TIME_EDUCATION = "part_time"
     FULL_TIME_AND_PART_TIME_EDUCATION = "full_part_time"
@@ -252,6 +256,16 @@ class StudentProfile(BaseProfile):
     faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, null=True, related_name='faculty')
     specialty = models.ForeignKey(Specialty, on_delete=models.CASCADE, null=True, related_name='specialty')
     admission_year = models.IntegerField(null=True)
+    reply_count = models.IntegerField(default=REPLY_MONTH_COUNT, editable=False, blank=True)
+    reply_reload_date = models.DateTimeField(default=(tz.now() + tz.timedelta(days=REPLY_RELOAD_DAYS)), editable=False, blank=True)
+
+
+    def get_reply_count(self):
+        if tz.now() >= self.reply_reload_date:
+            self.reply_count = REPLY_MONTH_COUNT
+            self.reply_reload_date = tz.now() + tz.timedelta(days=self.REPLY_RELOAD_DAYS)
+            self.save()
+        return self.reply_count
 
 
 class CompanyProfile(BaseProfile):

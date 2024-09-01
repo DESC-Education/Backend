@@ -6,6 +6,7 @@ from Tasks.models import (
     FilterCategory,
     Filter,
     Task,
+    Solution
 )
 
 
@@ -17,12 +18,10 @@ class FilterSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'filterCategory')
 
 
-
 class TaskCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskCategory
         fields = '__all__'
-
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -34,8 +33,6 @@ class TaskSerializer(serializers.ModelSerializer):
     filters = FilterSerializer(many=True, read_only=True)
     profile = serializers.SerializerMethodField(read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
-
-
 
     class Meta:
         model = Task
@@ -61,7 +58,6 @@ class TaskSerializer(serializers.ModelSerializer):
         if request and request.method == 'GET':
             for field in self.fields:
                 self.fields[field].required = False
-
 
     def validate(self, attrs):
         request = self.context.get('request')
@@ -89,6 +85,7 @@ class TaskListSerializer(serializers.ModelSerializer):
         model = Task
         fields = ('title', 'description', 'deadline', 'createdAt', 'profile', 'category')
 
+
     @staticmethod
     def get_profile(obj):
         try:
@@ -96,3 +93,28 @@ class TaskListSerializer(serializers.ModelSerializer):
             return ProfileTaskSerializer(profile).data
         except:
             return None
+
+
+class SolutionSerializer(serializers.ModelSerializer):
+    """
+        Создание студент: taskId, description, file
+
+    """
+
+    # write_only
+    taskId = serializers.PrimaryKeyRelatedField(
+        source="task", queryset=Task.objects.all(), write_only=True)
+
+    # read_only
+    createdAt = serializers.DateTimeField(source='created_at', read_only=True)
+    companyComment = serializers.CharField(source='company_comment', read_only=True)
+    task = TaskSerializer(read_only=True)
+
+    # read and write
+
+
+    class Meta:
+        model = Solution
+        fields = ('id', 'task', 'user', 'description', 'file',
+                  'companyComment', 'status', 'createdAt', 'taskId')
+        read_only_fields = ['id', 'task', 'createdAt', 'companyComment', 'user', 'status']

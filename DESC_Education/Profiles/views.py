@@ -35,6 +35,7 @@ from Profiles.serializers import (
     SetPhoneSerializer,
     EditStudentProfileSerializer,
     EditCompanyProfileSerializer,
+    TestProfileVerifySerializer
 
 )
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -226,7 +227,9 @@ class ProfileView(generics.GenericAPIView):
                             'vkLink': 'str',
                             'skills': [
                                 {'id': 'uuid', 'name': 'str'},
-                                {'id': 'uuid', 'name': 'str'}]
+                                {'id': 'uuid', 'name': 'str'}],
+                            "replyCount": "int",
+                            "replyReloadDate": "datetime"
                         }
                     ),
                     OpenApiExample(
@@ -421,7 +424,10 @@ class GetMyProfileView(generics.GenericAPIView):
                             'vkLink': 'str',
                             'skills': [
                                 {'id': 'uuid', 'name': 'str'},
-                                {'id': 'uuid', 'name': 'str'}]
+                                {'id': 'uuid', 'name': 'str'},
+                            ],
+                            "replyCount": "int",
+                            "replyReloadDate": "datetime"
                         }
 
                     ),
@@ -557,7 +563,9 @@ class GetProfileView(generics.GenericAPIView):
                                'vkLink': 'str',
                                'skills': [
                                    {'id': 'uuid', 'name': 'str'},
-                                   {'id': 'uuid', 'name': 'str'}]
+                                   {'id': 'uuid', 'name': 'str'}],
+                            "replyCount": "int",
+                            "replyReloadDate": "datetime"
                                }
 
                     ),
@@ -1036,7 +1044,9 @@ class EditProfileView(generics.GenericAPIView):
                             'vkLink': 'str',
                             'skills': [
                                 {'id': 'uuid', 'name': 'str'},
-                                {'id': 'uuid', 'name': 'str'}]
+                                {'id': 'uuid', 'name': 'str'}],
+                            "replyCount": "int",
+                            "replyReloadDate": "datetime"
                         }
 
                     ),
@@ -1178,3 +1188,18 @@ class FacultiesList(generics.ListAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+
+class TestVerifyView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = TestProfileVerifySerializer
+
+    def post(self, request):
+        serializer = self.get_serializer()
+        serializer.is_valid(raise_exception=True)
+        user = CustomUser.objects.get(email=serializer.validated_data['email'])
+        profile = StudentProfile.objects.get(user=user)
+        profile.is_verified = True
+        profile.save()
+
+        return Response(status=status.HTTP_200_OK)

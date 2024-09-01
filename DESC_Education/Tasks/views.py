@@ -1,22 +1,21 @@
-import logging
 from rest_framework import generics, status
-from Tasks.permissions import IsCompanyRole
+from Settings.permissions import IsCompanyRole, IsStudentRole
 from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
-from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from Settings.pagination import CustomPageNumberPagination
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
+from Profiles.models import (
+    StudentProfile
+)
 from Tasks.serializers import (
     TaskSerializer,
     TaskListSerializer,
+    SolutionSerializer
 )
 from Tasks.models import (
     Task
 )
+
 
 
 class TaskView(generics.GenericAPIView):
@@ -58,7 +57,9 @@ class TaskDetailView(generics.GenericAPIView):
     permission_classes = [IsCompanyRole]
 
     def get_object(self, pk):
-        return get_object_or_404(Task, pk=pk)
+        obj = get_object_or_404(Task, pk=pk)
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     @extend_schema(
         tags=["Tasks"],
@@ -67,7 +68,6 @@ class TaskDetailView(generics.GenericAPIView):
     def patch(self, request, pk):
         try:
             instance = self.get_object(pk)
-            self.check_object_permissions(request, instance)
             serializer = self.get_serializer(data=request.data, instance=instance)
             serializer.is_valid(raise_exception=True)
             instance = serializer.save()
@@ -83,5 +83,36 @@ class TaskDetailView(generics.GenericAPIView):
     def get(self, request, pk):
         instance = self.get_object(pk)
         return Response(TaskSerializer(instance).data, status=status.HTTP_200_OK)
+
+
+
+class SolutionView(generics.GenericAPIView):
+    serializer_class = SolutionSerializer
+    permission_classes = [IsStudentRole]
+
+
+    def get_object(self) -> StudentProfile:
+        return get_object_or_404(StudentProfile, user=self.request.user)
+
+
+    def post(self, request):
+        profile: StudentProfile = self.get_object()
+        if profile.reply_count == 0:
+            return Response({"message": "Недостаточно откликов для добавления решения"},
+                            status=status.HTTP_403_FORBIDDEN)
+
+
+
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save(user=request.user)
+
+        profile.reply_count -= 1
+        profile.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 
 

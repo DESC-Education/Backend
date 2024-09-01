@@ -10,16 +10,21 @@ from Users.models import CustomUser
 from io import BytesIO
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
+from Profiles.models import (
+    StudentProfile
+)
 from Tasks.models import (
     Task,
     TaskCategory,
     FilterCategory,
-    Filter
+    Filter,
+    Solution
 )
 
 from Tasks.serializers import (
     TaskSerializer,
-    TaskCategorySerializer
+    TaskCategorySerializer,
+    SolutionSerializer
 )
 
 
@@ -39,30 +44,30 @@ class TaskViewTest(APITestCase):
 
         return expected_data
 
-
     def setUp(self):
         self.maxDiff = None
         self.student = CustomUser.objects.create_user(
             email='example@example.com',
             password='password',
-            role=CustomUser.STUDENT_ROLE
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
         )
         self.student_token = self.student.get_token()['accessToken']
-
 
         self.another_company = CustomUser.objects.create_user(
             email='exampl3e@example.com',
             password='password',
-            role=CustomUser.COMPANY_ROLE
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
         )
         self.another_company_token = self.another_company.get_token()['accessToken']
         self.company = CustomUser.objects.create_user(
             email='exampl2e2@example.com',
             password='password',
-            role=CustomUser.COMPANY_ROLE
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
         )
         self.company_token = self.company.get_token()['accessToken']
-
 
         task_category = TaskCategory.objects.first()
         filter_category: FilterCategory = FilterCategory.objects.create(
@@ -90,7 +95,7 @@ class TaskViewTest(APITestCase):
                                HTTP_AUTHORIZATION='Bearer ' + self.student_token)
 
         self.assertEqual(json.loads(res.content),
-                         {'detail': "У вас недостаточно прав для выполнения данного действия."})
+                         {'detail': "Только для компаний!"})
         self.assertEqual(res.status_code, 403)
 
     def test_create_task_200(self):
@@ -118,15 +123,12 @@ class TaskViewTest(APITestCase):
                                                 {'title': "new Title"},
                                                 HTTP_AUTHORIZATION='Bearer ' + self.another_company_token)
         self.assertEqual(another_company_put.data.get('message'),
-                         'У вас недостаточно прав для выполнения данного действия.')
+                         'К изменению доступны объекты созданые только вами')
         self.assertEqual(another_company_put.status_code, 400)
-
-
 
     def test_edit_task_200(self):
         self.test_create_task_200()
         task = Task.objects.first()
-
 
         test_put = self.client.patch(reverse('task_detail',
                                              kwargs={'pk': task.id}),
@@ -158,6 +160,7 @@ class TaskDetailViewTest(APITestCase):
         img = Image.new("RGB", (100, 100))
         img.save(bts, 'jpeg')
         return SimpleUploadedFile(f"test_{random.randint(1, 25)}.jpg", bts.getvalue())
+
     def setUp(self):
         self.maxDiff = None
         self.company = CustomUser.objects.create_user(
@@ -185,14 +188,12 @@ class TaskDetailViewTest(APITestCase):
             category=TaskCategory.objects.first()
         )
 
-
     def test_get_200(self):
         res = self.client.get(reverse('task_detail', kwargs={'pk': self.task.id}),
                               HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
 
         task = Task.objects.first()
         expected_data = self.get_expected_data(task)
-
 
         self.assertEqual(dict(res.data), expected_data)
         self.assertEqual(res.status_code, 200)
@@ -211,3 +212,56 @@ class TaskDetailViewTest(APITestCase):
         self.assertEqual(res.status_code, 404)
 
 
+class TestSolutionView(APITestCase):
+    def setUp(self):
+        self.maxDiff = None
+        self.company = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+        self.task = Task.objects.create(
+            user=self.company,
+            title="Test Task",
+            description="Test Task Description",
+            deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            category=TaskCategory.objects.first()
+        )
+
+        self.student = CustomUser.objects.create_user(
+            email='student@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+
+        self.student_token = self.student.get_token()['accessToken']
+
+        self.example_data = {
+            'taskId': self.task.id,
+            'description': "Test Task Description",
+            'file': SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg")
+        }
+
+    def get_expected_data(self, solution):
+        example_data = self.example_data.copy()
+        expected_data = SolutionSerializer(instance=solution, data=example_data)
+        expected_data.is_valid()
+
+        return dict(expected_data.data)
+
+    def test_create_solution(self):
+        res = self.client.post(reverse('solution'),
+                               self.example_data,
+                               HTTP_AUTHORIZATION='Bearer ' + self.student_token,
+                               )
+        solution = Solution.objects.first()
+        profile:StudentProfile = StudentProfile.objects.get(user=self.student)
+
+
+        expected_data = self.get_expected_data(solution)
+        self.assertEqual(dict(res.data), expected_data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(profile.reply_count, profile.REPLY_MONTH_COUNT-1)

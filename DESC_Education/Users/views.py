@@ -2,6 +2,7 @@ import random
 
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from Settings.permissions import IsAuthenticatedAndVerified
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
@@ -384,7 +385,6 @@ class VerifyRegistrationView(generics.GenericAPIView):
 
 
 class CustomTokenRefreshView(TokenRefreshView):
-    # serializer_class = EmptySerializer
     @extend_schema(
         tags=["Users"],
         summary="Обновление access токена",
@@ -811,7 +811,7 @@ class ChangePasswordView(generics.GenericAPIView):
 class ChangeEmailView(generics.GenericAPIView):
     serializer_class = ChangeEmailSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedAndVerified]
 
     @extend_schema(
         tags=["Users"],
