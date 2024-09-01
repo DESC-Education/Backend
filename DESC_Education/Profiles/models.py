@@ -119,7 +119,7 @@ class ProfileVerifyRequest(models.Model):
         (APPROVED, 'Approved'),
         (REJECTED, 'Rejected'),
     ], default=PENDING)
-    comments = models.TextField(null=True, blank=True)
+    comment = models.TextField(null=True, blank=True)
 
 
     class Meta:
@@ -195,17 +195,17 @@ class BaseProfile(models.Model):
             if v_request.status == ProfileVerifyRequest.REJECTED:
                 return {
                     'status': v_request.status,
-                    'comments': v_request.comments
+                    'comment': v_request.comment
                 }
             elif v_request.status == ProfileVerifyRequest.APPROVED:
                 if self.verification != self.VERIFIED:
                     self.verification = self.VERIFIED
                     self.save()
-                return self.VERIFIED
+                return {"status": self.VERIFIED}
 
-            return statuses.get(v_request.status)
+            return {"status": statuses.get(v_request.status)}
 
-        return self.NOT_VERIFIED
+        return {"status": self.NOT_VERIFIED}
 
 
 
