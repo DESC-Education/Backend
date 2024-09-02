@@ -28,7 +28,8 @@ from Tasks.serializers import (
     SolutionSerializer,
     FilterCategorySerializer,
     CompanyTasksMySerializer,
-    TaskListSerializer
+    TaskListSerializer,
+    StudentTasksMySerializer,
 )
 
 
@@ -391,3 +392,105 @@ class CompanyTasksMyViewTest(APITestCase):
         self.assertEqual(dict(res.data), {'detail': 'Только для компаний!'})
         self.assertEqual(res.status_code, 403)
 
+
+
+class StudentTasksMyViewTest(APITestCase):
+    def setUp(self):
+        self.student = CustomUser.objects.create_user(
+            email='example2@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+
+        self.student_token = self.student.get_token()['accessToken']
+
+        self.company = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+
+        self.company_token = self.company.get_token()['accessToken']
+
+        self.task_1 = Task.objects.create(
+            user=self.company,
+            title="Test Task",
+            description="Test Task Description",
+            deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            category=TaskCategory.objects.first(),
+        )
+        self.task_1.filters.set([Filter.objects.first()])
+
+        self.task_2: Task = Task.objects.create(
+            user=self.company,
+            title="Test Task2",
+            description="Test Task Description",
+            deadline=(timezone.now() + timezone.timedelta(days=2)).isoformat(),
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            category=TaskCategory.objects.first(),
+        )
+        self.task_2.filters.set([Filter.objects.first()])
+
+        self.task_3 = Task.objects.create(
+            user=self.company,
+            title="Test Task3",
+            description="Test Task Description",
+            deadline=(timezone.now() - timezone.timedelta(days=1)).isoformat(),
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            category=TaskCategory.objects.first(),
+        )
+        self.task_3.filters.set([Filter.objects.first()])
+
+        self.task_4 = Task.objects.create(
+            user=self.company,
+            title="Test Task4",
+            description="Test Task Description",
+            deadline=(timezone.now() - timezone.timedelta(days=2)).isoformat(),
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            category=TaskCategory.objects.first(),
+        )
+        self.task_4.filters.set([Filter.objects.first()])
+
+
+        solution = Solution.objects.create(
+            task=self.task_1,
+            user=self.student,
+            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
+            status=Solution.COMPLETED,
+        )
+
+        solution2 = Solution.objects.create(
+            task=self.task_4,
+            user=self.student,
+            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
+            status=Solution.PENDING,
+        )
+
+        solution3 = Solution.objects.create(
+            task=self.task_2,
+            user=self.student,
+            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
+            status=Solution.PENDING,
+        )
+
+    def test_get_200(self):
+
+        res = self.client.get(reverse('student_tasks_my'),
+                              HTTP_AUTHORIZATION=f'Bearer {self.student_token}')
+
+        serializer = StudentTasksMySerializer()
+        self.assertEqual(dict(res.data),
+                         serializer.to_representation(Solution.objects.all()))
+        self.assertEqual(res.status_code, 200)
+
+
+    def test_get_company(self):
+        res = self.client.get(reverse('student_tasks_my'),
+                              HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
+
+
+        self.assertEqual(dict(res.data), {'detail': 'Только для студентов!'})
+        self.assertEqual(res.status_code, 403)

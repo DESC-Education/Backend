@@ -86,6 +86,27 @@ class TaskSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class StudentTasksMySerializer(serializers.Serializer):
+    active_tasks = TaskSerializer(many=True)
+    archived_tasks = TaskSerializer(many=True)
+
+    def to_representation(self, instance):
+        active_tasks = []
+        archived_tasks = []
+
+        for solution in instance:
+            if solution.status != solution.PENDING or solution.task.deadline < timezone.now():
+                archived_tasks.append(TaskSerializer(solution.task).data)
+            else:
+                active_tasks.append(TaskSerializer(solution.task).data)
+
+
+        return {
+            'active_tasks': active_tasks,
+            'archived_tasks': archived_tasks
+        }
+
+
 class CompanyTasksMySerializer(serializers.Serializer):
     active_tasks = TaskSerializer(many=True)
     archived_tasks = TaskSerializer(many=True)
@@ -143,7 +164,7 @@ class SolutionSerializer(serializers.ModelSerializer):
 
     # write_only
     taskId = serializers.PrimaryKeyRelatedField(
-        source="task", queryset=Task.objects.all(), write_only=True)
+        source="task", queryset=Task.objects.filter(deadline__gte=timezone.now()), write_only=True)
 
     # read_only
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)

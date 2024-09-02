@@ -83,12 +83,14 @@ class Solution(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='solutions')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='solutions')
-    description = models.TextField(max_length=2000)
-    file = models.FileField(upload_to=user_solution_directory_path)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
-    status = models.CharField(max_length=10, choices=STATUSES, default=PENDING)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='solutions',
+                             editable=False)
+    status = models.CharField(max_length=10, choices=STATUSES, default=PENDING, editable=False)
+
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='solutions')
+    description = models.TextField(max_length=2000)
+    file = models.FileField(upload_to=user_solution_directory_path, max_length=500)
     company_comment = models.TextField(max_length=1000, blank=True, null=True)
 
     class Meta:
