@@ -17,6 +17,7 @@ from Tasks.serializers import (
     TaskCategorySerializer,
     FilterCategorySerializer,
     CompanyTasksMySerializer,
+    StudentTasksMySerializer,
     TaskCategoryWithFiltersSerializer
 )
 from Tasks.models import (
@@ -168,6 +169,24 @@ class CompanyTasksMyView(generics.ListAPIView):
         summary="Получение экземпляров my Tasks"
     )
     def get(self, request, *args, **kwargs):
-        queryset = Task.objects.filter(user=self.request.user)
+        queryset = self.get_queryset()
+        serializer = self.get_serializer()
+        return Response(serializer.to_representation(queryset))
+
+
+class StudentTasksMyView(generics.ListAPIView):
+    queryset = Task.objects.all()
+    serializer_class = StudentTasksMySerializer
+    permission_classes = [IsStudentRole]
+
+    def get_queryset(self):
+        return Solution.objects.filter(user=self.request.user)
+
+    @extend_schema(
+        tags=["Tasks"],
+        summary="Получение экземпляров my Tasks"
+    )
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
         serializer = self.get_serializer()
         return Response(serializer.to_representation(queryset))
