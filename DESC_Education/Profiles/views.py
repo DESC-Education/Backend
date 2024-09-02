@@ -1200,10 +1200,9 @@ class TestVerifyView(generics.GenericAPIView):
 
         user = CustomUser.objects.get(email=serializer.validated_data['email'])
         profile = StudentProfile.objects.get(user=user)
-        v_request: ProfileVerifyRequest = ProfileVerifyRequest.objects.get(profile=profile)
+        v_request: ProfileVerifyRequest = profile.verification_requests.first()
         v_request.status = serializer.validated_data['status']
         v_request.comment = serializer.validated_data['comment']
-
         v_request.save()
 
         return Response(status=status.HTTP_200_OK)
