@@ -1194,12 +1194,17 @@ class TestVerifyView(generics.GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = TestProfileVerifySerializer
 
+    profile_classes = {
+        CustomUser.STUDENT_ROLE: StudentProfile,
+        CustomUser.COMPANY_ROLE: CompanyProfile,
+    }
+
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user = CustomUser.objects.get(email=serializer.validated_data['email'])
-        profile = StudentProfile.objects.get(user=user)
+        profile = self.profile_classes[user.role].objects.get(user=user)
         v_request: ProfileVerifyRequest = profile.verification_requests.first()
         v_request.status = serializer.validated_data['status']
         v_request.comment = serializer.validated_data['comment']
