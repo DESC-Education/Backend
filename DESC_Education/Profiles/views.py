@@ -491,7 +491,7 @@ class GetMyProfileView(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         try:
             user = request.user
-            profile = self.profile_classes[user.role].objects.get(user=user)
+            profile = user.get_profile()
             serializer = self.profile_serializer_class[user.role](profile)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -720,7 +720,7 @@ class ChangeLogoImgView(generics.GenericAPIView):
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             try:
-                profile = self.profile_classes[user.role].objects.get(user=user)
+                profile = user.get_profile()
             except ObjectDoesNotExist:
                 return Response({"message": "Профиль не найден"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -928,7 +928,7 @@ class SetPhoneView(generics.GenericAPIView):
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
 
-            profile = self.profile_classes[user.role].objects.get(user=user)
+            profile = user.get_profile()
 
             try:
                 phone_verification_code = PhoneVerificationCode.objects.get(phone=serializer.validated_data['phone'],
@@ -1105,7 +1105,7 @@ class EditProfileView(generics.GenericAPIView):
     def post(self, request):
         try:
             user = request.user
-            profile = self.profile_classes[user.role].objects.get(user=user)
+            profile = user.get_profile()
 
             serializer = self.edit_profile_serializers[user.role](data=request.data, instance=profile, partial=True)
             serializer.is_valid(raise_exception=True)
@@ -1204,7 +1204,7 @@ class TestVerifyView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         user = CustomUser.objects.get(email=serializer.validated_data['email'])
-        profile = self.profile_classes[user.role].objects.get(user=user)
+        profile = user.get_profile()
         v_request: ProfileVerifyRequest = profile.verification_requests.first()
         v_request.status = serializer.validated_data['status']
         v_request.comment = serializer.validated_data['comment']

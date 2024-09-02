@@ -24,8 +24,11 @@ from Tasks.models import (
 from Tasks.serializers import (
     TaskSerializer,
     TaskCategorySerializer,
+    TaskCategoryWithFiltersSerializer,
     SolutionSerializer,
-    FilterCategorySerializer
+    FilterCategorySerializer,
+    CompanyTasksMySerializer,
+    TaskListSerializer
 )
 
 
@@ -290,8 +293,8 @@ class TaskCategoryListViewTest(APITestCase):
         res = self.client.get(reverse('task_category_list'))
 
         categories = TaskCategory.objects.all()
-        expected_data = [TaskCategorySerializer(instance=category).data for category in categories]
-        self.assertEqual(dict(res.data).get('results'), expected_data)
+        expected_data = TaskCategoryWithFiltersSerializer(categories, many=True)
+        self.assertEqual(dict(res.data).get('results'), expected_data.data)
         self.assertEqual(res.status_code, 200)
 
 
@@ -309,42 +312,82 @@ class TaskCategoryListViewTest(APITestCase):
 
 
 
-# class TaskCategoryListViewTest(APITestCase):
-#     def setUp(self):
-#         TaskCategory.objects.all().delete()
-#         self.category1 = TaskCategory.objects.create(name='Web')
-#         self.category2 = TaskCategory.objects.create(name='Phone')
-#         self.category3 = TaskCategory.objects.create(name='Design')
-#
-#         FilterCategory.objects.all().delete()
-#
-#         self.filter1 = FilterCategory.objects.create(name='difficult')
-#         self.filter2 = FilterCategory.objects.create(name='programming_language')
-#         self.filter3 = FilterCategory.objects.create(name='items')
-#
-#         self.category1.filter_categories.add(self.filter1)
-#         self.category2.filter_categories.add(self.filter1)
-#         self.category1.filter_categories.add(self.filter2)
-#         self.category2.filter_categories.add(self.filter2)
-#         self.category3.filter_categories.add(self.filter3)
-#
-#
-#
-#     def test_get_filter_categories(self):
-#         res = self.client.get(reverse('filter_category_list'))
-#         categories = FilterCategory.objects.all()
-#         serializer = FilterCategorySerializer(many=True, data=categories)
-#         serializer.is_valid()
-#         self.assertEqual(dict(res.data).get('results'), serializer.data)
-#         self.assertEqual(res.status_code, 200)
-#
-#
-#     def test_get_filter_category_by_task_category(self):
-#         res = self.client.get(reverse('filter_category_list'), {"taskCategoryId": self.category1.id})
-#         categories = FilterCategory.objects.all().filter(task_categories=self.category1)
-#         serializer = FilterCategorySerializer(many=True, data=categories)
-#         serializer.is_valid()
-#         self.assertEqual(dict(res.data).get('results'), serializer.data)
+class CompanyTasksMyViewTest(APITestCase):
+    def setUp(self):
+        self.student = CustomUser.objects.create_user(
+            email='example2@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+
+        self.student_token = self.student.get_token()['accessToken']
+
+        self.company = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+
+        self.company_token = self.company.get_token()['accessToken']
+
+        self.task_1 = Task.objects.create(
+            user=self.company,
+            title="Test Task",
+            description="Test Task Description",
+            deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            category=TaskCategory.objects.first(),
+        )
+        self.task_1.filters.set([Filter.objects.first()])
+
+        self.task_2: Task = Task.objects.create(
+            user=self.company,
+            title="Test Task2",
+            description="Test Task Description",
+            deadline=(timezone.now() + timezone.timedelta(days=2)).isoformat(),
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            category=TaskCategory.objects.first(),
+        )
+        self.task_2.filters.set([Filter.objects.first()])
+
+        self.task_3 = Task.objects.create(
+            user=self.company,
+            title="Test Task3",
+            description="Test Task Description",
+            deadline=(timezone.now() - timezone.timedelta(days=1)).isoformat(),
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            category=TaskCategory.objects.first(),
+        )
+        self.task_3.filters.set([Filter.objects.first()])
+
+        self.task_4 = Task.objects.create(
+            user=self.company,
+            title="Test Task4",
+            description="Test Task Description",
+            deadline=(timezone.now() - timezone.timedelta(days=2)).isoformat(),
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            category=TaskCategory.objects.first(),
+        )
+        self.task_2.filters.set([Filter.objects.first()])
+
+    def test_get_200(self):
+
+        res = self.client.get(reverse('company_tasks_my'),
+                              HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
+
+        serializer = CompanyTasksMySerializer()
+        self.assertEqual(dict(res.data),
+                         serializer.to_representation(Task.objects.all()))
+        self.assertEqual(res.status_code, 200)
 
 
+    def test_get_student(self):
+        res = self.client.get(reverse('company_tasks_my'),
+                              HTTP_AUTHORIZATION=f'Bearer {self.student_token}')
+
+
+        self.assertEqual(dict(res.data), {'detail': 'Только для компаний!'})
+        self.assertEqual(res.status_code, 403)
 

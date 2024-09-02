@@ -1,5 +1,6 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from django.apps import apps
+from django.contrib.auth.models import AnonymousUser
 
 CustomUser = apps.get_model('Users', 'CustomUser')
 
@@ -27,9 +28,12 @@ class IsAuthenticatedAndVerified(BasePermission):
 
 
 class IsCompanyRole(IsAuthenticatedAndVerified):
-
     def has_permission(self, request, view):
         if not super().has_permission(request, view):
+            return False
+
+
+        if type(request.user) == AnonymousUser:
             return False
 
         self.message = 'Только для компаний!'
@@ -42,6 +46,11 @@ class IsStudentRole(IsAuthenticatedAndVerified):
     def has_permission(self, request, view):
         if not super().has_permission(request, view):
             return False
+
+
+        if type(request.user) == AnonymousUser:
+            return False
+
 
         self.message = 'Только для студентов!'
         return CustomUser.STUDENT_ROLE == request.user.role
