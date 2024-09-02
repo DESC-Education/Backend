@@ -91,6 +91,14 @@ class CustomUser(AbstractBaseUser):
             'email': self.email,
         }
 
+    def get_profile(self):
+        if self.role == self.STUDENT_ROLE:
+            return self.studentprofile
+        elif self.role == self.COMPANY_ROLE:
+            return self.companyprofile
+        else:
+            return None
+
 
 class VerificationCode(models.Model):
     REGISTRATION_TYPE = "RG"

@@ -7,6 +7,7 @@ from Tasks.views import (
     SolutionView,
     SolutionDetailView,
     TaskCategoryListView,
+    CompanyTasksMyView
 
 
 )
@@ -20,6 +21,9 @@ urlpatterns = [
     path('solution', SolutionView.as_view(), name='solution'),
     path('solution/<uuid:pk>', SolutionDetailView.as_view(), name='solution_detail'),
     path('task/categories', TaskCategoryListView.as_view(), name='task_category_list'),
+    path('my/company', CompanyTasksMyView.as_view(), name='company_tasks_my'),
+
+
 
 
 ]

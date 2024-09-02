@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.conf import settings
 from django.apps import apps
+from django.utils import timezone
 from Tasks.models import (
     TaskCategory,
     FilterCategory,
@@ -25,6 +26,12 @@ class FilterCategorySerializer(serializers.ModelSerializer):
 
 
 class TaskCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskCategory
+        fields = ('id', 'name')
+
+
+class TaskCategoryWithFiltersSerializer(serializers.ModelSerializer):
     filterCategories = FilterCategorySerializer(source='filter_categories', many=True)
 
     class Meta:
@@ -33,28 +40,31 @@ class TaskCategorySerializer(serializers.ModelSerializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    # write_only
     filtersId = serializers.PrimaryKeyRelatedField(source="filters", queryset=Filter.objects.all(),
                                                    many=True, required=False, write_only=True)
     categoryId = serializers.PrimaryKeyRelatedField(source="category", queryset=TaskCategory.objects.all(),
                                                     write_only=True)
+
+    # read_only
     category = TaskCategorySerializer(read_only=True)
     filters = FilterSerializer(many=True, read_only=True)
     profile = serializers.SerializerMethodField(read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
+    solutionsCount = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
         fields = ('id', 'user', 'createdAt', 'title', 'description', 'deadline', 'file', 'category',
-                  'filters', 'profile', "categoryId", "filtersId")
+                  'filters', 'profile', "categoryId", "filtersId", 'solutionsCount')
         read_only_fields = ['id', 'user']
+
+    def get_solutionsCount(self, obj) -> int:
+        return obj.solutions.count()
 
     @staticmethod
     def get_profile(obj) -> dict:
-        try:
-            profile = apps.get_model('Profiles', 'CompanyProfile').objects.get(user=obj.user)
-            return ProfileTaskSerializer(profile).data
-        except:
-            return None
+        return ProfileTaskSerializer(obj.user.get_profile()).data
 
     def __init__(self, *args, **kwargs):
         super(TaskSerializer, self).__init__(*args, **kwargs)
@@ -74,6 +84,29 @@ class TaskSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"data": "Необходимо передать хотя бы одно поле для изменения."})
 
         return attrs
+
+
+class CompanyTasksMySerializer(serializers.Serializer):
+    active_tasks = TaskSerializer(many=True)
+    archived_tasks = TaskSerializer(many=True)
+
+    def to_representation(self, instance):
+        active_tasks = []
+        archived_tasks = []
+
+        for task in instance:
+            if task.deadline > timezone.now():
+                active_tasks.append(TaskSerializer(task).data)
+            else:
+                archived_tasks.append(TaskSerializer(task).data)
+
+        return {
+            'active_tasks': active_tasks,
+            'archived_tasks': archived_tasks
+        }
+
+    class Meta:
+        fields = ('active_tasks', 'archived_tasks')
 
 
 class ProfileTaskSerializer(serializers.ModelSerializer):
