@@ -1195,11 +1195,15 @@ class TestVerifyView(generics.GenericAPIView):
     serializer_class = TestProfileVerifySerializer
 
     def post(self, request):
-        serializer = self.get_serializer()
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         user = CustomUser.objects.get(email=serializer.validated_data['email'])
         profile = StudentProfile.objects.get(user=user)
-        profile.is_verified = True
-        profile.save()
+        v_request: ProfileVerifyRequest = ProfileVerifyRequest.objects.get(profile=profile)
+        v_request.status = serializer.validated_data['status']
+        v_request.comment = serializer.validated_data['comment']
+
+        v_request.save()
 
         return Response(status=status.HTTP_200_OK)

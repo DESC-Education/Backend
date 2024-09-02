@@ -187,3 +187,5 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
 
 class TestProfileVerifySerializer(serializers.Serializer):
     email = serializers.EmailField()
+    status = serializers.CharField()
+    comment = serializers.CharField()
