@@ -8,7 +8,8 @@ from Tasks.views import (
     SolutionDetailView,
     TaskCategoryListView,
     CompanyTasksMyView,
-    StudentTasksMyView
+    StudentTasksMyView,
+    TaskPatternPatternListView
 
 
 )
@@ -24,6 +25,7 @@ urlpatterns = [
     path('task/categories', TaskCategoryListView.as_view(), name='task_category_list'),
     path('my/company', CompanyTasksMyView.as_view(), name='company_tasks_my'),
     path('my/student', StudentTasksMyView.as_view(), name='student_tasks_my'),
+    path('patterns', TaskPatternPatternListView.as_view(), name='task_pattern_list'),
 
 
 

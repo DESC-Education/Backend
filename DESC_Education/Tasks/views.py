@@ -25,7 +25,8 @@ from Tasks.models import (
     Solution,
     TaskCategory,
     FilterCategory,
-    Filter
+    Filter,
+    TaskPattern
 )
 
 
@@ -190,3 +191,17 @@ class StudentTasksMyView(generics.ListAPIView):
         queryset = self.get_queryset()
         serializer = self.get_serializer()
         return Response(serializer.to_representation(queryset))
+
+
+class TaskPatternPatternListView(generics.ListAPIView):
+    queryset = TaskPattern.objects.all()
+    serializer_class = TaskSerializer
+    permission_classes = [IsCompanyRole]
+
+    @extend_schema(
+        tags=["Tasks"],
+        summary="Получение экземпляров TaskPattern"
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+

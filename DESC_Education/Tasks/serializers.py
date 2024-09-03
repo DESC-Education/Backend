@@ -178,3 +178,4 @@ class SolutionSerializer(serializers.ModelSerializer):
         fields = ('id', 'task', 'user', 'description', 'file',
                   'companyComment', 'status', 'createdAt', 'taskId')
         read_only_fields = ['id', 'task', 'createdAt', 'companyComment', 'user', 'status']
+
