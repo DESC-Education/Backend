@@ -10,6 +10,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from django_filters.rest_framework import DjangoFilterBackend
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 from django.contrib.contenttypes.models import ContentType
 from drf_spectacular.utils import (
     extend_schema,
@@ -1143,6 +1145,7 @@ class SkillsList(generics.ListAPIView):
         tags=["Profiles"],
         summary="Получение экземпляров Навыков"
     )
+    @method_decorator(cache_page(60 * 60))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 

@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     EMAIL_USER: SecretStr
     EMAIL_PASSWORD: SecretStr
     SENTRY_ENV: str
+    REDIS_HOST: str
+    REDIS_PORT: str
+    REDIS_USER: SecretStr
+    REDIS_PASSWORD: SecretStr
 
     # Начиная со второй версии pydantic, настройки класса настроек задаются
     # через model_config
