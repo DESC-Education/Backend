@@ -71,6 +71,10 @@ class Task(models.Model):
         ordering = ['-created_at']
 
 
+class TaskPattern(Task):
+    pass
+
+
 class Solution(models.Model):
     COMPLETED = "completed"
     FAILED = "failed"
