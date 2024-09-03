@@ -11,6 +11,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from django_filters.rest_framework import DjangoFilterBackend
 from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 from django.utils.decorators import method_decorator
 from django.contrib.contenttypes.models import ContentType
 from drf_spectacular.utils import (
@@ -1131,6 +1132,7 @@ class UniversitiesList(generics.ListAPIView):
         tags=["Profiles"],
         summary="Получение экземпляров Университетов"
     )
+    @method_decorator(vary_on_cookie)
     @method_decorator(cache_page(60 * 60))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -1146,6 +1148,7 @@ class SkillsList(generics.ListAPIView):
         tags=["Profiles"],
         summary="Получение экземпляров Навыков"
     )
+    @method_decorator(vary_on_cookie)
     @method_decorator(cache_page(60 * 60))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -1161,6 +1164,7 @@ class CitiesList(generics.ListAPIView):
         tags=["Profiles"],
         summary="Получение экземпляров Городов"
     )
+    @method_decorator(vary_on_cookie)
     @method_decorator(cache_page(60 * 60))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -1176,6 +1180,7 @@ class SpecialtiesList(generics.ListAPIView):
         tags=["Profiles"],
         summary="Получение экземпляров Специальностей"
     )
+    @method_decorator(vary_on_cookie)
     @method_decorator(cache_page(60 * 60))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -1192,6 +1197,7 @@ class FacultiesList(generics.ListAPIView):
         tags=["Profiles"],
         summary="Получение экземпляров Факультетов"
     )
+    @method_decorator(vary_on_cookie)
     @method_decorator(cache_page(60 * 60))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
