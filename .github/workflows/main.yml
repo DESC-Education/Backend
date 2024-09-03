@@ -49,6 +49,10 @@ jobs:
 
       redis:
         image: redis
+        env:
+          - REDIS_PASSWORD: default
+          - REDIS_USER: default
+          - REDIS_USER_PASSWORD: default
         ports:
           - 6379:6379
         options: >-
