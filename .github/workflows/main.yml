@@ -22,7 +22,7 @@ jobs:
       EMAIL_USER: ${{ secrets.TEST_EMAIL_USER }}
       EMAIL_PASSWORD: ${{ secrets.TEST_EMAIL_PASSWORD}}
       SENTRY_ENV: test
-      REDIS_HOST: redis
+      REDIS_HOST: 127.0.0.1
       REDIS_PORT: 6379
       REDIS_USER: default
       REDIS_PASSWORD: default
