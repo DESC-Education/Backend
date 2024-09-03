@@ -19,9 +19,6 @@ import sentry_sdk
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -37,6 +34,10 @@ CORS_ALLOW_ALL_ORIGINS = True
 #     'http://localhost:3000',
 #     'http://193.233.20.226:3000'
 # ]
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
 
 # Application definition
 
@@ -61,6 +62,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -93,7 +95,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Settings.wsgi.application'
 
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -112,7 +113,6 @@ REST_FRAMEWORK = {
 PROMETHEUS_METRICS_EXPORT_PORT_RANGE = range(4001, 4050)
 
 
-
 AUTH_USER_MODEL = "Users.CustomUser"
 
 # SIMPLE_JWT = {
@@ -128,8 +128,6 @@ SPECTACULAR_SETTINGS = {
     # OTHER SETTINGS
 }
 
-
-
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
@@ -144,17 +142,25 @@ DATABASES = {
         "PORT": config.DB_PORT
     }
 }
-# CACHES = {
-#     "default": {
-#         "BACKEND": "django_prometheus.cache.backends.redis.RedisCache",
-#     }
-# }
 # DATABASES = {
 #         'default': {
 #             'ENGINE': 'django.db.backends.sqlite3',
 #             'NAME': BASE_DIR / 'db.sqlite3',
 #         }
 #     }
+CACHES = {
+    "default": {
+        "BACKEND": "django_prometheus.cache.backends.redis.RedisCache",
+        "LOCATION": f"redis://"
+                    f"{config.REDIS_USER.get_secret_value()}:"
+                    f"{config.REDIS_PASSWORD.get_secret_value()}@"
+                    f"{config.REDIS_HOST}:{config.REDIS_PORT}",
+    }
+}
+
+CACHE_TTL = 60 * 1
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -174,7 +180,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -186,13 +191,11 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static')
 STATIC_URL = '/api/static/'
-
 
 MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'mediafiles')
 MEDIA_URL = '/api/media/'
@@ -205,7 +208,6 @@ ADMINS = (
     # ('admin', 'yaroslavpavlenko2@gmail.com'),
 )
 
-
 EMAIL_HOST = 'smtp.yandex.ru'
 EMAIL_PORT = 465
 EMAIL_HOST_USER = config.EMAIL_USER.get_secret_value()
@@ -215,10 +217,9 @@ EMAIL_USE_SSL = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
 
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
+if DEBUG:
+    INSTALLED_APPS += ["debug_toolbar"]
 if 'test' in sys.argv:
     # store files in memory, no cleanup after tests are finished
     DEFAULT_FILE_STORAGE = 'inmemorystorage.InMemoryStorage'
@@ -241,7 +242,6 @@ else:
         profiles_sample_rate=1.0,
         environment=config.SENTRY_ENV,
     )
-
 
 LOGGING = {
     'version': 1,
