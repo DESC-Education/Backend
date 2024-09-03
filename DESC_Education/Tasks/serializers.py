@@ -58,7 +58,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
     # read_only
     category = TaskCategorySerializer(read_only=True)
-    filters = FilterSerializer(many=True, read_only=True)
+    catFilters = serializers.SerializerMethodField()
     profile = ProfileTaskSerializer(read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     solutionsCount = serializers.SerializerMethodField()
@@ -66,8 +66,30 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ('id', 'user', 'createdAt', 'title', 'description', 'deadline', 'file', 'category',
-                  'filters', 'profile', "categoryId", "filtersId", 'solutionsCount')
+                  'catFilters', 'profile', "categoryId", "filtersId", 'solutionsCount')
         read_only_fields = ['id', 'user']
+
+    def get_catFilters(self, obj) -> FilterCategorySerializer:
+        category_filters = {}
+        filters = obj.filters.all()
+
+        for filter in filters:
+            cat = filter.filter_category
+            cat_name = cat.name
+
+            if cat_name not in category_filters:
+                category_filters[cat_name] = {
+                    'name': cat_name,
+                    'id': cat.id,
+                    'filters': []
+                }
+
+            category_filters[cat_name]['filters'].append({
+                'id': filter.id,
+                'name': filter.name,
+            })
+
+        return category_filters
 
     def get_solutionsCount(self, obj) -> int:
         return obj.solutions.count()
