@@ -1132,7 +1132,7 @@ class UniversitiesList(generics.ListAPIView):
         tags=["Profiles"],
         summary="Получение экземпляров Университетов"
     )
-    @method_decorator(vary_on_cookie)
+    
     @method_decorator(cache_page(60 * 60))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -1148,7 +1148,7 @@ class SkillsList(generics.ListAPIView):
         tags=["Profiles"],
         summary="Получение экземпляров Навыков"
     )
-    @method_decorator(vary_on_cookie)
+    
     @method_decorator(cache_page(60 * 60))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -1164,7 +1164,7 @@ class CitiesList(generics.ListAPIView):
         tags=["Profiles"],
         summary="Получение экземпляров Городов"
     )
-    @method_decorator(vary_on_cookie)
+    
     @method_decorator(cache_page(60 * 60))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -1180,7 +1180,7 @@ class SpecialtiesList(generics.ListAPIView):
         tags=["Profiles"],
         summary="Получение экземпляров Специальностей"
     )
-    @method_decorator(vary_on_cookie)
+    
     @method_decorator(cache_page(60 * 60))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -1197,7 +1197,7 @@ class FacultiesList(generics.ListAPIView):
         tags=["Profiles"],
         summary="Получение экземпляров Факультетов"
     )
-    @method_decorator(vary_on_cookie)
+    
     @method_decorator(cache_page(60 * 60))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
