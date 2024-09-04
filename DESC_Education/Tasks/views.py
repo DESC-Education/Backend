@@ -18,7 +18,8 @@ from Tasks.serializers import (
     FilterCategorySerializer,
     CompanyTasksMySerializer,
     StudentTasksMySerializer,
-    TaskCategoryWithFiltersSerializer
+    TaskCategoryWithFiltersSerializer,
+    TaskPatternSerializer
 )
 from Tasks.models import (
     Task,
@@ -195,7 +196,7 @@ class StudentTasksMyView(generics.ListAPIView):
 
 class TaskPatternPatternListView(generics.ListAPIView):
     queryset = TaskPattern.objects.all()
-    serializer_class = TaskSerializer
+    serializer_class = TaskPatternSerializer
     permission_classes = [IsCompanyRole]
 
     @extend_schema(
