@@ -145,7 +145,7 @@ class SolutionDetailView(generics.GenericAPIView):
 
 
 class TaskCategoryListView(generics.ListAPIView):
-    queryset = TaskCategory.objects.all()
+    queryset = TaskCategory.objects.all().prefetch_related('filter_categories__filters')
     serializer_class = TaskCategoryWithFiltersSerializer
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['name']
