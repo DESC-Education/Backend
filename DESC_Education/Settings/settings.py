@@ -35,7 +35,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 #     'http://193.233.20.226:3000'
 # ]
 
-DEBUG_TOOLBAR_CONFIG = {'SHOW_TOOLBAR_CALLBACK': lambda request: True, 'IS_RUNNING_TESTS': False}
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -228,6 +228,7 @@ if 'test' in sys.argv:
         }
     }
 else:
+    DEBUG_TOOLBAR_CONFIG = {'SHOW_TOOLBAR_CALLBACK': lambda request: True, 'IS_RUNNING_TESTS': False}
     sentry_sdk.init(
         dsn="https://7106f16a563ce0ba3f7b963353a1e479@o4507797688483840.ingest.de.sentry.io/4507856169926736",
         # Set traces_sample_rate to 1.0 to capture 100%
