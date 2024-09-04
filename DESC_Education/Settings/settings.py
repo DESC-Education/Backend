@@ -35,11 +35,9 @@ CORS_ALLOW_ALL_ORIGINS = True
 #     'http://193.233.20.226:3000'
 # ]
 
-INTERNAL_IPS = [
-    "127.0.0.1",
-    "213.234.222.73",
-
-]
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': lambda request: True,
+}
 
 # Application definition
 
