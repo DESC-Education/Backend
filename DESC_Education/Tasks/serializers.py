@@ -7,8 +7,11 @@ from Tasks.models import (
     FilterCategory,
     Filter,
     Task,
-    Solution
+    Solution,
+    TaskPattern
 )
+
+
 
 
 
@@ -47,6 +50,37 @@ class TaskCategoryWithFiltersSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskCategory
         fields = ('id', 'name', 'filterCategories')
+
+
+
+class TaskPatternSerializer(serializers.ModelSerializer):
+    catFilters = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TaskPattern
+        fields = ("id", 'title', 'description', 'catFilters')
+
+    def get_catFilters(self, obj) -> FilterCategorySerializer:
+        category_filters = {}
+        filters = obj.filters.all()
+
+        for filter in filters:
+            cat = filter.filter_category
+            cat_name = cat.name
+
+            if cat_name not in category_filters:
+                category_filters[cat_name] = {
+                    'name': cat_name,
+                    'id': cat.id,
+                    'filters': []
+                }
+
+            category_filters[cat_name]['filters'].append({
+                'id': filter.id,
+                'name': filter.name,
+            })
+
+        return category_filters
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -132,7 +166,6 @@ class StudentTasksMySerializer(serializers.Serializer):
             else:
                 active_tasks.append(TaskSerializer(solution.task).data)
 
-
         return {
             'active_tasks': active_tasks,
             'archived_tasks': archived_tasks
@@ -160,9 +193,6 @@ class CompanyTasksMySerializer(serializers.Serializer):
 
     class Meta:
         fields = ('active_tasks', 'archived_tasks')
-
-
-
 
 
 class TaskListSerializer(serializers.ModelSerializer):
@@ -204,4 +234,3 @@ class SolutionSerializer(serializers.ModelSerializer):
         fields = ('id', 'task', 'user', 'description', 'file',
                   'companyComment', 'status', 'createdAt', 'taskId')
         read_only_fields = ['id', 'task', 'createdAt', 'companyComment', 'user', 'status']
-
