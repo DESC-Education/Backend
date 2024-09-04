@@ -37,6 +37,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 INTERNAL_IPS = [
     "127.0.0.1",
+    "213.234.222.73",
+
 ]
 
 # Application definition
