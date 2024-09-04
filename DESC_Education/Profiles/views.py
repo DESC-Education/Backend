@@ -33,7 +33,8 @@ from Profiles.serializers import (
     CitySerializer,
     SpecialtySerializer,
     FacultySerializer,
-    ChangeLogoImgSerializer,
+    ChangeCompanyLogoImgSerializer,
+    ChangeStudentLogoImgSerializer,
     SendPhoneCodeSerializer,
     SetPhoneSerializer,
     EditStudentProfileSerializer,
@@ -649,8 +650,13 @@ class GetProfileView(generics.GenericAPIView):
 
 
 class ChangeLogoImgView(generics.GenericAPIView):
-    serializer_class = ChangeLogoImgSerializer
+    serializer_class = ChangeStudentLogoImgSerializer
     permission_classes = [IsCompanyOrStudentRole]
+
+    logo_serializer_class = {
+        CustomUser.STUDENT_ROLE: ChangeStudentLogoImgSerializer,
+        CustomUser.COMPANY_ROLE: ChangeCompanyLogoImgSerializer
+    }
 
     profile_classes = {
         CustomUser.STUDENT_ROLE: StudentProfile,
@@ -720,17 +726,13 @@ class ChangeLogoImgView(generics.GenericAPIView):
     def post(self, request):
         try:
             user = request.user
-            serializer = self.serializer_class(data=request.data)
+            serializer = self.logo_serializer_class[user.role](data=request.data, instance=user.get_profile(),
+                                                               partial=True)
             serializer.is_valid(raise_exception=True)
-            try:
-                profile = user.get_profile()
-            except ObjectDoesNotExist:
-                return Response({"message": "Профиль не найден"}, status=status.HTTP_404_NOT_FOUND)
 
-            profile.logo_img = serializer.validated_data['logo']
-            profile.save()
+            serializer.save()
 
-            return Response({"logo": profile.logo_img.url}, status=status.HTTP_200_OK)
+            return Response({"logo": serializer.data}, status=status.HTTP_200_OK)
 
         except Exception as e:
             logging.exception(e)

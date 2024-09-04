@@ -16,8 +16,9 @@ from Profiles.models import (
 )
 
 
-class ChangeLogoImgSerializer(serializers.Serializer):
-    logo = serializers.ImageField(required=True, allow_empty_file=False)
+
+
+
 
 
 class SendPhoneCodeSerializer(serializers.ModelSerializer):
@@ -189,3 +190,20 @@ class TestProfileVerifySerializer(serializers.Serializer):
     email = serializers.EmailField()
     status = serializers.CharField()
     comment = serializers.CharField()
+
+
+class ChangeStudentLogoImgSerializer(serializers.ModelSerializer):
+    logo = serializers.ImageField(source="logo_img", required=True, allow_empty_file=False)
+
+    class Meta:
+        model = StudentProfile
+        fields = ('logo',)
+
+
+
+class ChangeCompanyLogoImgSerializer(serializers.ModelSerializer):
+    logo = serializers.ImageField(source="logo_img", required=True, allow_empty_file=False)
+
+    class Meta:
+        model = CompanyProfile
+        fields = ('logo',)
