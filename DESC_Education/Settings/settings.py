@@ -35,10 +35,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 #     'http://193.233.20.226:3000'
 # ]
 
-DEBUG_TOOLBAR_CONFIG = {
-    'SHOW_TOOLBAR_CALLBACK': lambda request: True,
-}
-
+DEBUG_TOOLBAR_CONFIG = {'SHOW_TOOLBAR_CALLBACK': lambda request: True, 'IS_RUNNING_TESTS': False}
 # Application definition
 
 INSTALLED_APPS = [
