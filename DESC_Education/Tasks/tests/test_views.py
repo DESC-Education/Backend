@@ -57,6 +57,9 @@ class TaskViewTest(APITestCase):
             role=CustomUser.STUDENT_ROLE,
             is_verified=True
         )
+        profile = self.student.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
         self.student_token = self.student.get_token()['accessToken']
 
         self.another_company = CustomUser.objects.create_user(
@@ -65,6 +68,9 @@ class TaskViewTest(APITestCase):
             role=CustomUser.COMPANY_ROLE,
             is_verified=True
         )
+        profile = self.another_company.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
         self.another_company_token = self.another_company.get_token()['accessToken']
         self.company = CustomUser.objects.create_user(
             email='exampl2e2@example.com',
@@ -72,6 +78,9 @@ class TaskViewTest(APITestCase):
             role=CustomUser.COMPANY_ROLE,
             is_verified=True
         )
+        profile = self.company.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
         self.company_token = self.company.get_token()['accessToken']
 
         task_category = TaskCategory.objects.first()
@@ -107,7 +116,6 @@ class TaskViewTest(APITestCase):
         res = self.client.post(reverse('task'),
                                self.example_data,
                                HTTP_AUTHORIZATION='Bearer ' + self.company_token)
-
         task = Task.objects.first()
 
         expected_data = self.get_expected_data(task)
@@ -174,6 +182,9 @@ class TaskDetailViewTest(APITestCase):
             role=CustomUser.COMPANY_ROLE,
             is_verified=True
         )
+        profile = self.company.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
 
         self.company_token = self.company.get_token()['accessToken']
 
@@ -235,12 +246,16 @@ class TestSolutionView(APITestCase):
             category=TaskCategory.objects.first()
         )
 
-        self.student = CustomUser.objects.create_user(
+        self.student: CustomUser = CustomUser.objects.create_user(
             email='student@example.com',
             password='password',
             role=CustomUser.STUDENT_ROLE,
             is_verified=True
         )
+
+        profile = self.student.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
 
         self.student_token = self.student.get_token()['accessToken']
 
@@ -263,14 +278,12 @@ class TestSolutionView(APITestCase):
                                HTTP_AUTHORIZATION='Bearer ' + self.student_token,
                                )
         solution = Solution.objects.first()
-        profile:StudentProfile = StudentProfile.objects.get(user=self.student)
-
+        profile: StudentProfile = StudentProfile.objects.get(user=self.student)
 
         expected_data = self.get_expected_data(solution)
         self.assertEqual(dict(res.data), expected_data)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(profile.reply_count, profile.REPLY_MONTH_COUNT-1)
-
+        self.assertEqual(profile.reply_count, profile.REPLY_MONTH_COUNT - 1)
 
 
 class TaskCategoryListViewTest(APITestCase):
@@ -288,8 +301,6 @@ class TaskCategoryListViewTest(APITestCase):
 
         filter = Filter.objects.create(name='example_filter', filter_category=filter_category)
 
-
-
     def test_get_categories(self):
         res = self.client.get(reverse('task_category_list'))
 
@@ -297,8 +308,6 @@ class TaskCategoryListViewTest(APITestCase):
         expected_data = TaskCategoryWithFiltersSerializer(categories, many=True)
         self.assertEqual(dict(res.data).get('results'), expected_data.data)
         self.assertEqual(res.status_code, 200)
-
-
 
     def get_category_by_name(self):
         res = self.client.get(reverse('task_category_detail'), {'search': "pyt"})
@@ -312,7 +321,6 @@ class TaskCategoryListViewTest(APITestCase):
         self.assertEqual(res.status_code, 200)
 
 
-
 class CompanyTasksMyViewTest(APITestCase):
     def setUp(self):
         self.student = CustomUser.objects.create_user(
@@ -321,6 +329,9 @@ class CompanyTasksMyViewTest(APITestCase):
             role=CustomUser.STUDENT_ROLE,
             is_verified=True
         )
+        profile = self.student.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
 
         self.student_token = self.student.get_token()['accessToken']
 
@@ -330,7 +341,9 @@ class CompanyTasksMyViewTest(APITestCase):
             role=CustomUser.COMPANY_ROLE,
             is_verified=True
         )
-
+        profile = self.company.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
         self.company_token = self.company.get_token()['accessToken']
 
         self.task_1 = Task.objects.create(
@@ -374,7 +387,6 @@ class CompanyTasksMyViewTest(APITestCase):
         self.task_2.filters.set([Filter.objects.first()])
 
     def test_get_200(self):
-
         res = self.client.get(reverse('company_tasks_my'),
                               HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
 
@@ -383,15 +395,12 @@ class CompanyTasksMyViewTest(APITestCase):
                          serializer.to_representation(Task.objects.all()))
         self.assertEqual(res.status_code, 200)
 
-
     def test_get_student(self):
         res = self.client.get(reverse('company_tasks_my'),
                               HTTP_AUTHORIZATION=f'Bearer {self.student_token}')
 
-
         self.assertEqual(dict(res.data), {'detail': 'Только для компаний!'})
         self.assertEqual(res.status_code, 403)
-
 
 
 class StudentTasksMyViewTest(APITestCase):
@@ -402,6 +411,9 @@ class StudentTasksMyViewTest(APITestCase):
             role=CustomUser.STUDENT_ROLE,
             is_verified=True
         )
+        profile = self.student.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
 
         self.student_token = self.student.get_token()['accessToken']
 
@@ -411,6 +423,9 @@ class StudentTasksMyViewTest(APITestCase):
             role=CustomUser.COMPANY_ROLE,
             is_verified=True
         )
+        profile = self.company.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
 
         self.company_token = self.company.get_token()['accessToken']
 
@@ -454,7 +469,6 @@ class StudentTasksMyViewTest(APITestCase):
         )
         self.task_4.filters.set([Filter.objects.first()])
 
-
         solution = Solution.objects.create(
             task=self.task_1,
             user=self.student,
@@ -477,7 +491,6 @@ class StudentTasksMyViewTest(APITestCase):
         )
 
     def test_get_200(self):
-
         res = self.client.get(reverse('student_tasks_my'),
                               HTTP_AUTHORIZATION=f'Bearer {self.student_token}')
 
@@ -486,11 +499,69 @@ class StudentTasksMyViewTest(APITestCase):
                          serializer.to_representation(Solution.objects.all()))
         self.assertEqual(res.status_code, 200)
 
-
     def test_get_company(self):
         res = self.client.get(reverse('student_tasks_my'),
                               HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
 
-
         self.assertEqual(dict(res.data), {'detail': 'Только для студентов!'})
         self.assertEqual(res.status_code, 403)
+
+
+class EvaluateSolutionViewTest(APITestCase):
+    def setUp(self):
+        self.student = CustomUser.objects.create_user(
+            email='example2@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        profile = self.student.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
+        self.student_token = self.student.get_token()['accessToken']
+
+        self.company = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+        profile = self.company.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
+        self.company_token = self.company.get_token()['accessToken']
+
+        self.task_1 = Task.objects.create(
+            user=self.company,
+            title="Test Task",
+            description="Test Task Description",
+            deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            category=TaskCategory.objects.first(),
+        )
+        self.task_1.filters.set([Filter.objects.first()])
+
+        self.solution = Solution.objects.create(
+            task=self.task_1,
+            user=self.student,
+            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
+            description="Test Solution Description",
+        )
+
+    def test_evaluate_solution(self):
+        res = self.client.post((reverse('task_evaluate', kwargs={"pk": self.solution.id})),
+                               {
+                                   'status': "completed",
+                                   'companyComment': "Test Comment",
+                               },
+                               HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
+
+        solution: Solution = Solution.objects.first()
+
+
+        self.assertEqual(res.data, {'status': 'completed'})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(solution.status, "completed")
+

@@ -1,5 +1,5 @@
 from rest_framework import generics, status
-from Settings.permissions import IsCompanyRole, IsStudentRole
+from Settings.permissions import IsCompanyRole, IsStudentRole, EvaluateCompanyRole
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
@@ -19,7 +19,8 @@ from Tasks.serializers import (
     CompanyTasksMySerializer,
     StudentTasksMySerializer,
     TaskCategoryWithFiltersSerializer,
-    TaskPatternSerializer
+    TaskPatternSerializer,
+    EvaluateSolutionSerializer,
 )
 from Tasks.models import (
     Task,
@@ -79,7 +80,7 @@ class TaskDetailView(generics.GenericAPIView):
     def patch(self, request, pk):
         try:
             instance = self.get_object(pk)
-            serializer = self.get_serializer(data=request.data, instance=instance)
+            serializer = self.get_serializer(instance=instance, data=request.data)
             serializer.is_valid(raise_exception=True)
             instance = serializer.save()
 
@@ -206,3 +207,27 @@ class TaskPatternPatternListView(generics.ListAPIView):
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
+
+
+class EvaluateSolutionView(generics.GenericAPIView):
+    serializer_class = EvaluateSolutionSerializer
+    permission_classes = [EvaluateCompanyRole]
+
+
+    def get_object(self, pk):
+        obj = get_object_or_404(Solution, pk=pk)
+
+        return obj
+
+    @extend_schema(
+        tags=["Tasks"],
+        summary="Оценка решения компанией"
+    )
+    def post(self, request, pk):
+        serializer = self.get_serializer(instance=self.get_object(pk), data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)

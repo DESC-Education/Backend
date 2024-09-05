@@ -101,10 +101,10 @@ class Solution(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='solutions',
                              editable=False)
-    status = models.CharField(max_length=10, choices=STATUSES, default=PENDING, editable=False)
+    status = models.CharField(max_length=10, choices=STATUSES, default=PENDING)
 
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='solutions')
-    description = models.TextField(max_length=2000)
+    description = models.TextField(max_length=2000, null=True, blank=True)
     file = models.FileField(upload_to=user_solution_directory_path, max_length=500)
     company_comment = models.TextField(max_length=1000, blank=True, null=True)
 
