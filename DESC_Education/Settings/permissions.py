@@ -2,6 +2,7 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 from django.apps import apps
 from django.contrib.auth.models import AnonymousUser
 
+BaseProfile = apps.get_model('Profiles', 'StudentProfile')
 CustomUser = apps.get_model('Users', 'CustomUser')
 
 
@@ -18,7 +19,6 @@ class IsAuthenticatedAndVerified(BasePermission):
         if not bool(user and user.is_authenticated):
             return False
 
-
         self.message = 'Необходимо подтвердить адрес электронной почты'
         return user.is_verified
 
@@ -32,13 +32,21 @@ class IsCompanyRole(IsAuthenticatedAndVerified):
         if not super().has_permission(request, view):
             return False
 
-
         if type(request.user) == AnonymousUser:
             return False
 
         self.message = 'Только для компаний!'
-        return CustomUser.COMPANY_ROLE == request.user.role
+        if not CustomUser.COMPANY_ROLE == request.user.role:
+            return False
 
+        self.message = 'Необходимо подтвердить профиль!'
+        return request.user.get_profile().verification == BaseProfile.VERIFIED
+
+
+class EvaluateCompanyRole(IsCompanyRole):
+    def has_object_permission(self, request, view, obj):
+        self.message = 'К изменению доступны объекты созданые только вами'
+        return obj.task.user == request.user
 
 
 class IsStudentRole(IsAuthenticatedAndVerified):
@@ -47,11 +55,12 @@ class IsStudentRole(IsAuthenticatedAndVerified):
         if not super().has_permission(request, view):
             return False
 
-
         if type(request.user) == AnonymousUser:
             return False
 
-
         self.message = 'Только для студентов!'
-        return CustomUser.STUDENT_ROLE == request.user.role
+        if not CustomUser.STUDENT_ROLE == request.user.role:
+            return False
 
+        self.message = 'Необходимо подтвердить профиль!'
+        return request.user.get_profile().verification == BaseProfile.VERIFIED

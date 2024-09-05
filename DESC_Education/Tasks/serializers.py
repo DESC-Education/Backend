@@ -12,9 +12,6 @@ from Tasks.models import (
 )
 
 
-
-
-
 class ProfileTaskSerializer(serializers.ModelSerializer):
     companyName = serializers.CharField(source='company_name', read_only=True)
     logoImg = serializers.ImageField(source='logo_img', read_only=True)
@@ -50,7 +47,6 @@ class TaskCategoryWithFiltersSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskCategory
         fields = ('id', 'name', 'filterCategories')
-
 
 
 class TaskPatternSerializer(serializers.ModelSerializer):
@@ -105,6 +101,8 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def get_catFilters(self, obj) -> FilterCategorySerializer:
         category_filters = {}
+        if type(obj) is dict:
+            print(obj)
         filters = obj.filters.all()
 
         for filter in filters:
@@ -212,6 +210,14 @@ class TaskListSerializer(serializers.ModelSerializer):
     #         return None
 
 
+class EvaluateSolutionSerializer(serializers.ModelSerializer):
+    companyComment = serializers.CharField(source='company_comment', write_only=True)
+
+    class Meta:
+        model = Solution
+        fields = ('status', 'companyComment')
+
+
 class SolutionSerializer(serializers.ModelSerializer):
     """
         Создание студент: taskId, description, file
@@ -223,6 +229,7 @@ class SolutionSerializer(serializers.ModelSerializer):
         source="task", queryset=Task.objects.filter(deadline__gte=timezone.now()), write_only=True)
 
     # read_only
+    status = serializers.CharField(read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     companyComment = serializers.CharField(source='company_comment', read_only=True)
     task = TaskSerializer(read_only=True)

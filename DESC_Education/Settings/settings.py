@@ -110,7 +110,6 @@ REST_FRAMEWORK = {
 
 PROMETHEUS_METRICS_EXPORT_PORT_RANGE = range(4001, 4050)
 
-
 AUTH_USER_MODEL = "Users.CustomUser"
 
 SIMPLE_JWT = {
@@ -159,8 +158,6 @@ CACHES = {
 }
 
 CACHE_TTL = 60 * 1
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -218,31 +215,6 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-if DEBUG:
-    INSTALLED_APPS += ["debug_toolbar"]
-if 'test' in sys.argv:
-    # store files in memory, no cleanup after tests are finished
-    DEFAULT_FILE_STORAGE = 'inmemorystorage.InMemoryStorage'
-    # much faster password hashing, default one is super slow (on purpose)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-else:
-    DEBUG_TOOLBAR_CONFIG = {'SHOW_TOOLBAR_CALLBACK': lambda request: True, 'IS_RUNNING_TESTS': False}
-    sentry_sdk.init(
-        dsn="https://7106f16a563ce0ba3f7b963353a1e479@o4507797688483840.ingest.de.sentry.io/4507856169926736",
-        # Set traces_sample_rate to 1.0 to capture 100%
-        # of transactions for tracing.
-        traces_sample_rate=1.0,
-        # Set profiles_sample_rate to 1.0 to profile 100%
-        # of sampled transactions.
-        # We recommend adjusting this value in production.
-        profiles_sample_rate=1.0,
-        environment=config.SENTRY_ENV,
-    )
 
 LOGGING = {
     'version': 1,
@@ -285,3 +257,52 @@ LOGGING = {
     },
 
 }
+
+if DEBUG:
+    INSTALLED_APPS += ["debug_toolbar"]
+if 'test' in sys.argv:
+    # store files in memory, no cleanup after tests are finished
+    DEFAULT_FILE_STORAGE = 'inmemorystorage.InMemoryStorage'
+    # much faster password hashing, default one is super slow (on purpose)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'gunicorn_format': {
+                'format': '[%(asctime)s] [%(process)d] [%(levelname)s] %(message)s',
+                'datefmt': '%Y-%m-%d %H:%M:%S',
+            }
+        },
+        'handlers': {
+            'console': {
+                'level': 'ERROR',
+                'class': 'logging.StreamHandler',
+                'formatter': 'gunicorn_format',
+            },
+        },
+        'root': {
+            'level': 'INFO',
+            'handlers': ["console"],
+            'propagate': False,
+        },
+
+    }
+else:
+    DEBUG_TOOLBAR_CONFIG = {'SHOW_TOOLBAR_CALLBACK': lambda request: True, 'IS_RUNNING_TESTS': False}
+    sentry_sdk.init(
+        dsn="https://7106f16a563ce0ba3f7b963353a1e479@o4507797688483840.ingest.de.sentry.io/4507856169926736",
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
+        environment=config.SENTRY_ENV,
+    )
