@@ -248,7 +248,7 @@ class StudentProfile(BaseProfile):
     ]
 
 
-
+    profession = models.CharField(max_length=150, null=True)
     form_of_education = models.CharField(choices=EDUCATION_CHOISES, max_length=15, null=True)
     university = models.ForeignKey(University, on_delete=models.CASCADE, null=True, related_name='university')
     faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, null=True, related_name='faculty')

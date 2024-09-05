@@ -1,5 +1,5 @@
 import random
-
+from django.db.models import Count, Q
 from rest_framework import serializers
 
 from Profiles.models import (
@@ -15,10 +15,11 @@ from Profiles.models import (
     PhoneVerificationCode
 )
 
-
-
-
-
+from Tasks.models import (
+    Task,
+    TaskCategory,
+    Solution
+)
 
 
 class SendPhoneCodeSerializer(serializers.ModelSerializer):
@@ -89,11 +90,8 @@ class BaseProfileSerializer(serializers.ModelSerializer):
                   'logoImg', 'telegramLink', 'vkLink', 'timezone', 'city', 'skills', 'verification')
         read_only_fields = ['id', 'user']
 
-
     def get_verification(self, obj) -> str:
         return obj.get_verification_status()
-
-
 
 
 class StudentProfileSerializer(BaseProfileSerializer):
@@ -107,8 +105,7 @@ class StudentProfileSerializer(BaseProfileSerializer):
         model = StudentProfile
         fields = BaseProfileSerializer.Meta.fields + \
                  ('formOfEducation', 'university', 'faculty', 'admissionYear',
-                  'specialty')
-
+                  'specialty', 'profession')
 
 
 class EditStudentProfileSerializer(BaseProfileSerializer):
@@ -118,8 +115,7 @@ class EditStudentProfileSerializer(BaseProfileSerializer):
 
     class Meta:
         model = StudentProfile
-        fields = ("skills", 'phoneVisibility', 'emailVisibility', 'telegramLink', 'vkLink', 'description')
-
+        fields = ("skills", 'phoneVisibility', 'emailVisibility', 'telegramLink', 'vkLink', 'description', 'profession')
 
 
 class CreateCompanyProfileSerializer(BaseProfileSerializer):
@@ -132,7 +128,6 @@ class CreateCompanyProfileSerializer(BaseProfileSerializer):
                  ('linkToCompany', 'companyName',)
 
 
-
 class EditCompanyProfileSerializer(BaseProfileSerializer):
     linkToCompany = serializers.URLField(source="link_to_company", required=False)
     phoneVisibility = serializers.BooleanField(source="phone_visibility", required=False)
@@ -143,7 +138,6 @@ class EditCompanyProfileSerializer(BaseProfileSerializer):
         model = CompanyProfile
         fields = ('phoneVisibility', 'emailVisibility', 'telegramLink', 'vkLink',
                   'linkToCompany', 'description', 'skills')
-
 
 
 class EmptySerializer2(serializers.Serializer):
@@ -162,6 +156,12 @@ class GetCompanyProfileSerializer(BaseProfileSerializer):
                  ('linkToCompany', 'companyName', 'skills')
 
 
+class leadTaskCategoriesSerializer(serializers.Serializer):
+    id = serializers.UUIDField
+    name = serializers.CharField
+    percent = serializers.FloatField()
+
+
 class GetStudentProfileSerializer(BaseProfileSerializer):
     formOfEducation = serializers.CharField(source="form_of_education")
     admissionYear = serializers.IntegerField(source="admission_year")
@@ -172,17 +172,38 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
     specialty = SpecialtySerializer()
     replyCount = serializers.SerializerMethodField()
     replyReloadDate = serializers.DateTimeField(source="reply_reload_date", read_only=True)
-
-
+    leadTaskCategories = serializers.SerializerMethodField()
 
     class Meta(BaseProfileSerializer.Meta):
         model = StudentProfile
         fields = BaseProfileSerializer.Meta.fields + \
                  ('formOfEducation', 'admissionYear', 'university', 'faculty', 'skills',
-                  'specialty', 'replyCount', 'replyReloadDate')
+                  'specialty', 'replyCount', 'replyReloadDate', 'profession', 'leadTaskCategories')
 
+    @staticmethod
+    def get_leadTaskCategories(obj) -> leadTaskCategoriesSerializer:
+        queryset = TaskCategory.objects.annotate(
+            solved_count=Count("tasks__solutions", filter=Q(
+                tasks__solutions__user=obj.user,
+                tasks__solutions__status=Solution.COMPLETED,
+            ))
+        ).filter(solved_count__gt=0).order_by('-solved_count')
 
-    def get_replyCount(self, obj):
+        total_solved = sum(i.solved_count for i in queryset)
+        res = []
+        for i in queryset:
+            percent = round((i.solved_count / total_solved), 2)
+            res.append(
+                {
+                    'id': str(i.id),
+                    'name': i.name,
+                    'percent': percent,
+                }
+            )
+        return res
+
+    @staticmethod
+    def get_replyCount(obj):
         return obj.get_reply_count()
 
 
@@ -198,7 +219,6 @@ class ChangeStudentLogoImgSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentProfile
         fields = ('logo',)
-
 
 
 class ChangeCompanyLogoImgSerializer(serializers.ModelSerializer):

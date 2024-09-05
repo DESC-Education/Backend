@@ -6,6 +6,7 @@ from drf_spectacular.utils import extend_schema
 from django_filters.rest_framework import DjangoFilterBackend
 # from Tasks.filters import CategoryFilterBackend
 from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 from rest_framework import filters
 from Settings.pagination import CustomPageNumberPagination
 from Profiles.models import (

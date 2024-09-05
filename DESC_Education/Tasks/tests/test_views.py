@@ -304,7 +304,7 @@ class TaskCategoryListViewTest(APITestCase):
     def test_get_categories(self):
         res = self.client.get(reverse('task_category_list'))
 
-        categories = TaskCategory.objects.all()
+        categories = TaskCategory.objects.all().prefetch_related('filter_categories__filters')
         expected_data = TaskCategoryWithFiltersSerializer(categories, many=True)
         self.assertEqual(dict(res.data).get('results'), expected_data.data)
         self.assertEqual(res.status_code, 200)
