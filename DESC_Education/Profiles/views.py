@@ -109,7 +109,8 @@ class ProfileView(generics.GenericAPIView):
                     "faculty": "uuid",
                     "city": "uuid",
                     'skills': ["uuid", "uuid"],
-                    "files": [{"file": "file"}]
+                    "files": [{"file": "file"}],
+                    'profession': 'str'
                 },
             ),
             OpenApiExample(
@@ -131,7 +132,8 @@ class ProfileView(generics.GenericAPIView):
                     "faculty": "uuid",
                     "city": "uuid",
                     'skills': ["uuid", "uuid"],
-                    "files": [{"file": "file"}]
+                    "files": [{"file": "file"}],
+                    'profession': 'str'
                 },
             ),
             OpenApiExample(
@@ -153,7 +155,8 @@ class ProfileView(generics.GenericAPIView):
                     "faculty": "uuid",
                     "city": "uuid",
                     'skills': ["uuid", "uuid"],
-                    "files": [{"file": "file"}]
+                    "files": [{"file": "file"}],
+                    'profession': 'str'
                 },
             ),
             OpenApiExample(
@@ -233,7 +236,12 @@ class ProfileView(generics.GenericAPIView):
                                 {'id': 'uuid', 'name': 'str'},
                                 {'id': 'uuid', 'name': 'str'}],
                             "replyCount": "int",
-                            "replyReloadDate": "datetime"
+                            "replyReloadDate": "datetime",
+                            'profession': 'str',
+                            'leadTaskCategories': [
+                                {'id': 'uuid', 'name': 'str', 'percent': 0.1},
+                                {'id': 'uuid', 'name': 'str', 'percent': 0.2}
+                            ]
                         }
                     ),
                     OpenApiExample(
@@ -334,7 +342,6 @@ class ProfileView(generics.GenericAPIView):
 
             profile = serializer.save()
 
-
             files_data = self.request.data.getlist('files')
 
             if profile.verification_files.count() != 0:
@@ -431,7 +438,12 @@ class GetMyProfileView(generics.GenericAPIView):
                                 {'id': 'uuid', 'name': 'str'},
                             ],
                             "replyCount": "int",
-                            "replyReloadDate": "datetime"
+                            "replyReloadDate": "datetime",
+                            'profession': 'str',
+                            'leadTaskCategories': [
+                                {'id': 'uuid', 'name': 'str', 'percent': 0.1},
+                                {'id': 'uuid', 'name': 'str', 'percent': 0.2}
+                            ]
                         }
 
                     ),
@@ -568,8 +580,11 @@ class GetProfileView(generics.GenericAPIView):
                                'skills': [
                                    {'id': 'uuid', 'name': 'str'},
                                    {'id': 'uuid', 'name': 'str'}],
-                                "replyCount": "int",
-                                "replyReloadDate": "datetime"
+                               'profession': 'str',
+                               'leadTaskCategories': [
+                                   {'id': 'uuid', 'name': 'str', 'percent': 0.1},
+                                   {'id': 'uuid', 'name': 'str', 'percent': 0.2}
+                               ]
                                }
 
                     ),
@@ -641,6 +656,10 @@ class GetProfileView(generics.GenericAPIView):
             Email_V = profile_data.pop('emailVisibility')
             if Email_V:
                 profile_data['email'] = user.email
+
+            profile_data.pop('replyCount')
+            profile_data.pop("replyReloadDate")
+
 
             return Response(profile_data, status=status.HTTP_200_OK)
 
@@ -987,7 +1006,8 @@ class EditProfileView(generics.GenericAPIView):
                     'skills': [
                         'uuid',
                         'uuid',
-                    ]
+                    ],
+                    'profession': 'str'
                 },
             ),
             OpenApiExample(
@@ -1051,7 +1071,12 @@ class EditProfileView(generics.GenericAPIView):
                                 {'id': 'uuid', 'name': 'str'},
                                 {'id': 'uuid', 'name': 'str'}],
                             "replyCount": "int",
-                            "replyReloadDate": "datetime"
+                            "replyReloadDate": "datetime",
+                            'profession': 'str',
+                            'leadTaskCategories': [
+                                {'id': 'uuid', 'name': 'str', 'percent': 0.1},
+                                {'id': 'uuid', 'name': 'str', 'percent': 0.2}
+                            ]
                         }
 
                     ),

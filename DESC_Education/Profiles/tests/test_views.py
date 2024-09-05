@@ -50,7 +50,7 @@ class CreateProfileViewTest(APITestCase):
     def get_skils_ids(self):
         skills_ids = []
 
-        skills = Skill.objects.all()
+        skills = Skill.objects.all()[:3]
 
         for i in skills:
             skills_ids.append(i.id)
@@ -110,7 +110,8 @@ class CreateProfileViewTest(APITestCase):
             "faculty": str(self.faculty.id),
             "city": str(self.city.id),
             "files": [self.create_test_image()],
-            "skills": skills_ids
+            "skills": skills_ids,
+            "profession": "Умник"
         }
 
         self.company_example_data = {
@@ -153,6 +154,7 @@ class CreateProfileViewTest(APITestCase):
         expected_data['city'] = dict(CitySerializer(self.city).data)
         expected_data["replyReloadDate"] = serializer.data['replyReloadDate']
         expected_data["replyCount"] = profile.REPLY_MONTH_COUNT
+        expected_data["leadTaskCategories"] = []
 
         faculty = dict(FacultySerializer(self.faculty).data)
         faculty['university'] = faculty.get('university')
@@ -241,6 +243,7 @@ class CreateProfileViewTest(APITestCase):
         expected_data.pop('files')
         expected_data.pop('skills')
         expected_data["replyReloadDate"] = serializer.data['replyReloadDate']
+        expected_data["leadTaskCategories"] = []
         expected_data["replyCount"] = profile.REPLY_MONTH_COUNT
         expected_skill_names = set()
         for i in self.skills:
@@ -370,7 +373,7 @@ class GetProfileTest(APITestCase):
     def get_skils_ids(self):
         skills_ids = []
 
-        skills = Skill.objects.all()
+        skills = Skill.objects.all()[:3]
 
         for i in skills:
             skills_ids.append(i.id)
@@ -413,7 +416,8 @@ class GetProfileTest(APITestCase):
             "faculty": str(self.faculty.id),
             "city": str(self.city.id),
             "files": [self.create_test_image()],
-            "skills": skills_ids
+            "skills": skills_ids,
+            'profession': 'Сварщик'
         }
 
     def test_get_profile_200(self):
@@ -434,8 +438,7 @@ class GetProfileTest(APITestCase):
         expected_data["verification"] = {"status": "verified"}
         expected_data["logoImg"] = None
         expected_data["email"] = profile.user.email
-        expected_data["replyReloadDate"] = serializer.data['replyReloadDate']
-        expected_data["replyCount"] = profile.REPLY_MONTH_COUNT
+        expected_data["leadTaskCategories"] = []
         expected_data.pop('emailVisibility')
         expected_data.pop('phoneVisibility')
 
