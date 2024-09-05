@@ -115,7 +115,7 @@ AUTH_USER_MODEL = "Users.CustomUser"
 
 SIMPLE_JWT = {
     # "UPDATE_LAST_LOGIN": True,
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "ACCESS_TOKEN_LIFETIME": timezone.timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timezone.timedelta(days=15),
 }
 
