@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from django_filters.rest_framework import DjangoFilterBackend
 # from Tasks.filters import CategoryFilterBackend
+from django.views.decorators.cache import cache_page
 from rest_framework import filters
 from Settings.pagination import CustomPageNumberPagination
 from Profiles.models import (
@@ -155,6 +156,7 @@ class TaskCategoryListView(generics.ListAPIView):
         tags=["Tasks"],
         summary="Получение экземпляров Task Category"
     )
+    @method_decorator(cache_page(60 * 60))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
@@ -204,6 +206,7 @@ class TaskPatternPatternListView(generics.ListAPIView):
         tags=["Tasks"],
         summary="Получение экземпляров TaskPattern"
     )
+    @method_decorator(cache_page(60 * 60))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
