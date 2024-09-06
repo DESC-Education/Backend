@@ -155,10 +155,12 @@ class CreateProfileViewTest(APITestCase):
         expected_data["replyReloadDate"] = serializer.data['replyReloadDate']
         expected_data["replyCount"] = profile.REPLY_MONTH_COUNT
         expected_data["leadTaskCategories"] = []
+        expected_data['level'] = {'name': profile.get_level_id_display(), 'value': profile.level_id}
 
         faculty = dict(FacultySerializer(self.faculty).data)
         faculty['university'] = faculty.get('university')
         expected_data['faculty'] = faculty
+        expected_data['level'] = {'name': profile.get_level_id_display(), 'value': profile.level_id}
 
         result = dict(res.data)
         res_skills_names = set()
@@ -256,6 +258,7 @@ class CreateProfileViewTest(APITestCase):
         faculty = dict(FacultySerializer(self.faculty).data)
         faculty['university'] = faculty.get('university')
         expected_data['faculty'] = faculty
+        expected_data['level'] = {'name': profile.get_level_id_display(), 'value': profile.level_id}
 
         result = dict(res.data)
         res_skills_names = set()
@@ -443,6 +446,7 @@ class GetProfileTest(APITestCase):
         expected_data["leadTaskCategories"] = []
         expected_data.pop('emailVisibility')
         expected_data.pop('phoneVisibility')
+        expected_data['level'] = {'name': profile.get_level_id_display(), 'value': profile.level_id}
 
         expected_data.pop('files')
         expected_data.pop('skills')

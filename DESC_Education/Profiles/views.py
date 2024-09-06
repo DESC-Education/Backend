@@ -241,7 +241,11 @@ class ProfileView(generics.GenericAPIView):
                             'leadTaskCategories': [
                                 {'id': 'uuid', 'name': 'str', 'percent': 0.1},
                                 {'id': 'uuid', 'name': 'str', 'percent': 0.2}
-                            ]
+                            ],
+                            'level': {
+                                'value': 1,
+                                'name': 'str',
+                            }
                         }
                     ),
                     OpenApiExample(
@@ -447,7 +451,11 @@ class GetMyProfileView(generics.GenericAPIView):
                             'leadTaskCategories': [
                                 {'id': 'uuid', 'name': 'str', 'percent': 0.1},
                                 {'id': 'uuid', 'name': 'str', 'percent': 0.2}
-                            ]
+                            ],
+                            'level': {
+                                'value': 1,
+                                'name': 'str',
+                            }
                         }
 
                     ),
@@ -592,7 +600,11 @@ class GetProfileView(generics.GenericAPIView):
                                'leadTaskCategories': [
                                    {'id': 'uuid', 'name': 'str', 'percent': 0.1},
                                    {'id': 'uuid', 'name': 'str', 'percent': 0.2}
-                               ]
+                               ],
+                               'level': {
+                                   'value': 1,
+                                   'name': 'str',
+                               }
                                }
 
                     ),
@@ -1042,7 +1054,7 @@ class EditProfileView(generics.GenericAPIView):
                 serializer_class,
                 examples=[
                     OpenApiExample(
-                        "Успешно Студент",
+                        "Студент Успешно",
                         value={
                             'admissionYear': 'int',
                             'description': 'str',
@@ -1087,7 +1099,11 @@ class EditProfileView(generics.GenericAPIView):
                             'leadTaskCategories': [
                                 {'id': 'uuid', 'name': 'str', 'percent': 0.1},
                                 {'id': 'uuid', 'name': 'str', 'percent': 0.2}
-                            ]
+                            ],
+                           'level': {
+                               'value': 1,
+                               'name': 'str',
+                           }
                         }
 
                     ),

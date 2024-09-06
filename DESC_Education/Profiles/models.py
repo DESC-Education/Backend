@@ -2,6 +2,7 @@ import random
 from django.utils import timezone as tz
 from django.db import models
 from Users.models import CustomUser
+from Tasks.models import Task, Solution
 import uuid
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -125,9 +126,6 @@ class ProfileVerifyRequest(models.Model):
         ordering = ['-created_at']
 
 
-
-
-
 class File(models.Model):
     id = models.UUIDField(primary_key=True,
                           default=uuid.uuid4,
@@ -247,6 +245,15 @@ class StudentProfile(BaseProfile):
         (FULL_TIME_AND_PART_TIME_EDUCATION, "Очно-Заочная форма обучения")
     ]
 
+    BEGINNER_LEVEL = 1
+    ADVANCED_LEVEL = 2
+    EXPERIENCE_LEVEL = 3
+
+    LEVEL_CHOICES = [
+        (BEGINNER_LEVEL, 'Начинающий'),
+        (ADVANCED_LEVEL, 'Продвинутый'),
+        (EXPERIENCE_LEVEL, 'Опытный')
+    ]
 
     profession = models.CharField(max_length=150, null=True)
     form_of_education = models.CharField(choices=EDUCATION_CHOISES, max_length=15, null=True)
@@ -257,6 +264,7 @@ class StudentProfile(BaseProfile):
     reply_count = models.IntegerField(default=REPLY_MONTH_COUNT, editable=False, blank=True)
     reply_reload_date = models.DateTimeField(auto_now_add=True, editable=False,
                                              blank=True)
+    level_id = models.PositiveSmallIntegerField(choices=LEVEL_CHOICES, default=BEGINNER_LEVEL, editable=False)
 
     def get_reply_count(self):
         if tz.now() >= self.reply_reload_date:
@@ -264,6 +272,18 @@ class StudentProfile(BaseProfile):
             self.reply_reload_date = tz.now() + tz.timedelta(days=self.REPLY_RELOAD_DAYS)
             self.save()
         return self.reply_count
+
+    def check_level(self):
+        solved_tasks_count = Task.objects.filter(solutions__user=self.user,
+                                                 solutions__status=Solution.COMPLETED)
+
+        if solved_tasks_count.count() < 15:
+            self.level_id = self.BEGINNER_LEVEL
+        elif solved_tasks_count.count() < 30:
+            self.level_id = self.ADVANCED_LEVEL
+        elif solved_tasks_count.count() <= 60:
+            self.level_id = self.EXPERIENCE_LEVEL
+        self.save()
 
 
 class CompanyProfile(BaseProfile):

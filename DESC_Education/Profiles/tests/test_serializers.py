@@ -145,7 +145,7 @@ class GetStudentProfileSerializerTest(TestCase):
             status=Solution.COMPLETED,
         )
 
-    def test_serialize(self):
+    def test_serialize_leadTaskCategories(self):
         serializer = GetStudentProfileSerializer(instance=self.student.get_profile()).data
 
         self.assertEqual(serializer.get('leadTaskCategories'),
@@ -153,7 +153,7 @@ class GetStudentProfileSerializerTest(TestCase):
                           {'id': '848254a3-bad2-4e0c-be20-bedce1700301', 'name': 'Мобильная разработка',
                            'percent': 0.33}])
 
-    def test_company_serialize(self):
+    def test_company_serialize_leadTaskCategories(self):
         serializer = GetCompanyProfileSerializer(instance=self.company.get_profile()).data
 
         self.assertEqual(serializer.get('leadTaskCategories'),

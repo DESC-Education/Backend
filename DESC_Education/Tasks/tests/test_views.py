@@ -224,7 +224,7 @@ class TaskDetailViewTest(APITestCase):
         res = self.client.get(reverse('task_detail', kwargs={'pk': task_id}),
                               HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
 
-        self.assertEqual(dict(res.data).get('detail'), 'No Task matches the given query.')
+        self.assertEqual(dict(res.data), {'detail': 'No Task matches the given query.'})
         self.assertEqual(res.status_code, 404)
 
 
