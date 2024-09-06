@@ -144,22 +144,44 @@ class EmptySerializer2(serializers.Serializer):
     empty2 = serializers.CharField(required=False)
 
 
+class leadTaskCategoriesSerializer(serializers.Serializer):
+    id = serializers.UUIDField
+    name = serializers.CharField
+    percent = serializers.FloatField()
+
+
 class GetCompanyProfileSerializer(BaseProfileSerializer):
     linkToCompany = serializers.URLField(source="link_to_company")
     companyName = serializers.CharField(source="company_name")
     city = CitySerializer()
     skills = SkillSerializer(many=True)
+    leadTaskCategories = serializers.SerializerMethodField()
 
     class Meta(BaseProfileSerializer.Meta):
         model = CompanyProfile
         fields = BaseProfileSerializer.Meta.fields + \
-                 ('linkToCompany', 'companyName', 'skills')
+                 ('linkToCompany', 'companyName', 'skills', 'leadTaskCategories')
 
+    @staticmethod
+    def get_leadTaskCategories(obj) -> leadTaskCategoriesSerializer:
+        queryset = TaskCategory.objects.annotate(
+            solved_count=Count("tasks", filter=Q(
+                tasks__user=obj.user,
+            ))
+        ).filter(solved_count__gt=0).order_by('-solved_count')
 
-class leadTaskCategoriesSerializer(serializers.Serializer):
-    id = serializers.UUIDField
-    name = serializers.CharField
-    percent = serializers.FloatField()
+        total_solved = sum(i.solved_count for i in queryset)
+        res = []
+        for i in queryset:
+            percent = round((i.solved_count / total_solved), 2)
+            res.append(
+                {
+                    'id': str(i.id),
+                    'name': i.name,
+                    'percent': percent,
+                }
+            )
+        return res
 
 
 class GetStudentProfileSerializer(BaseProfileSerializer):

@@ -47,8 +47,6 @@ from Tasks.models import (
 )
 
 
-
-
 class GetStudentProfileSerializerTest(TestCase):
 
     @staticmethod
@@ -146,8 +144,19 @@ class GetStudentProfileSerializerTest(TestCase):
             description="Test Solution Description",
             status=Solution.COMPLETED,
         )
+
     def test_serialize(self):
         serializer = GetStudentProfileSerializer(instance=self.student.get_profile()).data
 
-        # print(serializer.data)
+        self.assertEqual(serializer.get('leadTaskCategories'),
+                         [{'id': 'c8ce70d4-6d74-460e-935a-2ae229e633c9', 'name': 'Анимация', 'percent': 0.67},
+                          {'id': '848254a3-bad2-4e0c-be20-bedce1700301', 'name': 'Мобильная разработка',
+                           'percent': 0.33}])
 
+    def test_company_serialize(self):
+        serializer = GetCompanyProfileSerializer(instance=self.company.get_profile()).data
+
+        self.assertEqual(serializer.get('leadTaskCategories'),
+                         [{'id': 'c8ce70d4-6d74-460e-935a-2ae229e633c9', 'name': 'Анимация', 'percent': 0.67},
+                          {'id': '848254a3-bad2-4e0c-be20-bedce1700301', 'name': 'Мобильная разработка',
+                           'percent': 0.33}])
