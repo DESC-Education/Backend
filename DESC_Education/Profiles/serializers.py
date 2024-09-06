@@ -90,7 +90,8 @@ class BaseProfileSerializer(serializers.ModelSerializer):
                   'logoImg', 'telegramLink', 'vkLink', 'timezone', 'city', 'skills', 'verification')
         read_only_fields = ['id', 'user']
 
-    def get_verification(self, obj) -> str:
+    @staticmethod
+    def get_verification(obj) -> str:
         return obj.get_verification_status()
 
 
@@ -184,6 +185,8 @@ class GetCompanyProfileSerializer(BaseProfileSerializer):
         return res
 
 
+
+
 class GetStudentProfileSerializer(BaseProfileSerializer):
     formOfEducation = serializers.CharField(source="form_of_education")
     admissionYear = serializers.IntegerField(source="admission_year")
@@ -195,12 +198,20 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
     replyCount = serializers.SerializerMethodField()
     replyReloadDate = serializers.DateTimeField(source="reply_reload_date", read_only=True)
     leadTaskCategories = serializers.SerializerMethodField()
+    level = serializers.SerializerMethodField()
 
     class Meta(BaseProfileSerializer.Meta):
         model = StudentProfile
         fields = BaseProfileSerializer.Meta.fields + \
                  ('formOfEducation', 'admissionYear', 'university', 'faculty', 'skills',
-                  'specialty', 'replyCount', 'replyReloadDate', 'profession', 'leadTaskCategories')
+                  'specialty', 'replyCount', 'replyReloadDate', 'profession', 'leadTaskCategories', "level")
+
+    @staticmethod
+    def get_level(obj):
+        return {
+            'value': obj.level_id,
+            'name': obj.get_level_id_display(),
+        }
 
     @staticmethod
     def get_leadTaskCategories(obj) -> leadTaskCategoriesSerializer:
