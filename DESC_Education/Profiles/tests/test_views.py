@@ -188,6 +188,7 @@ class CreateProfileViewTest(APITestCase):
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         expected_data['city'] = dict(CitySerializer(self.city).data)
+        expected_data["leadTaskCategories"] = []
         skills = expected_data.pop('skills')
         expected_skill_names = set()
         for i in self.skills:
@@ -285,6 +286,7 @@ class CreateProfileViewTest(APITestCase):
         expected_data["logoImg"] = None
         expected_data["phone"] = '+77777777777'
         expected_data['city'] = dict(CitySerializer(self.city).data)
+        expected_data["leadTaskCategories"] = []
         skills = expected_data.pop('skills')
         expected_skill_names = set()
         for i in self.skills:

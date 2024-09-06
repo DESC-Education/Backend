@@ -267,7 +267,11 @@ class ProfileView(generics.GenericAPIView):
                                 'region': 'str'},
                             'skills': [
                                 {'id': 'uuid', 'name': 'str'},
-                                {'id': 'uuid', 'name': 'str'}]
+                                {'id': 'uuid', 'name': 'str'}],
+                            'leadTaskCategories': [
+                                {'id': 'uuid', 'name': 'str', 'percent': 0.1},
+                                {'id': 'uuid', 'name': 'str', 'percent': 0.2}
+                            ]
                         }
 
                     )
@@ -471,7 +475,11 @@ class GetMyProfileView(generics.GenericAPIView):
                                 'region': 'str'},
                             'skills': [
                                 {'id': 'uuid', 'name': 'str'},
-                                {'id': 'uuid', 'name': 'str'}]
+                                {'id': 'uuid', 'name': 'str'}],
+                            'leadTaskCategories': [
+                                {'id': 'uuid', 'name': 'str', 'percent': 0.1},
+                                {'id': 'uuid', 'name': 'str', 'percent': 0.2}
+                            ]
 
                         }
 
@@ -610,7 +618,11 @@ class GetProfileView(generics.GenericAPIView):
                                 'region': 'str'},
                             'skills': [
                                 {'id': 'uuid', 'name': 'str'},
-                                {'id': 'uuid', 'name': 'str'}]
+                                {'id': 'uuid', 'name': 'str'}],
+                            'leadTaskCategories': [
+                                {'id': 'uuid', 'name': 'str', 'percent': 0.1},
+                                {'id': 'uuid', 'name': 'str', 'percent': 0.2}
+                            ]
                         }
 
                     )
@@ -659,7 +671,6 @@ class GetProfileView(generics.GenericAPIView):
 
             profile_data.pop('replyCount')
             profile_data.pop("replyReloadDate")
-
 
             return Response(profile_data, status=status.HTTP_200_OK)
 
@@ -1101,7 +1112,11 @@ class EditProfileView(generics.GenericAPIView):
                                 'region': 'str'},
                             'skills': [
                                 {'id': 'uuid', 'name': 'str'},
-                                {'id': 'uuid', 'name': 'str'}]
+                                {'id': 'uuid', 'name': 'str'}],
+                            'leadTaskCategories': [
+                                {'id': 'uuid', 'name': 'str', 'percent': 0.1},
+                                {'id': 'uuid', 'name': 'str', 'percent': 0.2}
+                            ]
                         }
 
                     ),
