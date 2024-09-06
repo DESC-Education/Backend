@@ -879,14 +879,15 @@ class SendPhoneCodeView(generics.GenericAPIView):
             if PhoneVerificationCode.objects.filter(phone=phone, is_used=True).exists():
                 return Response({"message": "Данный номер телефона уже привязан!"}, status=status.HTTP_404_NOT_FOUND)
 
-            try:
-                p = PhoneVerificationCode.objects.get(phone=phone, user=request.user, is_used=False)
+
+            p = PhoneVerificationCode.objects.filter(phone=phone, user=request.user, is_used=False)
+            if len(p) != 0:
+                p = p.first()
                 if (timezone.now() - p.created_at).total_seconds() < 55:
                     return Response({
                         "message": "Код подтверждения уже был отправлен. Пожалуйста, повторите попытку позже."},
                         status=status.HTTP_409_CONFLICT)
-            except ObjectDoesNotExist:
-                pass
+
 
             PhoneVerificationCode.objects.create(phone=phone,
                                                  code=PhoneVerificationCode.create_code(),
