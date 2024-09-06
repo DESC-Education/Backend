@@ -620,19 +620,23 @@ class SendVerifyCodeView(generics.GenericAPIView):
 
                     except CustomUser.DoesNotExist:
                         return Response({"message": "Пользователь не найден"}, status=status.HTTP_404_NOT_FOUND)
-                    try:
-                        code: VerificationCode = VerificationCode.objects.get(user=user,
+
+                    Vcode: VerificationCode = VerificationCode.objects.filter(user=user,
                                                                               type=VerificationCode.REGISTRATION_TYPE,
                                                                               is_used=False)
+                    if len(Vcode) != 0:
+                        code = Vcode.first()
+
                         if code.get_time() < 55:
                             return Response({"message": "Проверочный код по-прежнему активен, повторите попытку позже"},
                                             status=status.HTTP_409_CONFLICT)
-                    except VerificationCode.DoesNotExist:
-                        pass
+
 
                     Vcode_reg = VerificationCode.objects.create(user=user,
                                                                 code=str(random.randint(1000, 9999)),
                                                                 type=VerificationCode.REGISTRATION_TYPE)
+
+
 
                     send_auth_registration_code(email, Vcode_reg.code)
 
@@ -645,15 +649,15 @@ class SendVerifyCodeView(generics.GenericAPIView):
                     if not request.user.is_authenticated:
                         return Response({"message": "Пользователь не авторизован"}, status=status.HTTP_401_UNAUTHORIZED)
 
-                    try:
-                        code: VerificationCode = VerificationCode.objects.get(user=request.user,
-                                                                              type=VerificationCode.REGISTRATION_TYPE,
+                    Vcode: VerificationCode = VerificationCode.objects.filter(user=request.user,
+                                                                              type=VerificationCode.EMAIL_CHANGE_TYPE,
                                                                               is_used=False)
+                    if len(Vcode) != 0:
+                        code = Vcode.first()
                         if code.get_time() < 55:
                             return Response({"message": "Проверочный код по-прежнему активен, повторите попытку позже"},
                                             status=status.HTTP_409_CONFLICT)
-                    except VerificationCode.DoesNotExist:
-                        pass
+
 
                     Vcode_email = VerificationCode.objects.create(user=request.user,
                                                                   code=str(random.randint(1000, 9999)),
@@ -676,15 +680,14 @@ class SendVerifyCodeView(generics.GenericAPIView):
                     except CustomUser.DoesNotExist:
                         return Response({"message": "Пользователь не найден"}, status=status.HTTP_404_NOT_FOUND)
 
-                    try:
-                        code: VerificationCode = VerificationCode.objects.get(user=user,
-                                                                              type=VerificationCode.REGISTRATION_TYPE,
+                    Vcode: VerificationCode = VerificationCode.objects.filter(user=user,
+                                                                              type=VerificationCode.PASSWORD_CHANGE_TYPE,
                                                                               is_used=False)
+                    if len(Vcode) != 0:
+                        code = Vcode.first()
                         if code.get_time() < 55:
                             return Response({"message": "Проверочный код по-прежнему активен, повторите попытку позже"},
                                             status=status.HTTP_409_CONFLICT)
-                    except VerificationCode.DoesNotExist:
-                        pass
 
                     Vcode_pass = VerificationCode.objects.create(user=user,
                                                                  code=random.randint(1000, 9999),
@@ -870,13 +873,14 @@ class ChangeEmailView(generics.GenericAPIView):
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
 
-            try:
-                Vcode: VerificationCode = VerificationCode.objects.get(user=request.user,
-                                                                       type=VerificationCode.EMAIL_CHANGE_TYPE,
-                                                                       is_used=False)
-            except VerificationCode.DoesNotExist:
+            Vcode: VerificationCode = VerificationCode.objects.filter(user=request.user,
+                                                                      type=VerificationCode.EMAIL_CHANGE_TYPE,
+                                                                      is_used=False)
+            if len(Vcode) == 0:
                 return Response({"message": "Проверочный код не найден или срок действия истек"},
                                 status=status.HTTP_404_NOT_FOUND)
+            Vcode = Vcode.first()
+
 
             if not Vcode.is_valid():
                 return Response({"message": "Проверочный код не найден или срок действия истек"},
