@@ -89,7 +89,7 @@ class TaskSerializer(serializers.ModelSerializer):
     # read_only
     category = TaskCategorySerializer(read_only=True)
     catFilters = serializers.SerializerMethodField()
-    profile = ProfileTaskSerializer(read_only=True)
+    profile = serializers.SerializerMethodField(read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     solutionsCount = serializers.SerializerMethodField()
 
@@ -98,6 +98,14 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'createdAt', 'title', 'description', 'deadline', 'file', 'category',
                   'catFilters', 'profile', "categoryId", "filtersId", 'solutionsCount')
         read_only_fields = ['id', 'user']
+
+    @staticmethod
+    def get_profile(obj) -> ProfileTaskSerializer:
+        try:
+            profile = obj.user.get_profile()
+            return ProfileTaskSerializer(profile).data
+        except:
+            return None
 
     def get_catFilters(self, obj) -> FilterCategorySerializer:
         category_filters = {}
@@ -194,20 +202,20 @@ class CompanyTasksMySerializer(serializers.Serializer):
 
 
 class TaskListSerializer(serializers.ModelSerializer):
-    profile = ProfileTaskSerializer()
+    profile = serializers.SerializerMethodField()
     createdAt = serializers.DateTimeField(source='created_at')
 
     class Meta:
         model = Task
         fields = ('title', 'description', 'deadline', 'createdAt', 'profile', 'category')
 
-    # @staticmethod
-    # def get_profile(obj) -> {'logoIMG': "str", 'companyName': "str"}:
-    #     try:
-    #         profile = apps.get_model('Profiles', 'CompanyProfile').objects.get(user=obj.user)
-    #         return ProfileTaskSerializer(profile).data
-    #     except:
-    #         return None
+    @staticmethod
+    def get_profile(obj) -> ProfileTaskSerializer:
+        try:
+            profile = obj.user.get_profile()
+            return ProfileTaskSerializer(profile).data
+        except:
+            return None
 
 
 class EvaluateSolutionSerializer(serializers.ModelSerializer):

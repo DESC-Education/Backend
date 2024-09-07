@@ -157,6 +157,85 @@ class TaskViewTest(APITestCase):
         self.assertEqual(test_put.status_code, 200)
 
 
+class TaskListViewTest(APITestCase):
+    @staticmethod
+    def create_test_image():
+        bts = BytesIO()
+        img = Image.new("RGB", (100, 100))
+        img.save(bts, 'jpeg')
+        return SimpleUploadedFile(f"test_{random.randint(1, 25)}.jpg", bts.getvalue())
+
+    def get_expected_data(self, task):
+        expected_data = TaskSerializer(data=self.example_data, instance=task)
+        expected_data.user = str(self.company.id)
+        expected_data.is_valid()
+        expected_data = dict(expected_data.data)
+
+        return expected_data
+
+    def setUp(self):
+        self.maxDiff = None
+        self.student = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        profile = self.student.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+        self.student_token = self.student.get_token()['accessToken']
+
+        self.another_company = CustomUser.objects.create_user(
+            email='exampl3e@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+        profile = self.another_company.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+        self.another_company_token = self.another_company.get_token()['accessToken']
+        self.company = CustomUser.objects.create_user(
+            email='exampl2e2@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+        profile = self.company.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+        self.company_token = self.company.get_token()['accessToken']
+
+        task_category = TaskCategory.objects.first()
+        filter_category: FilterCategory = FilterCategory.objects.create(
+            name="Языки прогрмирования",
+        )
+        task_category.filter_categories.add(filter_category)
+        filter_python: Filter = Filter.objects.create(
+            name="Python",
+            filter_category=filter_category
+        )
+
+        self.example_data = {
+            "user": self.company,
+            "title": "Test Task",
+            "description": "Test Task Description",
+            "deadline": (timezone.now() + timezone.timedelta(days=1)).isoformat(),
+            'file': self.create_test_image(),
+            'category': task_category,
+
+        }
+
+        self.task = Task.objects.create(**self.example_data)
+
+    def test_get(self):
+        res = self.client.get(reverse('get_tasks'))
+
+        expected_data = TaskListSerializer(instance=self.task)
+
+        self.assertEqual(dict(res.data).get('results')[0], dict(expected_data.data))
+
 class TaskDetailViewTest(APITestCase):
 
     def get_expected_data(self, task):
