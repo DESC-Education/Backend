@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from django_filters.rest_framework import DjangoFilterBackend
-# from Tasks.filters import CategoryFilterBackend
+from Tasks.filters import TaskFilter
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from rest_framework import filters
@@ -57,6 +57,8 @@ class TaskListView(generics.ListAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskListSerializer
     pagination_class = CustomPageNumberPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TaskFilter
 
     @extend_schema(
         tags=["Tasks"],
