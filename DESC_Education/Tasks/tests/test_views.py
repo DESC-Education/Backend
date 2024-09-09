@@ -298,6 +298,9 @@ class TaskDetailViewTest(APITestCase):
         t = task_id[-1]
         task_id[-1] = task_id[0]
         task_id[0] = t
+        task_id[1] = '0'
+        task_id[2] = '0'
+        task_id[3] = '0'
         task_id = ''.join(task_id)
 
         res = self.client.get(reverse('task_detail', kwargs={'pk': task_id}),

@@ -1,15 +1,11 @@
+from django_filters import rest_framework as drf_filters
+from Tasks.models import Task, Filter, TaskCategory
 
-# from rest_framework.filters import BaseFilterBackend
-#
-#
-#
-#
-#
-#
-#
-# class CategoryFilterBackend(BaseFilterBackend):
-#     def filter_queryset(self, request, queryset, view):
-#         taskCategoryId = request.query_params.get('taskCategoryId')
-#         if taskCategoryId:
-#             queryset = queryset.filter(task_categories__id=taskCategoryId)
-#         return queryset
+
+class TaskFilter(drf_filters.FilterSet):
+    filters = drf_filters.ModelMultipleChoiceFilter(queryset=Filter.objects.all(), field_name='filters')
+    category = drf_filters.ModelChoiceFilter(queryset=TaskCategory.objects.all(), field_name='category')
+
+    class Meta:
+        model = Task
+        fields = ['filters', 'category']
