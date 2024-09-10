@@ -220,7 +220,7 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
                 tasks__solutions__user=obj.user,
                 tasks__solutions__status=Solution.COMPLETED,
             ))
-        ).filter(solved_count__gt=0).order_by('-solved_count')
+        ).filter(solved_count__gt=0).order_by('-solved_count')[:3]
 
         total_solved = sum(i.solved_count for i in queryset)
         res = []
