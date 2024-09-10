@@ -220,11 +220,11 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
                 tasks__solutions__user=obj.user,
                 tasks__solutions__status=Solution.COMPLETED,
             ))
-        ).filter(solved_count__gt=0).order_by('-solved_count')[:3]
+        ).filter(solved_count__gt=0).order_by('-solved_count')
 
         total_solved = sum(i.solved_count for i in queryset)
         res = []
-        for i in queryset:
+        for i in queryset[:3]:
             percent = round((i.solved_count / total_solved), 2)
             res.append(
                 {
