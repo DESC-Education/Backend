@@ -169,12 +169,14 @@ class GetCompanyProfileSerializer(BaseProfileSerializer):
             solved_count=Count("tasks", filter=Q(
                 tasks__user=obj.user,
             ))
-        ).filter(solved_count__gt=0).order_by('-solved_count')[:3]
+        ).filter(solved_count__gt=0).order_by('-solved_count')
 
         total_solved = sum(i.solved_count for i in queryset)
+        three_percent = 0.0
         res = []
-        for i in queryset:
+        for i in queryset[:3]:
             percent = round((i.solved_count / total_solved), 2)
+            three_percent += percent
             res.append(
                 {
                     'id': str(i.id),
@@ -182,6 +184,12 @@ class GetCompanyProfileSerializer(BaseProfileSerializer):
                     'percent': percent,
                 }
             )
+
+        if total_solved > 3:
+            res.append({
+                'name': 'Другие',
+                'percent': three_percent,
+            })
         return res
 
 
@@ -220,12 +228,14 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
                 tasks__solutions__user=obj.user,
                 tasks__solutions__status=Solution.COMPLETED,
             ))
-        ).filter(solved_count__gt=0).order_by('-solved_count')[:3]
+        ).filter(solved_count__gt=0).order_by('-solved_count')
 
         total_solved = sum(i.solved_count for i in queryset)
+        three_percent = 0.0
         res = []
-        for i in queryset:
+        for i in queryset[:3]:
             percent = round((i.solved_count / total_solved), 2)
+            three_percent += percent
             res.append(
                 {
                     'id': str(i.id),
@@ -233,6 +243,11 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
                     'percent': percent,
                 }
             )
+        if total_solved > 3:
+            res.append({
+                'name': 'Другие',
+                'percent': three_percent,
+            })
         return res
 
     @staticmethod

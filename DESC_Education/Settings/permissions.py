@@ -43,6 +43,22 @@ class IsCompanyRole(IsAuthenticatedAndVerified):
         return request.user.get_profile().verification == BaseProfile.VERIFIED
 
 
+class IsAdminRole(BasePermission):
+    def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+
+        if type(request.user) == AnonymousUser:
+            return False
+
+        self.message = 'Только для модераторов!'
+        if request.user.role not in [CustomUser.ADMIN_ROLE, CustomUser.UNIVERSITY_ADMIN_ROLE]:
+            return False
+
+        return True
+
+
+
 class EvaluateCompanyRole(IsCompanyRole):
     def has_object_permission(self, request, view, obj):
         self.message = 'К изменению доступны объекты созданые только вами'

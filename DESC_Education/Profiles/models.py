@@ -105,6 +105,12 @@ class ProfileVerifyRequest(models.Model):
     APPROVED = 'approved'
     REJECTED = 'rejected'
 
+    STATUS_CHOICES = [
+        (PENDING, 'Pending'),
+        (APPROVED, 'Approved'),
+        (REJECTED, 'Rejected'),
+    ]
+
     id = models.UUIDField(primary_key=True,
                           default=uuid.uuid4,
                           editable=False,
@@ -115,11 +121,7 @@ class ProfileVerifyRequest(models.Model):
     admin = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True, editable=False, blank=True)
-    status = models.CharField(max_length=20, choices=[
-        (PENDING, 'Pending'),
-        (APPROVED, 'Approved'),
-        (REJECTED, 'Rejected'),
-    ], default=PENDING)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
     comment = models.TextField(null=True, blank=True)
 
     class Meta:

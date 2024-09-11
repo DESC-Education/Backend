@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'Users',
     'Profiles',
     'Tasks',
+    'Admins',
     'corsheaders',
     'rest_framework_simplejwt',
     'drf_spectacular',

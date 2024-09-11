@@ -1,6 +1,5 @@
 import random
 import uuid
-
 import rest_framework.generics
 from django.urls import reverse
 import json
