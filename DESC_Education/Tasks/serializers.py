@@ -207,7 +207,7 @@ class TaskListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ('title', 'description', 'deadline', 'createdAt', 'profile', 'category')
+        fields = ('id', 'title', 'description', 'deadline', 'createdAt', 'profile', 'category')
 
     @staticmethod
     def get_profile(obj) -> ProfileTaskSerializer:
