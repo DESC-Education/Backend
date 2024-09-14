@@ -26,7 +26,7 @@ class TaskFilter(drf_filters.FilterSet):
         fields = ['filters', 'category']
 
 
-class CompanyMyTasksFilter(drf_filters.FilterSet):
+class MyTasksFilter(drf_filters.FilterSet):
     ordering = drf_filters.OrderingFilter(
         fields=(
             ('created_at', 'createdAt'),
@@ -39,63 +39,8 @@ class CompanyMyTasksFilter(drf_filters.FilterSet):
 
     )
 
-    status = drf_filters.ChoiceFilter(
-        choices=[
-            ('active', 'Активные'),
-            ('archived', 'Архивные')
-        ],
-        label='Статус задач'
-    )
-
     class Meta:
         model = Task
-        fields = ['status', 'ordering']
-
-    def filter_queryset(self, queryset):
-        queryset = super().filter_queryset(queryset)
-
-        task_status = self.data.get('status')
-        if task_status == 'active':
-            queryset = queryset.filter(deadline__gte=timezone.now())  # Предполагаем, что у вас есть поле is_archived
-        elif task_status == 'archived':
-            queryset = queryset.filter(deadline__lt=timezone.now())
-
-        return queryset
+        fields = []
 
 
-class StudentMyTasksFilter(drf_filters.FilterSet):
-    ordering = drf_filters.OrderingFilter(
-        fields=(
-            ('created_at', 'createdAt'),
-        ),
-
-        # labels do not need to retain order
-        field_labels={
-            'created_at': 'По дате добавления',
-        }
-
-    )
-
-    status = drf_filters.ChoiceFilter(
-        choices=[
-            ('active', 'Активные'),
-            ('archived', 'Архивные')
-        ],
-        label='Статус задач'
-    )
-
-    class Meta:
-        model = Task
-        fields = ['status', 'ordering']
-
-    def filter_queryset(self, queryset):
-        queryset = super().filter_queryset(queryset)
-
-        task_status = self.data.get('status')
-        if task_status == 'active':
-            queryset = queryset.filter(
-                solutions__status=Solution.PENDING)  # Предполагаем, что у вас есть поле is_archived
-        elif task_status == 'archived':
-            queryset = queryset.filter(Q(solutions__status=Solution.COMPLETED) | Q(solutions__status=Solution.FAILED))
-
-        return queryset
