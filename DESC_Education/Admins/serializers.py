@@ -14,13 +14,24 @@ from Profiles.models import (
 
 
 class ProfileVerifyRequestDetailSerializer(serializers.ModelSerializer):
-    createdAt = serializers.DateTimeField(source="created_at")
-    profile = serializers.SerializerMethodField()
-    verificationFiles = serializers.SerializerMethodField()
+    comment = serializers.CharField(required=False, max_length=255)
+    status = serializers.ChoiceField(choices=ProfileVerifyRequest.STATUS_CHOICES, required=True)
+    createdAt = serializers.DateTimeField(source="created_at", read_only=True)
+    profile = serializers.SerializerMethodField(read_only=True)
+    verificationFiles = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ProfileVerifyRequest
         fields = ['id', 'createdAt', 'status', 'comment', 'admin', 'profile', 'verificationFiles']
+
+    def validate(self, attrs):
+        status = attrs.get('status')
+        comment = attrs.get('comment')
+
+        if status == ProfileVerifyRequest.REJECTED and not comment:
+            raise serializers.ValidationError({"comment": "Требуется указать причину отказа!"})
+
+        return attrs
 
     @staticmethod
     def get_verificationFiles(obj) -> list[str]:

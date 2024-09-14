@@ -63,6 +63,22 @@ class AdminProfileVerifyRequestDetailView(generics.GenericAPIView):
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        tags=["Admins"],
+        summary="Верификация ProfileVerifyRequest"
+    )
+
+    def post(self, request, pk):
+        instance = self.get_object(pk)
+        serializer = self.get_serializer(instance, data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save(admin=request.user)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
 
 
 
