@@ -97,3 +97,41 @@ class AdminProfileVerifyRequestDetailViewTest(APITestCase):
         self.assertEqual(res.status_code, 200)
 
 
+
+    def test_post_v_request_detail_error(self):
+        res = self.client.post(reverse('admin_v_request_detail', kwargs={'pk': str(self.v_request.id)}),
+                               data=json.dumps({"status": ProfileVerifyRequest.REJECTED,
+                                                }),
+                               content_type="application/json",
+                               headers={"Authorization": f"Bearer {self.admin_token}"})
+
+        self.assertEqual(dict(res.data).get('comment')[0], 'Требуется указать причину отказа!')
+
+    def test_post_v_request_detail_approve(self):
+        res = self.client.post(reverse('admin_v_request_detail', kwargs={'pk': str(self.v_request.id)}),
+                               data=json.dumps({"status": ProfileVerifyRequest.APPROVED,
+                                                }),
+                               content_type="application/json",
+                               headers={"Authorization": f"Bearer {self.admin_token}"})
+
+
+        self.assertEqual(dict(res.data).get('status'), ProfileVerifyRequest.APPROVED)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data.get('admin'), self.admin.id)
+
+    def test_post_v_request_detail_rejected(self):
+        res = self.client.post(reverse('admin_v_request_detail', kwargs={'pk': str(self.v_request.id)}),
+                               data=json.dumps({"status": ProfileVerifyRequest.REJECTED,
+                                                "comment": "Причина"
+                                                }),
+                               content_type="application/json",
+                               headers={"Authorization": f"Bearer {self.admin_token}"})
+        data = dict(res.data)
+        self.assertEqual(data.get('status'), ProfileVerifyRequest.REJECTED)
+        self.assertEqual(data.get('comment'), 'Причина')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data.get('admin'), self.admin.id)
+
+
+
+
