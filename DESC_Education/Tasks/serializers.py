@@ -109,8 +109,6 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def get_catFilters(self, obj) -> FilterCategorySerializer:
         category_filters = {}
-        if type(obj) is dict:
-            print(obj)
         filters = obj.filters.all()
 
         for filter in filters:
@@ -178,27 +176,7 @@ class StudentTasksMySerializer(serializers.Serializer):
         }
 
 
-class CompanyTasksMySerializer(serializers.Serializer):
-    active_tasks = TaskSerializer(many=True)
-    archived_tasks = TaskSerializer(many=True)
 
-    def to_representation(self, instance):
-        active_tasks = []
-        archived_tasks = []
-
-        for task in instance:
-            if task.deadline > timezone.now():
-                active_tasks.append(TaskSerializer(task).data)
-            else:
-                archived_tasks.append(TaskSerializer(task).data)
-
-        return {
-            'active_tasks': active_tasks,
-            'archived_tasks': archived_tasks
-        }
-
-    class Meta:
-        fields = ('active_tasks', 'archived_tasks')
 
 
 class TaskListSerializer(serializers.ModelSerializer):

@@ -27,7 +27,6 @@ from Tasks.serializers import (
     TaskCategoryWithFiltersSerializer,
     SolutionSerializer,
     FilterCategorySerializer,
-    CompanyTasksMySerializer,
     TaskListSerializer,
     StudentTasksMySerializer,
 )
@@ -415,6 +414,16 @@ class CompanyTasksMyViewTest(APITestCase):
         profile.verification = StudentProfile.VERIFIED
         profile.save()
 
+        self.company_2 = CustomUser.objects.create_user(
+            email='example3@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+        profile2 = self.company_2.get_profile()
+        profile2.verification = StudentProfile.VERIFIED
+        profile2.save()
+
         self.student_token = self.student.get_token()['accessToken']
 
         self.company = CustomUser.objects.create_user(
@@ -466,15 +475,25 @@ class CompanyTasksMyViewTest(APITestCase):
             file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.first(),
         )
-        self.task_2.filters.set([Filter.objects.first()])
+        self.task_4.filters.set([Filter.objects.first()])
+
+        self.task_5 = Task.objects.create(
+            user=self.company_2,
+            title="Test Task4",
+            description="Test Task Description",
+            deadline=(timezone.now() - timezone.timedelta(days=2)).isoformat(),
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            category=TaskCategory.objects.first(),
+        )
+        self.task_5.filters.set([Filter.objects.first()])
 
     def test_get_200(self):
         res = self.client.get(reverse('company_tasks_my'),
                               HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
 
-        serializer = CompanyTasksMySerializer()
-        self.assertEqual(dict(res.data),
-                         serializer.to_representation(Task.objects.all()))
+        serializer = TaskListSerializer(Task.objects.filter(user=self.company), many=True)
+        self.assertEqual(dict(res.data).get('results'),
+                         serializer.data)
         self.assertEqual(res.status_code, 200)
 
     def test_get_student(self):
@@ -576,9 +595,9 @@ class StudentTasksMyViewTest(APITestCase):
         res = self.client.get(reverse('student_tasks_my'),
                               HTTP_AUTHORIZATION=f'Bearer {self.student_token}')
 
-        serializer = StudentTasksMySerializer()
-        self.assertEqual(dict(res.data),
-                         serializer.to_representation(Solution.objects.all()))
+        serializer = TaskListSerializer(Task.objects.filter(solutions__user=self.student), many=True)
+        self.assertEqual(dict(res.data).get('results'),
+                         serializer.data)
         self.assertEqual(res.status_code, 200)
 
     def test_get_company(self):

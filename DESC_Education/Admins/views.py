@@ -54,6 +54,10 @@ class AdminProfileVerifyRequestDetailView(generics.GenericAPIView):
         obj = get_object_or_404(ProfileVerifyRequest, pk=pk)
         return obj
 
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение экземпляра ProfileVerifyRequest"
+    )
     def get(self, request, pk):
         instance = self.get_object(pk)
         serializer = self.get_serializer(instance)
