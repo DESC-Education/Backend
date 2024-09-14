@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from django_filters.rest_framework import DjangoFilterBackend
-from Tasks.filters import TaskFilter
+from Tasks.filters import TaskFilter, CompanyMyTasksFilter, StudentMyTasksFilter
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from rest_framework import filters
@@ -18,7 +18,6 @@ from Tasks.serializers import (
     SolutionSerializer,
     TaskCategorySerializer,
     FilterCategorySerializer,
-    CompanyTasksMySerializer,
     StudentTasksMySerializer,
     TaskCategoryWithFiltersSerializer,
     TaskPatternSerializer,
@@ -166,8 +165,11 @@ class TaskCategoryListView(generics.ListAPIView):
 
 class CompanyTasksMyView(generics.ListAPIView):
     queryset = Task.objects.all()
-    serializer_class = CompanyTasksMySerializer
+    serializer_class = TaskListSerializer
     permission_classes = [IsCompanyRole]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = CompanyMyTasksFilter
+
 
     def get_queryset(self):
         return Task.objects.filter(user=self.request.user)
@@ -177,27 +179,30 @@ class CompanyTasksMyView(generics.ListAPIView):
         summary="Получение экземпляров my Tasks"
     )
     def get(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer()
-        return Response(serializer.to_representation(queryset))
+        return super().get(request, *args, **kwargs)
+
 
 
 class StudentTasksMyView(generics.ListAPIView):
     queryset = Task.objects.all()
-    serializer_class = StudentTasksMySerializer
+    serializer_class = TaskListSerializer
     permission_classes = [IsStudentRole]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = StudentMyTasksFilter
 
     def get_queryset(self):
-        return Solution.objects.filter(user=self.request.user)
+        return Task.objects.filter(solutions__user=self.request.user)
 
     @extend_schema(
         tags=["Tasks"],
         summary="Получение экземпляров my Tasks"
     )
     def get(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer()
-        return Response(serializer.to_representation(queryset))
+        return super().get(request, *args, **kwargs)
+    # def get(self, request, *args, **kwargs):
+    #     queryset = self.get_queryset()
+    #     serializer = self.get_serializer()
+    #     return Response(serializer.to_representation(queryset))
 
 
 class TaskPatternPatternListView(generics.ListAPIView):

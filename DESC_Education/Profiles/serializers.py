@@ -215,7 +215,7 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
                   'specialty', 'replyCount', 'replyReloadDate', 'profession', 'leadTaskCategories', "level")
 
     @staticmethod
-    def get_level(obj):
+    def get_level(obj) -> dict:
         return {
             'value': obj.level_id,
             'name': obj.get_level_id_display(),
@@ -251,7 +251,7 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
         return res
 
     @staticmethod
-    def get_replyCount(obj):
+    def get_replyCount(obj) -> int:
         return obj.get_reply_count()
 
 

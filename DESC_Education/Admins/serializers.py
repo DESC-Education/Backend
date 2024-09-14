@@ -32,7 +32,7 @@ class ProfileVerifyRequestDetailSerializer(serializers.ModelSerializer):
         return res
 
     @staticmethod
-    def get_profile(obj):
+    def get_profile(obj) -> GetStudentProfileSerializer:
         if isinstance(obj.profile, StudentProfile):
             return GetStudentProfileSerializer(obj.profile).data
         elif isinstance(obj.profile, CompanyProfile):
@@ -48,7 +48,8 @@ class ProfileVerifyRequestsListSerializer(serializers.ModelSerializer):
     lastName = serializers.CharField(source="profile.last_name")
     email = serializers.CharField(source="profile.user.email")
     createdAt = serializers.DateTimeField(source="created_at")
+    requestStatus = serializers.CharField(source="status")
 
     class Meta:
         model = ProfileVerifyRequest
-        fields = ['id', 'createdAt', 'status', 'comment', 'admin', "userType", "firstName", "lastName", "email"]
+        fields = ['id', 'createdAt', 'requestStatus', 'comment', 'admin', "userType", "firstName", "lastName", "email"]
