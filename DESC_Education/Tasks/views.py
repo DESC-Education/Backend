@@ -2,12 +2,13 @@ from rest_framework import generics, status
 from Settings.permissions import IsCompanyRole, IsStudentRole, EvaluateCompanyRole
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from django_filters.rest_framework import DjangoFilterBackend
-from Tasks.filters import TaskFilter, CompanyMyTasksFilter, StudentMyTasksFilter
+from Tasks.filters import TaskFilter, MyTasksFilter
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from rest_framework import filters
+from django.utils import timezone
 from Settings.pagination import CustomPageNumberPagination
 from Profiles.models import (
     StudentProfile
@@ -147,7 +148,6 @@ class SolutionDetailView(generics.GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
 class TaskCategoryListView(generics.ListAPIView):
     queryset = TaskCategory.objects.all().prefetch_related('filter_categories__filters')
     serializer_class = TaskCategoryWithFiltersSerializer
@@ -168,19 +168,32 @@ class CompanyTasksMyView(generics.ListAPIView):
     serializer_class = TaskListSerializer
     permission_classes = [IsCompanyRole]
     filter_backends = (DjangoFilterBackend,)
-    filterset_class = CompanyMyTasksFilter
+    filterset_class = MyTasksFilter
 
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+
+        task_status = self.request.query_params.get('status')
+        now = timezone.now()
+        if task_status == 'active':
+            queryset = queryset.filter(deadline__gte=now)
+        elif task_status == 'archived':
+            queryset = queryset.filter(deadline__lt=now)
+
+        return queryset
 
     def get_queryset(self):
         return Task.objects.filter(user=self.request.user)
 
     @extend_schema(
         tags=["Tasks"],
-        summary="Получение экземпляров my Tasks"
+        summary="Получение экземпляров my Tasks",
+        parameters=[
+            OpenApiParameter(name='status', type=OpenApiTypes.STR, enum=['active', 'archive']),
+        ]
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
-
 
 
 class StudentTasksMyView(generics.ListAPIView):
@@ -188,21 +201,22 @@ class StudentTasksMyView(generics.ListAPIView):
     serializer_class = TaskListSerializer
     permission_classes = [IsStudentRole]
     filter_backends = (DjangoFilterBackend,)
-    filterset_class = StudentMyTasksFilter
+    filterset_class = MyTasksFilter
 
     def get_queryset(self):
         return Task.objects.filter(solutions__user=self.request.user)
 
     @extend_schema(
         tags=["Tasks"],
-        summary="Получение экземпляров my Tasks"
+        summary="Получение экземпляров my Tasks",
+        parameters=[
+            OpenApiParameter(name='status', type=OpenApiTypes.STR, enum=['active', 'archive']),
+        ]
+
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
-    # def get(self, request, *args, **kwargs):
-    #     queryset = self.get_queryset()
-    #     serializer = self.get_serializer()
-    #     return Response(serializer.to_representation(queryset))
+
 
 
 class TaskPatternPatternListView(generics.ListAPIView):
@@ -219,11 +233,9 @@ class TaskPatternPatternListView(generics.ListAPIView):
         return super().get(request, *args, **kwargs)
 
 
-
 class EvaluateSolutionView(generics.GenericAPIView):
     serializer_class = EvaluateSolutionSerializer
     permission_classes = [EvaluateCompanyRole]
-
 
     def get_object(self, pk):
         obj = get_object_or_404(Solution, pk=pk)

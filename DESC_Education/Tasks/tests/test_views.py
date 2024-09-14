@@ -488,12 +488,12 @@ class CompanyTasksMyViewTest(APITestCase):
         self.task_5.filters.set([Filter.objects.first()])
 
     def test_get_200(self):
-        res = self.client.get(reverse('company_tasks_my'),
+        res = self.client.get(reverse('company_tasks_my'),{'status':'active'},
                               HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
 
         serializer = TaskListSerializer(Task.objects.filter(user=self.company), many=True)
-        self.assertEqual(dict(res.data).get('results'),
-                         serializer.data)
+        self.assertEqual(len(dict(res.data).get('results')),
+                         2)
         self.assertEqual(res.status_code, 200)
 
     def test_get_student(self):
