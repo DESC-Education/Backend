@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 import time
+from Mail import tasks
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 import logging
 from Users.models import (
@@ -247,7 +248,8 @@ class RegistrationView(generics.GenericAPIView):
                 type=VerificationCode.REGISTRATION_TYPE
             )
 
-            send_auth_registration_code(email, Vcode.code)
+            tasks.send_auth_registration_code.delay(email, Vcode.code)
+            # send_auth_registration_code(email, Vcode.code)
 
             return Response({"message": "Код подтверждения отправлен на электронную почту"},
                             status=status.HTTP_200_OK)

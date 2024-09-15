@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'Profiles',
     'Tasks',
     'Admins',
+    'Mail',
     'corsheaders',
     'rest_framework_simplejwt',
     'drf_spectacular',
@@ -79,7 +80,7 @@ ROOT_URLCONF = 'Settings.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'Mail', 'templates', 'Mail')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -91,6 +92,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'Settings.wsgi.application'
 
@@ -148,15 +150,18 @@ DATABASES = {
 #             'NAME': BASE_DIR / 'db.sqlite3',
 #         }
 #     }
+
+REDIS_PATH = f"redis://{config.REDIS_USER.get_secret_value()}:{config.REDIS_PASSWORD.get_secret_value()}@{config.REDIS_HOST}:{config.REDIS_PORT}/0"
 CACHES = {
     "default": {
         "BACKEND": "django_prometheus.cache.backends.redis.RedisCache",
-        "LOCATION": f"redis://"
-                    f"{config.REDIS_USER.get_secret_value()}:"
-                    f"{config.REDIS_PASSWORD.get_secret_value()}@"
-                    f"{config.REDIS_HOST}:{config.REDIS_PORT}",
+        "LOCATION": REDIS_PATH
     }
 }
+
+CELERY_BROKER_URL = REDIS_PATH
+CELERY_RESULT_BACKEND = REDIS_PATH
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 CACHE_TTL = 60 * 1
 
