@@ -19,9 +19,9 @@ COPY DESC_Education /usr/src/app/
 COPY mediafiles /usr/src/mediafiles
 
 
-CMD python manage.py makemigrations \
-    && python manage.py migrate \
-    && python manage.py collectstatic \
+CMD python manage.py makemigrations --noinput\
+    && python manage.py migrate --noinput\
+    && python manage.py collectstatic --noinput\
 #    && python manage.py test\
 #    && python manage.py runserver 0.0.0.0:4000
     && gunicorn Settings.wsgi:application -c gunicorn_conf.py
