@@ -97,7 +97,7 @@ class TaskDetailView(generics.GenericAPIView):
         summary="Получение Задания по его ID"
     )
     def get(self, request, pk):
-        instance = self.get_object(pk)
+        instance = get_object_or_404(Task, pk=pk)
         return Response(TaskSerializer(instance).data, status=status.HTTP_200_OK)
 
 
