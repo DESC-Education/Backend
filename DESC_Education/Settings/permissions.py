@@ -32,11 +32,24 @@ class IsCompanyRole(IsAuthenticatedAndVerified):
         if not super().has_permission(request, view):
             return False
 
-        if type(request.user) == AnonymousUser:
-            return False
-
         self.message = 'Только для компаний!'
         if not CustomUser.COMPANY_ROLE == request.user.role:
+            return False
+
+        self.message = 'Необходимо подтвердить профиль!'
+        return request.user.get_profile().verification == BaseProfile.VERIFIED
+
+
+class IsCompanyOrStudentRole(IsAuthenticatedAndVerified):
+    def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+
+        if not super().has_permission(request, view):
+            return False
+
+        self.message = 'Только для компаний и студентов!'
+        if request.user.role not in [CustomUser.COMPANY_ROLE, CustomUser.STUDENT_ROLE]:
             return False
 
         self.message = 'Необходимо подтвердить профиль!'
@@ -56,7 +69,6 @@ class IsAdminRole(BasePermission):
             return False
 
         return True
-
 
 
 class EvaluateCompanyRole(IsCompanyRole):

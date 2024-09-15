@@ -1,5 +1,5 @@
 from rest_framework import generics, status
-from Settings.permissions import IsCompanyRole, IsStudentRole, EvaluateCompanyRole
+from Settings.permissions import IsCompanyRole, IsStudentRole, EvaluateCompanyRole, IsCompanyOrStudentRole
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
@@ -70,7 +70,7 @@ class TaskListView(generics.ListAPIView):
 
 class TaskDetailView(generics.GenericAPIView):
     serializer_class = TaskSerializer
-    permission_classes = [IsCompanyRole]
+    permission_classes = [IsCompanyOrStudentRole]
 
     def get_object(self, pk):
         obj = get_object_or_404(Task, pk=pk)
