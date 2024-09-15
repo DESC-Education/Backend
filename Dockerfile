@@ -13,15 +13,10 @@ COPY requirements.txt /usr/src/app/requirements.txt
 #COPY app/.env /usr/src/app/.env
 RUN pip install -r requirements.txt
 
-
-
-
 COPY DESC_Education /usr/src/app/
 
 
 COPY mediafiles /usr/src/mediafiles
-
-
 
 
 CMD python manage.py makemigrations \

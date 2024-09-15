@@ -7,7 +7,6 @@ DESC_Education/.env
 
 /venv
 
-/mediafiles/
 /DESC_Education/Profiles/migrations/cities_vk.csv
 /DESC_Education/Profiles/migrations/cities_old.csv
 /static/
