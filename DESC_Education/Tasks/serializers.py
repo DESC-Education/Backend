@@ -154,12 +154,11 @@ class TaskSerializer(serializers.ModelSerializer):
             user: CustomUser = request.user
             if user.role == CustomUser.STUDENT_ROLE:
                 solutions = obj.solutions.filter(user=user)
-            elif user.role == CustomUser.COMPANY_ROLE:
-                solutions = obj.solutions.all()
 
 
-        serializer = SolutionSerializer(solutions, many=True)
-        return serializer.data
+
+        solutions = SolutionSerializer(solutions, many=True).data
+        return solutions
 
     @staticmethod
     def get_profile(obj) -> ProfileTaskSerializer:
