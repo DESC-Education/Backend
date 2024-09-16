@@ -11,6 +11,17 @@ from Tasks.models import (
     TaskPattern
 )
 from Users.models import CustomUser
+from Profiles.models import StudentProfile
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    firstName = serializers.CharField(source='first_name')
+    lastName = serializers.CharField(source='last_name')
+    logoImg = serializers.ImageField(source='logo_img')
+
+    class Meta:
+        model = StudentProfile
+        fields = ('firstName', 'lastName', 'logoImg')
 
 
 class SolutionSerializer(serializers.ModelSerializer):
@@ -20,11 +31,13 @@ class SolutionSerializer(serializers.ModelSerializer):
     """
 
     # write_only
+
     taskId = serializers.PrimaryKeyRelatedField(
         source="task", queryset=Task.objects.filter(deadline__gte=timezone.now()), write_only=True)
 
     # read_only
-    solutionStatus = serializers.ChoiceField(choices=Solution.STATUSES,read_only=True)
+    userProfile = serializers.SerializerMethodField(read_only=True)
+    status = serializers.ChoiceField(choices=Solution.STATUSES, read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     companyComment = serializers.CharField(source='company_comment', read_only=True)
 
@@ -32,9 +45,17 @@ class SolutionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Solution
-        fields = ('id', 'user', 'description', 'file',
-                  'companyComment', 'solutionStatus', 'createdAt', 'taskId')
+        fields = ('id', 'user', 'description', 'file', 'userProfile',
+                  'companyComment', 'status', 'createdAt', 'taskId')
         read_only_fields = ['id', 'task', 'createdAt', 'companyComment', 'user', 'status']
+
+    @staticmethod
+    def get_userProfile(obj) -> UserProfileSerializer:
+        return UserProfileSerializer(obj.user.get_profile()).data
+
+
+
+
 
 
 class ProfileTaskSerializer(serializers.ModelSerializer):

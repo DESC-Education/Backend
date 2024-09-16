@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from django_filters.rest_framework import DjangoFilterBackend
-from Tasks.filters import TaskFilter, MyTasksFilter
+from Tasks.filters import TaskFilter, MyTasksFilter, SolutionFilter
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from rest_framework import filters
@@ -129,6 +129,29 @@ class SolutionView(generics.GenericAPIView):
         profile.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SolutionListView(generics.ListAPIView):
+    queryset = Solution.objects.all()
+    serializer_class = SolutionSerializer
+    pagination_class = CustomPageNumberPagination
+    filter_backends = (DjangoFilterBackend,)
+    permission_classes = [IsCompanyRole]
+    filterset_class = SolutionFilter
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        queryset = queryset.filter(task__user=self.request.user, task__pk=self.pk)
+        return queryset
+
+    @extend_schema(
+        tags=["Tasks"],
+        summary="Получение списка решений по id task"
+    )
+    def get(self, request, pk, *args, **kwargs):
+        self.request = request
+        self.pk = pk
+        return super().get(request, *args, **kwargs)
 
 
 class SolutionDetailView(generics.GenericAPIView):
