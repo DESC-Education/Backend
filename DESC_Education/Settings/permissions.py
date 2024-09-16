@@ -12,8 +12,8 @@ class IsAuthenticatedAndVerified(BasePermission):
         self.message = 'Учетные данные не были предоставлены.'
 
     def has_permission(self, request, view):
-        if request.method in SAFE_METHODS:
-            return True
+        # if request.method in SAFE_METHODS:
+        #     return True
 
         user = request.user
         if not bool(user and user.is_authenticated):

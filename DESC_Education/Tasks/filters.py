@@ -44,3 +44,21 @@ class MyTasksFilter(drf_filters.FilterSet):
         fields = []
 
 
+class SolutionFilter(drf_filters.FilterSet):
+    ordering = drf_filters.OrderingFilter(
+        fields=(
+            ('created_at', 'createdAt'),
+        ),
+
+        # labels do not need to retain order
+        field_labels={
+            'created_at': 'По дате добавления',
+        }
+
+    )
+
+    status = drf_filters.ChoiceFilter(choices=Solution.STATUSES, field_name='status')
+
+    class Meta:
+        model = Solution
+        fields = ['status']
