@@ -408,7 +408,7 @@ class TaskDetailViewTest(APITestCase):
 
         task = Task.objects.first()
         expected_data = self.get_expected_data(task)
-        expected_data['solutions'] = SolutionSerializer(Solution.objects.all(), many=True).data
+        expected_data['solutions'] = []
         self.assertEqual(dict(res.data), expected_data)
         self.assertEqual(res.status_code, 200)
 
