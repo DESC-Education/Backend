@@ -8,6 +8,7 @@ from Tasks.filters import TaskFilter, MyTasksFilter
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from rest_framework import filters
+from django.db.models import Q
 from django.utils import timezone
 from Settings.pagination import CustomPageNumberPagination
 from Profiles.models import (
@@ -19,7 +20,7 @@ from Tasks.serializers import (
     SolutionSerializer,
     TaskCategorySerializer,
     FilterCategorySerializer,
-    StudentTasksMySerializer,
+    # StudentTasksMySerializer,
     TaskCategoryWithFiltersSerializer,
     TaskPatternSerializer,
     EvaluateSolutionSerializer,
@@ -203,6 +204,18 @@ class StudentTasksMyView(generics.ListAPIView):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = MyTasksFilter
 
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+
+        task_status = self.request.query_params.get('status')
+        now = timezone.now()
+        if task_status == 'archived':
+            queryset = queryset.filter(~Q(solutions__status=Solution.PENDING) | Q(deadline__lt=now))
+        elif task_status == 'active':
+            queryset = queryset.filter(solutions__status=Solution.PENDING, deadline__gte=now)
+
+        return queryset
+
     def get_queryset(self):
         return Task.objects.filter(solutions__user=self.request.user)
 
@@ -216,7 +229,6 @@ class StudentTasksMyView(generics.ListAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
-
 
 
 class TaskPatternPatternListView(generics.ListAPIView):

@@ -156,25 +156,6 @@ class TaskSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class StudentTasksMySerializer(serializers.Serializer):
-    active_tasks = TaskSerializer(many=True)
-    archived_tasks = TaskSerializer(many=True)
-
-    def to_representation(self, instance):
-        active_tasks = []
-        archived_tasks = []
-
-        for solution in instance:
-            if solution.status != solution.PENDING or solution.task.deadline < timezone.now():
-                archived_tasks.append(TaskSerializer(solution.task).data)
-            else:
-                active_tasks.append(TaskSerializer(solution.task).data)
-
-        return {
-            'active_tasks': active_tasks,
-            'archived_tasks': archived_tasks
-        }
-
 
 
 
