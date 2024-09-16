@@ -10,6 +10,31 @@ from Tasks.models import (
     Solution,
     TaskPattern
 )
+from Users.models import CustomUser
+
+
+class SolutionSerializer(serializers.ModelSerializer):
+    """
+        Создание студент: taskId, description, file
+
+    """
+
+    # write_only
+    taskId = serializers.PrimaryKeyRelatedField(
+        source="task", queryset=Task.objects.filter(deadline__gte=timezone.now()), write_only=True)
+
+    # read_only
+    status = serializers.CharField(read_only=True)
+    createdAt = serializers.DateTimeField(source='created_at', read_only=True)
+    companyComment = serializers.CharField(source='company_comment', read_only=True)
+
+    # read and write
+
+    class Meta:
+        model = Solution
+        fields = ('id', 'user', 'description', 'file',
+                  'companyComment', 'status', 'createdAt', 'taskId')
+        read_only_fields = ['id', 'task', 'createdAt', 'companyComment', 'user', 'status']
 
 
 class ProfileTaskSerializer(serializers.ModelSerializer):
@@ -91,13 +116,29 @@ class TaskSerializer(serializers.ModelSerializer):
     catFilters = serializers.SerializerMethodField()
     profile = serializers.SerializerMethodField(read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
-    solutionsCount = serializers.SerializerMethodField()
+    solutionsCount = serializers.SerializerMethodField(read_only=True)
+    solutions = serializers.SerializerMethodField(read_only=True)
+
 
     class Meta:
         model = Task
         fields = ('id', 'user', 'createdAt', 'title', 'description', 'deadline', 'file', 'category',
-                  'catFilters', 'profile', "categoryId", "filtersId", 'solutionsCount')
+                  'catFilters', 'profile', "categoryId", "filtersId", 'solutionsCount', 'solutions')
         read_only_fields = ['id', 'user']
+
+    def get_solutions(self, obj) -> ProfileTaskSerializer:
+        request = self.context.get('request', None)
+        solutions = None
+        if request:
+            user: CustomUser = request.user
+            if user.role == CustomUser.STUDENT_ROLE:
+                solutions = obj.solutions.filter(user=user)
+            elif user.role == CustomUser.COMPANY_ROLE:
+                solutions = obj.solutions.all()
+
+
+        serializer = SolutionSerializer(solutions, many=True)
+        return serializer.data
 
     @staticmethod
     def get_profile(obj) -> ProfileTaskSerializer:
@@ -156,10 +197,6 @@ class TaskSerializer(serializers.ModelSerializer):
         return attrs
 
 
-
-
-
-
 class TaskListSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
     createdAt = serializers.DateTimeField(source='created_at')
@@ -183,28 +220,3 @@ class EvaluateSolutionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Solution
         fields = ('status', 'companyComment')
-
-
-class SolutionSerializer(serializers.ModelSerializer):
-    """
-        Создание студент: taskId, description, file
-
-    """
-
-    # write_only
-    taskId = serializers.PrimaryKeyRelatedField(
-        source="task", queryset=Task.objects.filter(deadline__gte=timezone.now()), write_only=True)
-
-    # read_only
-    status = serializers.CharField(read_only=True)
-    createdAt = serializers.DateTimeField(source='created_at', read_only=True)
-    companyComment = serializers.CharField(source='company_comment', read_only=True)
-    task = TaskSerializer(read_only=True)
-
-    # read and write
-
-    class Meta:
-        model = Solution
-        fields = ('id', 'task', 'user', 'description', 'file',
-                  'companyComment', 'status', 'createdAt', 'taskId')
-        read_only_fields = ['id', 'task', 'createdAt', 'companyComment', 'user', 'status']

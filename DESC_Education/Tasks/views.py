@@ -99,7 +99,8 @@ class TaskDetailView(generics.GenericAPIView):
     )
     def get(self, request, pk):
         instance = get_object_or_404(Task, pk=pk)
-        return Response(TaskSerializer(instance).data, status=status.HTTP_200_OK)
+        serializer = self.get_serializer(instance=instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SolutionView(generics.GenericAPIView):

@@ -255,6 +255,27 @@ class TaskDetailViewTest(APITestCase):
 
     def setUp(self):
         self.maxDiff = None
+        self.student = CustomUser.objects.create_user(
+            email='example2@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        profile = self.student.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
+        self.student2 = CustomUser.objects.create_user(
+            email='example3@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        profile2 = self.student2.get_profile()
+        profile2.verification = StudentProfile.VERIFIED
+        profile2.save()
+
+        self.student_token = self.student.get_token()['accessToken']
         self.company = CustomUser.objects.create_user(
             email='example@example.com',
             password='password',
@@ -283,13 +304,32 @@ class TaskDetailViewTest(APITestCase):
             category=TaskCategory.objects.first()
         )
 
-    def test_get_200(self):
+        self.solution = Solution.objects.create(
+            task=self.task,
+            user=self.student
+        )
+        self.solution = Solution.objects.create(
+            task=self.task,
+            user=self.student2
+        )
+
+    def test_get_company_200(self):
         res = self.client.get(reverse('task_detail', kwargs={'pk': self.task.id}),
                               HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
 
         task = Task.objects.first()
         expected_data = self.get_expected_data(task)
+        expected_data['solutions'] = SolutionSerializer(Solution.objects.all(), many=True).data
+        self.assertEqual(dict(res.data), expected_data)
+        self.assertEqual(res.status_code, 200)
 
+    def test_get_student_200(self):
+        res = self.client.get(reverse('task_detail', kwargs={'pk': self.task.id}),
+                              HTTP_AUTHORIZATION=f'Bearer {self.student_token}')
+
+        task = Task.objects.first()
+        expected_data = self.get_expected_data(task)
+        expected_data['solutions'] = SolutionSerializer(Solution.objects.filter(user=self.student), many=True).data
         self.assertEqual(dict(res.data), expected_data)
         self.assertEqual(res.status_code, 200)
 
