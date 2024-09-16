@@ -8,6 +8,7 @@ from rest_framework.test import APITestCase
 import uuid
 from Users.models import CustomUser
 from io import BytesIO
+from django.db.models import Q
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
 from Profiles.models import (
@@ -28,7 +29,7 @@ from Tasks.serializers import (
     SolutionSerializer,
     FilterCategorySerializer,
     TaskListSerializer,
-    StudentTasksMySerializer,
+    # StudentTasksMySerializer,
 )
 
 
@@ -591,14 +592,26 @@ class StudentTasksMyViewTest(APITestCase):
             status=Solution.PENDING,
         )
 
-    def test_get_200(self):
-        res = self.client.get(reverse('student_tasks_my'),
+    def test_get_student_active_200(self):
+        res = self.client.get(reverse('student_tasks_my'), {"status": 'active'},
                               HTTP_AUTHORIZATION=f'Bearer {self.student_token}')
 
-        serializer = TaskListSerializer(Task.objects.filter(solutions__user=self.student), many=True)
+        serializer = TaskListSerializer(Task.objects.filter(solutions__user=self.student, solutions__status=Solution.PENDING, deadline__gte=timezone.now()), many=True)
         self.assertEqual(dict(res.data).get('results'),
                          serializer.data)
         self.assertEqual(res.status_code, 200)
+
+    def test_get_student_archived_200(self):
+        res = self.client.get(reverse('student_tasks_my'), {"status": 'archived'},
+                              HTTP_AUTHORIZATION=f'Bearer {self.student_token}')
+
+        serializer = TaskListSerializer(
+            Task.objects.filter(Q(solutions__user=self.student) & (~Q(solutions__status=Solution.PENDING) |
+                                Q(deadline__lt=timezone.now()))), many=True)
+        self.assertEqual(dict(res.data).get('results'),
+                         serializer.data)
+        self.assertEqual(res.status_code, 200)
+
 
     def test_get_company(self):
         res = self.client.get(reverse('student_tasks_my'),
