@@ -12,7 +12,7 @@ from django.utils.html import strip_tags
 
 @shared_task
 def send_auth_registration_code(email, code):
-    html_content = render_to_string('reg.html', {'code': code})
+    html_content = render_to_string('reg_mail.html', {'code': code})
     text_content = strip_tags(html_content)
 
     msg = EmailMessage(
