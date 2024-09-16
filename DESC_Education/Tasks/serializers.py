@@ -24,7 +24,7 @@ class SolutionSerializer(serializers.ModelSerializer):
         source="task", queryset=Task.objects.filter(deadline__gte=timezone.now()), write_only=True)
 
     # read_only
-    status = serializers.CharField(read_only=True)
+    solutionStatus = serializers.ChoiceField(choices=Solution.STATUSES,read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     companyComment = serializers.CharField(source='company_comment', read_only=True)
 
@@ -33,7 +33,7 @@ class SolutionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Solution
         fields = ('id', 'user', 'description', 'file',
-                  'companyComment', 'status', 'createdAt', 'taskId')
+                  'companyComment', 'solutionStatus', 'createdAt', 'taskId')
         read_only_fields = ['id', 'task', 'createdAt', 'companyComment', 'user', 'status']
 
 

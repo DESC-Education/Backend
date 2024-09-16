@@ -142,7 +142,7 @@ class SolutionDetailView(generics.GenericAPIView):
 
     @extend_schema(
         tags=["Tasks"],
-        summary="Получение Решения по его ID"
+        summary="Получение Решения по его ID",
     )
     def get(self, request, pk):
         instance = self.get_object(pk)
