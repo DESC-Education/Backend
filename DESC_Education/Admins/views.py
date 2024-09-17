@@ -29,7 +29,7 @@ from Admins.filters import (
 )
 
 
-class AdminProfileVerifyRequestsView(generics.ListAPIView):
+class AdminProfileVerifyRequestListView(generics.ListAPIView):
     queryset = ProfileVerifyRequest.objects.all()
     serializer_class = ProfileVerifyRequestsListSerializer
     # permission_classes = [IsAdminRole]
