@@ -3,6 +3,7 @@ from django.utils import timezone as tz
 from django.db import models
 from Users.models import CustomUser
 from Tasks.models import Task, Solution
+from django.apps import apps
 import uuid
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -119,7 +120,6 @@ class ProfileVerifyRequest(models.Model):
     object_id = models.UUIDField()
     profile = GenericForeignKey(ct_field='content_type', fk_field='object_id')
     admin = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
-
     created_at = models.DateTimeField(auto_now_add=True, editable=False, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
     comment = models.TextField(null=True, blank=True)
@@ -169,7 +169,6 @@ class BaseProfile(models.Model):
     telegram_link = models.URLField(blank=True, null=True)
     vk_link = models.URLField(blank=True, null=True)
     timezone = models.IntegerField(null=True)
-    verification_requests = GenericRelation(ProfileVerifyRequest, related_name="v_requests")
     verification_files = GenericRelation(File, related_name='v_files')
     skills = models.ManyToManyField(Skill, blank=True)
     verification = models.CharField(max_length=20, choices=VERIFICATION_CHOISES, default=NOT_VERIFIED)
@@ -256,7 +255,8 @@ class StudentProfile(BaseProfile):
         (ADVANCED_LEVEL, 'Продвинутый'),
         (EXPERIENCE_LEVEL, 'Опытный')
     ]
-
+    verification_requests = GenericRelation(ProfileVerifyRequest, related_name="v_requests",
+                                            related_query_name="student_profile")
     profession = models.CharField(max_length=150, null=True)
     form_of_education = models.CharField(choices=EDUCATION_CHOISES, max_length=15, null=True)
     university = models.ForeignKey(University, on_delete=models.CASCADE, null=True, related_name='university')
@@ -291,3 +291,5 @@ class StudentProfile(BaseProfile):
 class CompanyProfile(BaseProfile):
     link_to_company = models.URLField()
     company_name = models.CharField(max_length=100)
+    verification_requests = GenericRelation(ProfileVerifyRequest, related_name="v_requests",
+                                            related_query_name="company_profile")
