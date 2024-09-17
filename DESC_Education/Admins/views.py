@@ -30,7 +30,7 @@ from Admins.filters import (
 
 
 class AdminProfileVerifyRequestListView(generics.ListAPIView):
-    queryset = ProfileVerifyRequest.objects.all()
+    queryset = ProfileVerifyRequest.objects.all().prefetch_related('profile__user')
     serializer_class = ProfileVerifyRequestsListSerializer
     # permission_classes = [IsAdminRole]
     filter_backends = [DjangoFilterBackend]

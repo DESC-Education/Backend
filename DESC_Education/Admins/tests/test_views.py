@@ -88,7 +88,7 @@ class AdminProfileVerifyRequestDetailViewTest(APITestCase):
         )
 
 
-    def test_get_list(self):
+    def test_get_detail(self):
         res = self.client.get(reverse('admin_v_request_detail', kwargs={'pk': str(self.v_request.id)}),
                               headers={"Authorization": f"Bearer {self.admin_token}"})
 
