@@ -10,6 +10,7 @@ from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.utils.html import strip_tags
 
+
 @shared_task
 def send_auth_registration_code(email, code):
     html_content = render_to_string('reg_mail.html', {'code': code})
