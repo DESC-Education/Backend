@@ -235,24 +235,24 @@ class RegistrationView(generics.GenericAPIView):
                     {'message': 'Адрес электронной почты уже зарегистрирован'},
                     status=status.HTTP_406_NOT_ACCEPTABLE)
 
-            print(time.time() - start_time)
+
             user = CustomUser.objects.create_user(
                 email=email,
                 password=password,
                 role=role
             )
-            print(time.time() - start_time)
+
 
             Vcode: VerificationCode = VerificationCode.objects.create(
                 user=user,
                 code=random.randint(1000, 9999),
                 type=VerificationCode.REGISTRATION_TYPE
             )
-            print(time.time() - start_time)
+
 
             res = tasks.send_auth_registration_code.delay(email, Vcode.code)
             # send_auth_registration_code(email, Vcode.code)
-            print(time.time() - start_time)
+
             return Response({"message": "Код подтверждения отправлен на электронную почту"},
                             status=status.HTTP_200_OK)
 
