@@ -9,13 +9,13 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 
+from Files.models import (
+    File
+)
+
 
 def image_upload_to(instance, filename):
     return f'users/{instance.user.id}/logo/{filename}'
-
-
-def verification_files_upload(instance, filename):
-    return f'users/{instance.profile.user.id}/verification_files/{filename}'
 
 
 class City(models.Model):
@@ -126,17 +126,6 @@ class ProfileVerifyRequest(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-
-
-class File(models.Model):
-    id = models.UUIDField(primary_key=True,
-                          default=uuid.uuid4,
-                          editable=False,
-                          unique=True)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.UUIDField()
-    profile = GenericForeignKey(ct_field='content_type', fk_field='object_id')
-    file = models.FileField(upload_to=verification_files_upload, max_length=200)
 
 
 # Create your models here.

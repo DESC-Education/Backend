@@ -49,12 +49,14 @@ from Users.models import (
 from Profiles.filters import (
     FacultiesFilter
 )
+from Files.models import (
+    File
+)
 from Profiles.models import (
     BaseProfile,
     StudentProfile,
     CompanyProfile,
     ProfileVerifyRequest,
-    File,
     University,
     Skill,
     City,
@@ -361,7 +363,7 @@ class ProfileView(generics.GenericAPIView):
             if len(files_data) > 6:
                 files_data = files_data[:6]
             for file_data in files_data:
-                File.objects.create(file=file_data, profile=profile)
+                File.objects.create(file=file_data, content_object=profile)
 
             ProfileVerifyRequest.objects.create(profile=profile)
 

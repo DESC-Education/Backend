@@ -36,7 +36,6 @@ class AdminProfileVerifyRequestListView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = ProfileVerifyRequestFilter
 
-
     @extend_schema(
         tags=["Admins"],
         summary="Получение экземпляров ProfileVerifyRequest"
@@ -47,8 +46,8 @@ class AdminProfileVerifyRequestListView(generics.ListAPIView):
 
 class AdminProfileVerifyRequestDetailView(generics.GenericAPIView):
     serializer_class = ProfileVerifyRequestDetailSerializer
-    # permission_classes = [IsAdminRole]
 
+    # permission_classes = [IsAdminRole]
 
     def get_object(self, pk):
         obj = get_object_or_404(ProfileVerifyRequest, pk=pk)
@@ -67,7 +66,6 @@ class AdminProfileVerifyRequestDetailView(generics.GenericAPIView):
         tags=["Admins"],
         summary="Верификация ProfileVerifyRequest"
     )
-
     def post(self, request, pk):
         instance = self.get_object(pk)
         serializer = self.get_serializer(instance, data=request.data)
@@ -76,12 +74,3 @@ class AdminProfileVerifyRequestDetailView(generics.GenericAPIView):
         serializer.save(admin=request.user)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-
-
-
-
-
-
-
