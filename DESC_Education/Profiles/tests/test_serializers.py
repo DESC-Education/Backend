@@ -44,6 +44,7 @@ from Tasks.models import (
     FilterCategory,
     Filter,
 )
+from Files.models import File
 
 
 class GetStudentProfileSerializerTest(TestCase):
@@ -96,29 +97,44 @@ class GetStudentProfileSerializerTest(TestCase):
             title="Test Task",
             description="Test Task Description",
             deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
-            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.first(),
         )
         self.task_1.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=self.create_test_image(),
+            type=File.TASK_FILE,
+            content_object=self.task_1
+        )
+        self.task_1.files.add(file)
         self.task_2 = Task.objects.create(
             user=self.company,
             title="Test Task2",
             description="Test Task Description2",
             deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
-            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.first(),
         )
         self.task_2.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=self.create_test_image(),
+            type=File.TASK_FILE,
+            content_object=self.task_2
+        )
+        self.task_2.files.add(file)
 
         self.task_3 = Task.objects.create(
             user=self.company,
             title="Test Task3",
             description="Test Task Description2",
             deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
-            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.get(id="848254a3-bad2-4e0c-be20-bedce1700301"),
         )
         self.task_3.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=self.create_test_image(),
+            type=File.TASK_FILE,
+            content_object=self.task_3
+        )
+        self.task_3.files.add(file)
 
         self.solution = Solution.objects.create(
             task=self.task_1,

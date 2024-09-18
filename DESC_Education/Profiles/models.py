@@ -158,7 +158,7 @@ class BaseProfile(models.Model):
     telegram_link = models.URLField(blank=True, null=True)
     vk_link = models.URLField(blank=True, null=True)
     timezone = models.IntegerField(null=True)
-    verification_files = GenericRelation(File, related_name='v_files')
+    verification_files = GenericRelation(File)
     skills = models.ManyToManyField(Skill, blank=True)
     verification = models.CharField(max_length=20, choices=VERIFICATION_CHOISES, default=NOT_VERIFIED)
 

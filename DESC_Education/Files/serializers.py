@@ -7,14 +7,28 @@ from Files.models import (
 )
 
 
+class FileSerializer(serializers.ModelSerializer):
+    file = serializers.FileField(write_only=True)
 
-class CustomFileSerializer(serializers.ModelSerializer):
-    file = serializers.FileField()
-    type = serializers.ChoiceField(File.TYPE_CHOISES)
+    name = serializers.SerializerMethodField()
+    extension = serializers.SerializerMethodField()
+    path = serializers.SerializerMethodField()
 
     class Meta:
         model = File
-        fields = ('file', 'type')
+        fields = ('file', 'name', 'extension', 'path')
+
+    @staticmethod
+    def get_name(obj) -> str:
+        return obj.file.name.split('/')[-1].rsplit('.', 1)[0]
+
+    @staticmethod
+    def get_path(obj) -> str:
+        return obj.file.url
+
+    @staticmethod
+    def get_extension(obj) -> str:
+        return obj.file.name.split('.')[-1]
 
     @staticmethod
     def validate_file(value):

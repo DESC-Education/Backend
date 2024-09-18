@@ -31,7 +31,7 @@ from Tasks.serializers import (
     TaskListSerializer,
     # StudentTasksMySerializer,
 )
-
+from Files.models import File
 
 class TaskViewTest(APITestCase):
     @staticmethod
@@ -42,6 +42,8 @@ class TaskViewTest(APITestCase):
         return SimpleUploadedFile(f"test_{random.randint(1, 25)}.jpg", bts.getvalue())
 
     def get_expected_data(self, task):
+        example_data = self.example_data.copy()
+        example_data.pop('files_list')
         expected_data = TaskSerializer(data=self.example_data, instance=task)
         expected_data.user = str(self.company.id)
         expected_data.is_valid()
@@ -97,7 +99,7 @@ class TaskViewTest(APITestCase):
             "title": "Test Task",
             "description": "Test Task Description",
             "deadline": (timezone.now() + timezone.timedelta(days=1)).isoformat(),
-            'file': self.create_test_image(),
+            'files_list': [self.create_test_image()],
             'categoryId': task_category.id,
             'filters': [filter_python.id, ]
 
@@ -121,7 +123,6 @@ class TaskViewTest(APITestCase):
         expected_data = self.get_expected_data(task)
 
         res_data = json.loads(res.content)
-
         res_data['user'] = uuid.UUID(res_data.get('user'))
 
         self.assertEqual(res_data, expected_data)
@@ -222,12 +223,17 @@ class TaskListViewTest(APITestCase):
             "title": "Test Task",
             "description": "Test Task Description",
             "deadline": (timezone.now() + timezone.timedelta(days=1)).isoformat(),
-            'file': self.create_test_image(),
             'category': task_category,
 
         }
 
         self.task = Task.objects.create(**self.example_data)
+        file = File.objects.create(
+            file=self.create_test_image(),
+            type=File.TASK_FILE,
+            content_object=self.task
+        )
+        self.task.files.add(file)
 
     def test_get(self):
         res = self.client.get(reverse('get_tasks'))
@@ -293,7 +299,6 @@ class SolutionListViewTest(APITestCase):
             "title": "Test Task",
             "description": "Test Task Description",
             "deadline": (timezone.now() + timezone.timedelta(days=1)).isoformat(),
-            'file': self.create_test_image(),
             "categoryId": TaskCategory.objects.first().id
         }
         self.task = Task.objects.create(
@@ -301,9 +306,14 @@ class SolutionListViewTest(APITestCase):
             title=self.example_data['title'],
             description=self.example_data['description'],
             deadline=self.example_data['deadline'],
-            file=self.example_data['file'],
             category=TaskCategory.objects.first()
         )
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task
+        )
+        self.task.files.add(file)
 
         self.solution = Solution.objects.create(
             task=self.task,
@@ -381,17 +391,23 @@ class TaskDetailViewTest(APITestCase):
             "title": "Test Task",
             "description": "Test Task Description",
             "deadline": (timezone.now() + timezone.timedelta(days=1)).isoformat(),
-            'file': self.create_test_image(),
-            "categoryId": TaskCategory.objects.first().id
+            "categoryId": TaskCategory.objects.first().id,
+            'files_list': [self.create_test_image()],
         }
         self.task = Task.objects.create(
             user=self.company,
             title=self.example_data['title'],
             description=self.example_data['description'],
             deadline=self.example_data['deadline'],
-            file=self.example_data['file'],
             category=TaskCategory.objects.first()
         )
+        file = File.objects.create(
+            file=self.create_test_image(),
+            type=File.TASK_FILE,
+            content_object=self.task
+        )
+        self.task.files.add(file)
+
 
         self.solution = Solution.objects.create(
             task=self.task,
@@ -453,9 +469,14 @@ class TestSolutionView(APITestCase):
             title="Test Task",
             description="Test Task Description",
             deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
-            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.first()
         )
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task
+        )
+        self.task.files.add(file)
 
         self.student: CustomUser = CustomUser.objects.create_user(
             email='student@example.com',
@@ -572,50 +593,75 @@ class CompanyTasksMyViewTest(APITestCase):
             title="Test Task",
             description="Test Task Description",
             deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
-            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.first(),
         )
         self.task_1.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task_1
+        )
+        self.task_1.files.add(file)
 
         self.task_2: Task = Task.objects.create(
             user=self.company,
             title="Test Task2",
             description="Test Task Description",
             deadline=(timezone.now() + timezone.timedelta(days=2)).isoformat(),
-            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.first(),
         )
         self.task_2.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task_1
+        )
+        self.task_1.files.add(file)
 
         self.task_3 = Task.objects.create(
             user=self.company,
             title="Test Task3",
             description="Test Task Description",
             deadline=(timezone.now() - timezone.timedelta(days=1)).isoformat(),
-            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.first(),
         )
         self.task_3.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task_3
+        )
+        self.task_3.files.add(file)
 
         self.task_4 = Task.objects.create(
             user=self.company,
             title="Test Task4",
             description="Test Task Description",
             deadline=(timezone.now() - timezone.timedelta(days=2)).isoformat(),
-            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.first(),
         )
         self.task_4.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task_4
+        )
+        self.task_4.files.add(file)
 
         self.task_5 = Task.objects.create(
             user=self.company_2,
             title="Test Task4",
             description="Test Task Description",
             deadline=(timezone.now() - timezone.timedelta(days=2)).isoformat(),
-            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.first(),
         )
         self.task_5.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task_5
+        )
+        self.task_5.files.add(file)
 
     def test_get_200(self):
         res = self.client.get(reverse('company_tasks_my'), {'status': 'active'},
@@ -665,40 +711,60 @@ class StudentTasksMyViewTest(APITestCase):
             title="Test Task",
             description="Test Task Description",
             deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
-            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.first(),
         )
         self.task_1.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task_1
+        )
+        self.task_1.files.add(file)
 
         self.task_2: Task = Task.objects.create(
             user=self.company,
             title="Test Task2",
             description="Test Task Description",
             deadline=(timezone.now() + timezone.timedelta(days=2)).isoformat(),
-            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.first(),
         )
         self.task_2.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task_2
+        )
+        self.task_2.files.add(file)
 
         self.task_3 = Task.objects.create(
             user=self.company,
             title="Test Task3",
             description="Test Task Description",
             deadline=(timezone.now() - timezone.timedelta(days=1)).isoformat(),
-            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.first(),
         )
         self.task_3.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task_3
+        )
+        self.task_3.files.add(file)
 
         self.task_4 = Task.objects.create(
             user=self.company,
             title="Test Task4",
             description="Test Task Description",
             deadline=(timezone.now() - timezone.timedelta(days=2)).isoformat(),
-            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.first(),
         )
         self.task_4.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task_4
+        )
+        self.task_4.files.add(file)
 
         solution = Solution.objects.create(
             task=self.task_1,
@@ -782,10 +848,15 @@ class EvaluateSolutionViewTest(APITestCase):
             title="Test Task",
             description="Test Task Description",
             deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
-            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             category=TaskCategory.objects.first(),
         )
         self.task_1.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task_1
+        )
+        self.task_1.files.add(file)
 
         self.solution = Solution.objects.create(
             task=self.task_1,

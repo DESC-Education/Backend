@@ -7,7 +7,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.apps import apps
-
+from Files.models import File
 
 class FilterCategory(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
@@ -58,7 +58,8 @@ class Task(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField(max_length=2000)
     deadline = models.DateTimeField()
-    file = models.FileField(upload_to=user_task_directory_path)
+    files = GenericRelation(File)
+    # file = models.FileField(upload_to=user_task_directory_path)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
 
     category = models.ForeignKey(TaskCategory, on_delete=models.CASCADE, related_name='tasks')
@@ -105,6 +106,7 @@ class Solution(models.Model):
 
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='solutions')
     description = models.TextField(max_length=2000, null=True, blank=True)
+    # files = GenericRelation(File)
     file = models.FileField(upload_to=user_solution_directory_path, max_length=500)
     company_comment = models.TextField(max_length=1000, blank=True, null=True)
 
