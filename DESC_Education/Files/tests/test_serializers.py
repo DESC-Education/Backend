@@ -20,7 +20,7 @@ from Tasks.models import (
 )
 
 from Files.serializers import (
-    CustomFileSerializer
+    FileSerializer
 )
 
 
@@ -63,23 +63,22 @@ class CustomFileSerializerTest(TestCase):
         )
 
     def test_file_create_verification_student_ok(self):
-        serializer = CustomFileSerializer(data={
+        serializer = FileSerializer(data={
             'file': SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
-            'type': File.VERIFICATION_FILE
         })
         serializer.is_valid(raise_exception=True)
-        serializer.save(content_object=self.student_profile)
+        serializer.save(content_object=self.student_profile, type=File.VERIFICATION_FILE)
 
-        self.assertEqual(serializer.data, {
-            'file': f'users/{self.student.id}/verification_files/test.jpg',
-            'type': File.VERIFICATION_FILE
+        self.assertEqual(dict(serializer.data), {
+            'name': 'test',
+            'extension': 'jpg',
+            'path': f'/api/media/users/{self.student.id}/verification_files/test.jpg'
         })
 
     def test_file_validate_available_extension(self):
         for ext in ('jpg', 'jpeg', 'png', 'pdf', 'docx'):
-            serializer = CustomFileSerializer(data={
-                'file': SimpleUploadedFile(name=f"test.{ext}", content=b"file_content", content_type="image/jpeg"),
-                'type': File.VERIFICATION_FILE
+            serializer = FileSerializer(data={
+                'file': SimpleUploadedFile(name=f"test.{ext}", content=b"file_content", content_type="image/jpeg")
             })
             serializer.is_valid()
             self.assertTrue(serializer.is_valid())
@@ -87,18 +86,16 @@ class CustomFileSerializerTest(TestCase):
 
 
     def test_file_validate_not_available_extension(self):
-        serializer_1 = CustomFileSerializer(data={
-            'file': SimpleUploadedFile(name="test.txt", content=b"file_content", content_type="image/jpeg"),
-            'type': File.VERIFICATION_FILE
+        serializer_1 = FileSerializer(data={
+            'file': SimpleUploadedFile(name="test.txt", content=b"file_content", content_type="image/jpeg")
         })
 
         self.assertFalse(serializer_1.is_valid())
 
     def test_file_validate_not_available_size(self):
         data = b'file_content' * 1024 * 500
-        serializer = CustomFileSerializer(data={
+        serializer = FileSerializer(data={
             'file': SimpleUploadedFile(name="test.docx", content=data, content_type="image/jpeg"),
-            'type': File.VERIFICATION_FILE
         })
 
         self.assertFalse(serializer.is_valid())

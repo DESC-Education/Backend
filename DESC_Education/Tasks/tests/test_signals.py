@@ -21,6 +21,7 @@ from Tasks.models import (
 from Profiles.models import (
     StudentProfile
 )
+from Files.models import File
 
 
 class check_student_profile_levelTest(TestCase):
@@ -53,9 +54,14 @@ class check_student_profile_levelTest(TestCase):
                 title=f"Test Task {random.randint(1, 100)}",
                 description=f"Test Task Description {random.randint(1, 100)}",
                 deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
-                file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
                 category=TaskCategory.objects.first(),
             )
+            file = File.objects.create(
+                file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+                type=File.TASK_FILE,
+                content_object=task
+            )
+            task.files.add(file)
 
             solution = Solution.objects.create(
                 user=user,
@@ -68,7 +74,6 @@ class check_student_profile_levelTest(TestCase):
             solution.save()
 
     def test_signal(self):
-
         profile = self.student.get_profile()
 
         self.assertEqual(profile.level_id, 1)
@@ -80,5 +85,3 @@ class check_student_profile_levelTest(TestCase):
         self.create_tasks(self.company, self.student, 15)
 
         self.assertEqual(profile.level_id, 3)
-
-

@@ -12,6 +12,8 @@ from Tasks.models import (
 )
 from Users.models import CustomUser
 from Profiles.models import StudentProfile
+from Files.serializers import FileSerializer
+from Files.models import File
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -52,10 +54,6 @@ class SolutionSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_userProfile(obj) -> UserProfileSerializer:
         return UserProfileSerializer(obj.user.get_profile()).data
-
-
-
-
 
 
 class ProfileTaskSerializer(serializers.ModelSerializer):
@@ -131,21 +129,30 @@ class TaskSerializer(serializers.ModelSerializer):
                                                    many=True, required=False, write_only=True)
     categoryId = serializers.PrimaryKeyRelatedField(source="category", queryset=TaskCategory.objects.all(),
                                                     write_only=True)
-
+    files_list = serializers.ListField(
+        child=serializers.FileField(),
+        write_only=True
+    )
     # read_only
+    files = FileSerializer(many=True, read_only=True)
     category = TaskCategorySerializer(read_only=True)
-    catFilters = serializers.SerializerMethodField()
+    catFilters = serializers.SerializerMethodField(read_only=True)
     profile = serializers.SerializerMethodField(read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     solutionsCount = serializers.SerializerMethodField(read_only=True)
     solutions = serializers.SerializerMethodField(read_only=True)
 
-
     class Meta:
         model = Task
-        fields = ('id', 'user', 'createdAt', 'title', 'description', 'deadline', 'file', 'category',
+        fields = ('id', 'user', 'createdAt', 'title', 'description', 'deadline', 'files', 'files_list', 'category',
                   'catFilters', 'profile', "categoryId", "filtersId", 'solutionsCount', 'solutions')
         read_only_fields = ['id', 'user']
+        extra_fields = {
+            'files': {
+                'type': 'list',
+                'description': 'Файлы'
+            }
+        }
 
     def get_solutions(self, obj) -> ProfileTaskSerializer:
         request = self.context.get('request', None)
@@ -154,8 +161,6 @@ class TaskSerializer(serializers.ModelSerializer):
             user: CustomUser = request.user
             if user.role == CustomUser.STUDENT_ROLE:
                 solutions = obj.solutions.filter(user=user)
-
-
 
         solutions = SolutionSerializer(solutions, many=True).data
         return solutions
@@ -193,9 +198,6 @@ class TaskSerializer(serializers.ModelSerializer):
     def get_solutionsCount(self, obj) -> int:
         return obj.solutions.count()
 
-    # @staticmethod
-    # def get_profile(obj) -> dict:
-    #     return ProfileTaskSerializer(obj.user.get_profile()).data
 
     def __init__(self, *args, **kwargs):
         super(TaskSerializer, self).__init__(*args, **kwargs)
@@ -215,6 +217,22 @@ class TaskSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"data": "Необходимо передать хотя бы одно поле для изменения."})
 
         return attrs
+
+    def create(self, validated_data):
+        validated_data.pop('files_list')
+        files = self.context.get('view').request.data.getlist('files_list')
+
+        instance = super().create(validated_data)
+
+        for file in files:
+            File.objects.create(
+                file=file,
+                type=File.TASK_FILE,
+                content_object=instance
+            )
+
+        return instance
+
 
 
 class TaskListSerializer(serializers.ModelSerializer):
