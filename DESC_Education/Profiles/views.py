@@ -363,7 +363,9 @@ class ProfileView(generics.GenericAPIView):
             if len(files_data) > 6:
                 files_data = files_data[:6]
             for file_data in files_data:
-                File.objects.create(file=file_data, content_object=profile)
+                File.objects.create(file=file_data,
+                                    content_object=profile,
+                                    type=File.VERIFICATION_FILE)
 
             ProfileVerifyRequest.objects.create(profile=profile)
 
