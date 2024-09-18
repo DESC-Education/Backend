@@ -9,7 +9,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from Profiles.models import (
     ProfileVerifyRequest,
-    File,
+)
+from Files.models import (
+    File
 )
 from Admins.serializers import (
     ProfileVerifyRequestsListSerializer,
@@ -74,7 +76,7 @@ class AdminProfileVerifyRequestDetailViewTest(APITestCase):
 
         file = File.objects.create(
             file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
-            profile=self.student.get_profile()
+            content_object=self.student.get_profile()
         )
         profile = self.student.get_profile()
         profile.reply_reload_date = timezone.now() + timezone.timedelta(minutes=10)

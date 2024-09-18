@@ -14,7 +14,6 @@ from Profiles.models import (
     CompanyProfile,
     University,
     ProfileVerifyRequest,
-    File,
     Skill,
     City,
     Faculty,

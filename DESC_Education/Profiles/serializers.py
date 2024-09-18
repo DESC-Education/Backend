@@ -6,7 +6,6 @@ from Profiles.models import (
     StudentProfile,
     CompanyProfile,
     BaseProfile,
-    File,
     Skill,
     University,
     Faculty,
@@ -45,11 +44,6 @@ class CitySerializer(serializers.ModelSerializer):
         model = City
         fields = '__all__'
 
-
-class FileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = File
-        fields = ('file',)
 
 
 class UniversitySerializer(serializers.ModelSerializer):
