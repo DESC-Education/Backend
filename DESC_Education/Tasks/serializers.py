@@ -224,7 +224,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
         instance = super().create(validated_data)
 
-        for file in files:
+        for file in files[:6]:
             File.objects.create(
                 file=file,
                 type=File.TASK_FILE,
