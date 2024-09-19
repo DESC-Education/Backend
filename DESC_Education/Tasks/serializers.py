@@ -33,11 +33,15 @@ class SolutionSerializer(serializers.ModelSerializer):
     """
 
     # write_only
-
+    files_list = serializers.ListField(
+        child=serializers.FileField(),
+        write_only=True
+    )
     taskId = serializers.PrimaryKeyRelatedField(
         source="task", queryset=Task.objects.filter(deadline__gte=timezone.now()), write_only=True)
 
     # read_only
+    files = FileSerializer(many=True, read_only=True)
     userProfile = serializers.SerializerMethodField(read_only=True)
     status = serializers.ChoiceField(choices=Solution.STATUSES, read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
@@ -47,13 +51,28 @@ class SolutionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Solution
-        fields = ('id', 'user', 'description', 'file', 'userProfile',
+        fields = ('id', 'user', 'description', 'files', 'files_list', 'userProfile',
                   'companyComment', 'status', 'createdAt', 'taskId')
         read_only_fields = ['id', 'task', 'createdAt', 'companyComment', 'user', 'status']
 
     @staticmethod
     def get_userProfile(obj) -> UserProfileSerializer:
         return UserProfileSerializer(obj.user.get_profile()).data
+
+    def create(self, validated_data):
+        validated_data.pop('files_list')
+        files = self.context.get('view').request.data.getlist('files_list')
+
+        instance = super().create(validated_data)
+
+        for file in files[:6]:
+            serializer = FileSerializer(data={"file": file})
+            if not serializer.is_valid():
+                raise serializers.ValidationError(str(serializer.errors))
+            serializer.save(type=File.SOLUTION_FILE, content_object=instance)
+
+        return instance
+
 
 
 class ProfileTaskSerializer(serializers.ModelSerializer):
@@ -100,7 +119,8 @@ class TaskPatternSerializer(serializers.ModelSerializer):
         model = TaskPattern
         fields = ("id", 'title', 'description', 'catFilters')
 
-    def get_catFilters(self, obj) -> FilterCategorySerializer:
+    @staticmethod
+    def get_catFilters(obj) -> FilterCategorySerializer:
         category_filters = {}
         filters = obj.filters.all()
 
@@ -225,11 +245,10 @@ class TaskSerializer(serializers.ModelSerializer):
         instance = super().create(validated_data)
 
         for file in files[:6]:
-            File.objects.create(
-                file=file,
-                type=File.TASK_FILE,
-                content_object=instance
-            )
+            serializer = FileSerializer(data={"file": file})
+            if not serializer.is_valid():
+                raise serializers.ValidationError(str(serializer.errors))
+            serializer.save(type=File.TASK_FILE, content_object=instance)
 
         return instance
 
