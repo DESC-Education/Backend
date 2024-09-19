@@ -494,7 +494,7 @@ class TestSolutionView(APITestCase):
         self.example_data = {
             'taskId': self.task.id,
             'description': "Test Task Description",
-            'file': SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg")
+            'files_list': [SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),]
         }
 
     def get_expected_data(self, solution):
