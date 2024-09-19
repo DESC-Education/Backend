@@ -9,8 +9,8 @@ from Profiles.models import (
     ProfileVerifyRequest,
     StudentProfile,
     CompanyProfile,
-
 )
+from Users.models import CustomUser
 
 
 class ProfileVerifyRequestDetailSerializer(serializers.ModelSerializer):
@@ -23,6 +23,7 @@ class ProfileVerifyRequestDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProfileVerifyRequest
         fields = ['id', 'createdAt', 'status', 'comment', 'admin', 'profile', 'verificationFiles']
+        read_only_fields = ['id', 'createdAt', 'admin']
 
     def validate(self, attrs):
         status = attrs.get('status')
@@ -52,7 +53,6 @@ class ProfileVerifyRequestDetailSerializer(serializers.ModelSerializer):
             return None
 
 
-
 class ProfileVerifyRequestsListSerializer(serializers.ModelSerializer):
     userType = serializers.CharField(source="profile.user.role")
     firstName = serializers.CharField(source="profile.first_name")
@@ -64,3 +64,16 @@ class ProfileVerifyRequestsListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProfileVerifyRequest
         fields = ['id', 'createdAt', 'requestStatus', 'comment', 'admin', "userType", "firstName", "lastName", "email"]
+
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = '__all__'
+
+
+    def get_profile(self, obj):
+        obj.get_profile()
+
