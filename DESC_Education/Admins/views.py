@@ -23,17 +23,20 @@ from drf_spectacular.utils import (
     OpenApiRequest,
     inline_serializer)
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
 from Admins.filters import (
     ProfileVerifyRequestFilter,
-
 )
+from Users.models import CustomUser
 
 
 class AdminProfileVerifyRequestListView(generics.ListAPIView):
     queryset = ProfileVerifyRequest.objects.all().prefetch_related('profile__user')
     serializer_class = ProfileVerifyRequestsListSerializer
     # permission_classes = [IsAdminRole]
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    search_fields = ['student_profile__first_name', 'student_profile__last_name',
+                     'company_profile__first_name', 'company_profile__last_name']
     filterset_class = ProfileVerifyRequestFilter
 
     @extend_schema(
@@ -74,3 +77,18 @@ class AdminProfileVerifyRequestDetailView(generics.GenericAPIView):
         serializer.save(admin=request.user)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AdminCustomUserListView(generics.ListAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = ProfileVerifyRequestsListSerializer
+    # permission_classes = [IsAdminRole]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ProfileVerifyRequestFilter
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение экземпляров ProfileVerifyRequest"
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
