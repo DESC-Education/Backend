@@ -35,7 +35,8 @@ class SolutionSerializer(serializers.ModelSerializer):
     # write_only
     files_list = serializers.ListField(
         child=serializers.FileField(),
-        write_only=True
+        write_only=True,
+        required=False
     )
     taskId = serializers.PrimaryKeyRelatedField(
         source="task", queryset=Task.objects.filter(deadline__gte=timezone.now()), write_only=True)
@@ -151,7 +152,8 @@ class TaskSerializer(serializers.ModelSerializer):
                                                     write_only=True)
     files_list = serializers.ListField(
         child=serializers.FileField(),
-        write_only=True
+        write_only=True,
+        required=False
     )
     # read_only
     files = FileSerializer(many=True, read_only=True)
