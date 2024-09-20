@@ -61,16 +61,16 @@ class SolutionSerializer(serializers.ModelSerializer):
         return UserProfileSerializer(obj.user.get_profile()).data
 
     def create(self, validated_data):
-        validated_data.pop('files_list')
-        files = self.context.get('view').request.data.getlist('files_list')
+        validated_data.pop('files_list', None)
+        files = self.context.get('view').request.data.getlist('files_list', None)
 
         instance = super().create(validated_data)
-
-        for file in files[:6]:
-            serializer = FileSerializer(data={"file": file})
-            if not serializer.is_valid():
-                raise serializers.ValidationError(str(serializer.errors))
-            serializer.save(type=File.SOLUTION_FILE, content_object=instance)
+        if files:
+            for file in files[:6]:
+                serializer = FileSerializer(data={"file": file})
+                if not serializer.is_valid():
+                    raise serializers.ValidationError(str(serializer.errors))
+                serializer.save(type=File.SOLUTION_FILE, content_object=instance)
 
         return instance
 
@@ -241,16 +241,16 @@ class TaskSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        validated_data.pop('files_list')
-        files = self.context.get('view').request.data.getlist('files_list')
+        validated_data.pop('files_list', None)
+        files = self.context.get('view').request.data.getlist('files_list', None)
 
         instance = super().create(validated_data)
-
-        for file in files[:6]:
-            serializer = FileSerializer(data={"file": file})
-            if not serializer.is_valid():
-                raise serializers.ValidationError(str(serializer.errors))
-            serializer.save(type=File.TASK_FILE, content_object=instance)
+        if files:
+            for file in files[:6]:
+                serializer = FileSerializer(data={"file": file})
+                if not serializer.is_valid():
+                    raise serializers.ValidationError(str(serializer.errors))
+                serializer.save(type=File.TASK_FILE, content_object=instance)
 
         return instance
 
