@@ -49,7 +49,6 @@ class AdminProfileVerifyRequestListView(generics.ListAPIView):
 
 class AdminProfileVerifyRequestDetailView(generics.GenericAPIView):
     serializer_class = ProfileVerifyRequestDetailSerializer
-
     # permission_classes = [IsAdminRole]
 
     def get_object(self, pk):
