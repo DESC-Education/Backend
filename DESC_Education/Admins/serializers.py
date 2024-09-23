@@ -15,6 +15,7 @@ from Profiles.serializers import (
     GetCompanyProfileSerializer
 )
 from Users.models import CustomUser
+from Users.serializers import CustomUserSerializer
 
 
 class ProfileVerifyRequestDetailSerializer(serializers.ModelSerializer):
@@ -70,34 +71,16 @@ class ProfileVerifyRequestsListSerializer(serializers.ModelSerializer):
         fields = ['id', 'createdAt', 'requestStatus', 'comment', 'admin', "userType", "firstName", "lastName", "email"]
 
 
-class CustomUserSerializer(serializers.ModelSerializer):
-    profile = serializers.SerializerMethodField()
-
-    class Meta:
-        model = CustomUser
-        fields = '__all__'
-
-    def get_profile(self, obj):
-        obj.get_profile()
 
 
-class CustomUserListSerializer(serializers.ModelSerializer):
-    createdAt = serializers.DateTimeField(source="created_at")
-    lastLogin = serializers.DateTimeField(source="last_login")
-    isActive = serializers.BooleanField(source="is_active")
-    isSuperuser = serializers.BooleanField(source="is_superuser")
-    isVerified = serializers.BooleanField(source="is_verified")
+class CustomUserListSerializer(CustomUserSerializer):
     firstName = serializers.SerializerMethodField()
     lastName = serializers.SerializerMethodField()
     companyName = serializers.SerializerMethodField()
 
-    class Meta:
-        model = CustomUser
-        fields = ['createdAt', 'id', 'email', 'createdAt', 'lastLogin', 'isActive', 'isSuperuser', 'isVerified',
-                  'firstName', 'lastName', 'role', 'companyName']
-
-    def to_representation(self, instance):
-        return super().to_representation(instance)
+    class Meta(CustomUserSerializer.Meta):
+        fields = CustomUserSerializer.Meta.fields + \
+                 ['firstName', 'lastName', 'companyName']
 
     @staticmethod
     def get_firstName(obj):

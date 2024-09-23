@@ -65,6 +65,8 @@ class LoginViewTest(APITestCase):
                              "isActive": self.user.is_active,
                              "isStaff": self.user.is_staff,
                              "isSuperuser": self.user.is_superuser,
+                             "isVerified": self.user.is_verified,
+                             'createdAt': self.user.created_at.isoformat()
                          }
                          )
         self.assertEqual(type(tokens.get("accessToken")), str)
@@ -180,6 +182,8 @@ class VerifyRegistrationViewTest(APITestCase):
                              "isActive": user.is_active,
                              "isStaff": user.is_staff,
                              "isSuperuser": user.is_superuser,
+                             "isVerified": user.is_verified,
+                             'createdAt': user.created_at.isoformat(),
                          })
         self.assertEqual(res.status_code, 200)
         self.assertTrue(user.is_verified)
@@ -237,13 +241,15 @@ class AuthViewTest(APITestCase):
                               content_type="application/json")
 
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.data, {
+        self.assertEqual(dict(res.data), {
                     "id": str(self.user.id),
                     "email": self.user.email,
                     "role": self.user.role,
                     "isActive": self.user.is_active,
                     "isStaff": self.user.is_staff,
                     "isSuperuser": self.user.is_superuser,
+                    "isVerified": self.user.is_verified,
+                    'createdAt': self.user.created_at.isoformat(),
                 }
             )
 
