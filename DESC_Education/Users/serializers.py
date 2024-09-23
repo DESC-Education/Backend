@@ -7,10 +7,13 @@ class CustomUserSerializer(serializers.ModelSerializer):
     isActive = serializers.BooleanField(source="is_active")
     isStaff = serializers.BooleanField(source="is_staff")
     isSuperuser = serializers.BooleanField(source="is_superuser")
+    createdAt = serializers.DateTimeField(source="created_at")
+    isVerified = serializers.BooleanField(source="is_verified")
 
     class Meta:
         model = CustomUser
-        fields = ["id", "email", "role", "isActive", "isStaff", "isSuperuser"]
+        fields = ["id", "email", "role", "isActive", "isStaff", "isSuperuser",
+                  'isVerified', 'createdAt']
 
 
 class EmptySerializer(serializers.Serializer):
