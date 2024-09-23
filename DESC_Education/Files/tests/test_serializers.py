@@ -72,7 +72,7 @@ class CustomFileSerializerTest(TestCase):
         self.assertEqual(dict(serializer.data), {
             'name': 'test',
             'extension': 'jpg',
-            'path': f'/api/media/users/{self.student.id}/verification_files/test.jpg'
+            'path': f'users/{self.student.id}/verification_files/test.jpg'
         })
 
     def test_file_validate_available_extension(self):
