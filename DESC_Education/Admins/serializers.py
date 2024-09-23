@@ -10,6 +10,10 @@ from Profiles.models import (
     StudentProfile,
     CompanyProfile,
 )
+from Profiles.serializers import (
+    GetStudentProfileSerializer,
+    GetCompanyProfileSerializer
+)
 from Users.models import CustomUser
 
 
@@ -92,10 +96,9 @@ class CustomUserListSerializer(serializers.ModelSerializer):
         fields = ['createdAt', 'id', 'email', 'createdAt', 'lastLogin', 'isActive', 'isSuperuser', 'isVerified',
                   'firstName', 'lastName', 'role', 'companyName']
 
-
     def to_representation(self, instance):
-
         return super().to_representation(instance)
+
     @staticmethod
     def get_firstName(obj):
         return obj.get_profile().first_name
@@ -109,3 +112,18 @@ class CustomUserListSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_lastName(obj):
         return obj.get_profile().last_name
+
+
+class CustomUserDetailSerializer(CustomUserListSerializer):
+    profile = serializers.SerializerMethodField()
+
+    class Meta(CustomUserListSerializer.Meta):
+        fields = CustomUserListSerializer.Meta.fields + \
+                 ['profile',]
+
+    def get_profile(self, obj):
+        profile = obj.get_profile()
+        if obj.role == CustomUser.COMPANY_ROLE:
+            return GetCompanyProfileSerializer(profile).data
+        elif obj.role == CustomUser.STUDENT_ROLE:
+            return GetStudentProfileSerializer(profile).data

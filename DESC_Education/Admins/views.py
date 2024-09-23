@@ -15,7 +15,8 @@ from django.shortcuts import get_object_or_404
 from Admins.serializers import (
     ProfileVerifyRequestsListSerializer,
     ProfileVerifyRequestDetailSerializer,
-    CustomUserListSerializer
+    CustomUserListSerializer,
+    CustomUserDetailSerializer
 )
 from drf_spectacular.utils import (
     extend_schema,
@@ -104,3 +105,22 @@ class AdminCustomUserListView(generics.ListAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+
+class AdminCustomUserDetailView(generics.GenericAPIView):
+    serializer_class = CustomUserDetailSerializer
+    # permission_classes = [IsAdminRole]
+
+
+    def get_object(self, pk):
+        obj = get_object_or_404(CustomUser, pk=pk)
+        return obj
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение экземпляра пользователя"
+    )
+    def get(self, request, pk):
+        instance = self.get_object(pk)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)

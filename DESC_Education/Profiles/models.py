@@ -221,6 +221,13 @@ class Specialty(models.Model):
         ordering = ['-id']
 
 
+class StudentProfileManager(models.Manager):
+    def create(self, *args,  **kwargs):
+        instance = super().create(*args, **kwargs)
+        instance.get_reply_count()
+        return instance
+
+
 class StudentProfile(BaseProfile):
     REPLY_MONTH_COUNT = 30
     REPLY_RELOAD_DAYS = 30
@@ -257,10 +264,13 @@ class StudentProfile(BaseProfile):
                                              blank=True)
     level_id = models.PositiveSmallIntegerField(choices=LEVEL_CHOICES, default=BEGINNER_LEVEL, editable=False)
 
+    objects = StudentProfileManager()
+
     def get_reply_count(self):
-        if tz.now() >= self.reply_reload_date:
+        now = tz.now()
+        if now >= self.reply_reload_date:
             self.reply_count = self.REPLY_MONTH_COUNT
-            self.reply_reload_date = tz.now() + tz.timedelta(days=self.REPLY_RELOAD_DAYS)
+            self.reply_reload_date = now + tz.timedelta(days=self.REPLY_RELOAD_DAYS)
             self.save()
         return self.reply_count
 
@@ -275,6 +285,8 @@ class StudentProfile(BaseProfile):
         elif solved_tasks_count.count() <= 60:
             self.level_id = self.EXPERIENCE_LEVEL
         self.save()
+
+
 
 
 class CompanyProfile(BaseProfile):
