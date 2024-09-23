@@ -136,4 +136,40 @@ class AdminProfileVerifyRequestDetailViewTest(APITestCase):
 
 
 
+class AdminCustomUserListViewTest(APITestCase):
+    def setUp(self):
+        self.maxDiff = None
+        self.admin = CustomUser.objects.create_user(
+            email="example@example.com",
+            password="test123",
+            role=CustomUser.ADMIN_ROLE,
+            is_verified=True,
+        )
+        self.admin_token = self.admin.get_token()['accessToken']
 
+        self.student = CustomUser.objects.create_user(
+            email="example2@example.com",
+            password="test123",
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+
+        self.company = CustomUser.objects.create_user(
+            email="example22@example.com",
+            password="test123",
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+
+
+
+
+
+
+    def test_get_without_filters(self):
+        res = self.client.get(reverse('admin_user_list'),
+                              headers={"Authorization": f"Bearer {self.admin_token}"})
+
+
+        self.assertEqual(len(res.data.get('results')), 2)
+        self.assertEqual(res.status_code, 200)

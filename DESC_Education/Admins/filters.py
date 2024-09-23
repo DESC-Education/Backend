@@ -32,3 +32,28 @@ class ProfileVerifyRequestFilter(filters.FilterSet):
             queryset = queryset.filter(profile_filter)
 
         return queryset
+
+
+class CustomUserListFilter(filters.FilterSet):
+    role = filters.ChoiceFilter(choices=CustomUser.ROLE_CHOISES)
+
+    class Meta:
+        model = CustomUser
+        fields = ['role']
+
+    # def filter_queryset(self, queryset):
+    #     # Получаем значение фильтров из запроса
+    #     status = self.request.query_params.get('status')
+    #     role = self.request.query_params.get('role')
+    #
+    #     # Фильтрация по статусу
+    #     if status:
+    #         queryset = queryset.filter(status=status)
+    #
+    #     # Кастомная логика для фильтрации по роли
+    #     if role:
+    #         profile_filter = Q(student_profile__user__role=role) | Q(company_profile__user__role=role)
+    #         queryset = queryset.filter(profile_filter)
+    #
+    #     return queryset
+
