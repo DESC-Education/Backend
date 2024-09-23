@@ -156,7 +156,7 @@ class SolutionListView(generics.ListAPIView):
 
 class SolutionDetailView(generics.GenericAPIView):
     serializer_class = SolutionSerializer
-    permission_classes = [IsStudentRole]
+    permission_classes = [IsCompanyRole, IsStudentRole]
 
     def get_object(self, pk):
         obj = get_object_or_404(Solution, pk=pk)
