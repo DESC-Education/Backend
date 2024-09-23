@@ -528,7 +528,10 @@ class GetMyProfileView(generics.GenericAPIView):
         try:
             user = request.user
             profile = user.get_profile()
-            serializer = self.profile_serializer_class[user.role](profile)
+            serializer = self.profile_serializer_class.get(user.role)
+            if serializer is None:
+                return Response('', status=status.HTTP_400_BAD_REQUEST)
+            serializer = serializer(profile)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         except Exception as e:
