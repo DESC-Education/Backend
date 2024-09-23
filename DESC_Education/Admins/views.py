@@ -87,9 +87,9 @@ class AdminCustomUserListView(generics.ListAPIView):
     serializer_class = CustomUserListSerializer
     # permission_classes = [IsAdminRole]
     filter_backends = [SearchFilter, DjangoFilterBackend]
-    search_fields = ['companyprofile__first_name', 'companyprofile__last_name',
+    search_fields = ['companyprofile__first_name', 'companyprofile__last_name', 'companyprofile__company_name',
                      'studentprofile__first_name', 'studentprofile__last_name',
-                     'email']
+                     'email', ]
     filterset_class = CustomUserListFilter
 
     def get_queryset(self):
