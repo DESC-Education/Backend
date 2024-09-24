@@ -319,7 +319,7 @@ class SolutionListViewTest(APITestCase):
             task=self.task,
             user=self.student
         )
-        self.solution = Solution.objects.create(
+        self.solution_2 = Solution.objects.create(
             task=self.task,
             user=self.student2
         )
@@ -332,6 +332,29 @@ class SolutionListViewTest(APITestCase):
         serializer = SolutionSerializer(Solution.objects.all(), many=True)
         self.assertEqual(dict(res.data).get('results'), serializer.data)
         self.assertEqual(res.status_code, 200)
+
+    def test_get_solutions_sort_createdAt(self):
+        res = self.client.get(reverse('solution-list-by-task', kwargs={'pk': self.task.id}),
+                              {'ordering': 'createdAt'},
+                              HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
+
+        createdAt = []
+        for i in res.data.get('results'):
+            createdAt.append(i.get('id'))
+
+        self.assertEqual([str(self.solution.id), str(self.solution_2.id)], createdAt)
+
+    def test_get_solutions_sort__createdAt(self):
+        res = self.client.get(reverse('solution-list-by-task', kwargs={'pk': self.task.id}),
+                              {'ordering': '-createdAt'},
+                              HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
+
+        createdAt = []
+        for i in res.data.get('results'):
+            createdAt.append(i.get('id'))
+
+        self.assertEqual([str(self.solution_2.id), str(self.solution.id)], createdAt)
+
 
 
 
