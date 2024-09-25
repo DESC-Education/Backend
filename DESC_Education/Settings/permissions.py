@@ -5,6 +5,7 @@ from django.contrib.auth.models import AnonymousUser
 BaseProfile = apps.get_model('Profiles', 'StudentProfile')
 CustomUser = apps.get_model('Users', 'CustomUser')
 Task = apps.get_model('Tasks', 'Task')
+Solution = apps.get_model('Tasks', 'Solution')
 
 
 class IsAuthenticatedAndVerified(BasePermission):
@@ -42,11 +43,11 @@ class IsCompanyRole(IsAuthenticatedAndVerified):
 
     def has_object_permission(self, request, view, obj):
         self.message = 'К изменению доступны объекты созданые только вами'
-        if obj.user == request.user:
-            return True
-        if isinstance(obj, Task):
+        if isinstance(obj, Solution):
             if obj.task.user == request.user:
                 return True
+        if obj.user == request.user:
+            return True
         return False
 
 
@@ -66,6 +67,15 @@ class IsCompanyOrStudentRole(IsAuthenticatedAndVerified):
 
         self.message = 'Необходимо подтвердить профиль!'
         return request.user.get_profile().verification == BaseProfile.VERIFIED
+
+    def has_object_permission(self, request, view, obj):
+        self.message = 'К изменению доступны объекты созданые только вами'
+        if isinstance(obj, Solution):
+            if obj.task.user == request.user:
+                return True
+        if obj.user == request.user:
+            return True
+        return False
 
 
 class IsAdminRole(BasePermission):
