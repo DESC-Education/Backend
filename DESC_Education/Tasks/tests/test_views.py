@@ -242,6 +242,101 @@ class TaskListViewTest(APITestCase):
 
         self.assertEqual(dict(res.data).get('results')[0], dict(expected_data.data))
 
+class SolutionDetailViewTest(APITestCase):
+
+    def get_expected_data(self, task):
+        expected_data = TaskSerializer(data=self.example_data, instance=task)
+        expected_data.user = str(self.company.id)
+        expected_data.is_valid(raise_exception=True)
+        expected_data = dict(expected_data.data)
+
+        return expected_data
+
+    @staticmethod
+    def create_test_image():
+        bts = BytesIO()
+        img = Image.new("RGB", (100, 100))
+        img.save(bts, 'jpeg')
+        return SimpleUploadedFile(f"test_{random.randint(1, 25)}.jpg", bts.getvalue())
+
+    def setUp(self):
+        self.maxDiff = None
+        self.student = CustomUser.objects.create_user(
+            email='example2@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        profile = self.student.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
+        self.student2 = CustomUser.objects.create_user(
+            email='example3@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        profile2 = self.student2.get_profile()
+        profile2.verification = StudentProfile.VERIFIED
+        profile2.save()
+
+        self.student2_token = self.student2.get_token()['accessToken']
+        self.company = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+        profile = self.company.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
+        self.company_token = self.company.get_token()['accessToken']
+
+        self.example_data = {
+            "title": "Test Task",
+            "description": "Test Task Description",
+            "deadline": (timezone.now() + timezone.timedelta(days=1)).isoformat(),
+            "categoryId": TaskCategory.objects.first().id
+        }
+        self.task = Task.objects.create(
+            user=self.company,
+            title=self.example_data['title'],
+            description=self.example_data['description'],
+            deadline=self.example_data['deadline'],
+            category=TaskCategory.objects.first()
+        )
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task
+        )
+        self.task.files.add(file)
+
+        self.solution = Solution.objects.create(
+            task=self.task,
+            user=self.student
+        )
+        self.solution_2 = Solution.objects.create(
+            task=self.task,
+            user=self.student2
+        )
+
+    def test_get_solution_company_200(self):
+        res = self.client.get(reverse('solution_detail', kwargs={'pk': self.solution.id}),
+                              HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['id'], str(self.solution.id))
+
+    def test_get_solution_student_200(self):
+        res = self.client.get(reverse('solution_detail', kwargs={'pk': self.solution_2.id}),
+                              HTTP_AUTHORIZATION=f'Bearer {self.student2_token}')
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['id'], str(self.solution_2.id))
+
 
 class SolutionListViewTest(APITestCase):
 
@@ -319,7 +414,7 @@ class SolutionListViewTest(APITestCase):
             task=self.task,
             user=self.student
         )
-        self.solution = Solution.objects.create(
+        self.solution_2 = Solution.objects.create(
             task=self.task,
             user=self.student2
         )
@@ -332,6 +427,29 @@ class SolutionListViewTest(APITestCase):
         serializer = SolutionSerializer(Solution.objects.all(), many=True)
         self.assertEqual(dict(res.data).get('results'), serializer.data)
         self.assertEqual(res.status_code, 200)
+
+    def test_get_solutions_sort_createdAt(self):
+        res = self.client.get(reverse('solution-list-by-task', kwargs={'pk': self.task.id}),
+                              {'ordering': 'createdAt'},
+                              HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
+
+        createdAt = []
+        for i in res.data.get('results'):
+            createdAt.append(i.get('id'))
+
+        self.assertEqual([str(self.solution.id), str(self.solution_2.id)], createdAt)
+
+    def test_get_solutions_sort__createdAt(self):
+        res = self.client.get(reverse('solution-list-by-task', kwargs={'pk': self.task.id}),
+                              {'ordering': '-createdAt'},
+                              HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
+
+        createdAt = []
+        for i in res.data.get('results'):
+            createdAt.append(i.get('id'))
+
+        self.assertEqual([str(self.solution_2.id), str(self.solution.id)], createdAt)
+
 
 
 
