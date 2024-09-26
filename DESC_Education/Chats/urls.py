@@ -4,6 +4,7 @@ from Chats.views import (
     index,
     room,
     CreateChatView,
+    ChatListView
 
 )
 
@@ -13,7 +14,7 @@ urlpatterns = [
     # path("<str:room_name>/", room, name="room"),
 
 
-
+    path("chats/", ChatListView.as_view(), name="chat_list"),
     path("chat/", CreateChatView.as_view(), name="chat_create"),
     # path('profile/requests', AdminProfileVerifyRequestListView.as_view(), name='admin_v_request_list'),
 
