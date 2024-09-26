@@ -5,7 +5,8 @@ from rest_framework import serializers
 from django.http.request import HttpRequest
 from Chats.serializers import (
     ChatSerializer,
-    ChatListSerializer
+    ChatListSerializer,
+    ChatDetailSerializer
 )
 import json
 from Users.models import (
@@ -145,7 +146,7 @@ class ChatListSerializerTest(TestCase):
         ChatMembers.objects.create(chat=self.chat, user=self.student)
         ChatMembers.objects.create(chat=self.chat, user=self.company)
         Message.objects.create(chat=self.chat, user=self.student, message='Первое')
-        self.mes1 = Message.objects.create(chat=self.chat, user=self.student, message='Последнее')
+        self.mes1 = Message.objects.create(chat=self.chat, user=self.company, message='Последнее')
 
         self.company2 = CustomUser.objects.create_user(
             email='123@example.com',
@@ -176,9 +177,69 @@ class ChatListSerializerTest(TestCase):
                 'id': str(self.chat.id),
                 'companion': {'id': str(self.company.id), 'name': '', 'avatar': None},
                 'lastMessage': {'message': 'Последнее', 'created_at': self.mes1.created_at.isoformat(),
-                                'is_readed': False}},
+                                'is_readed': False, 'user': self.company.id, 'id': str(self.mes1.id)}},
             {
                 'id': str(self.chat2.id),
                 'companion': {'id': str(self.company2.id), 'name': '', 'avatar': None},
                 'lastMessage': {'message': 'Последнее второе', 'created_at': self.mes2.created_at.isoformat(),
-                                'is_readed': False}}])
+                                'is_readed': False, 'user': self.student.id, 'id': str(self.mes2.id)}}])
+
+
+class ChatDetailSerializerTest(TestCase):
+    def setUp(self):
+        self.maxDiff = None
+
+        self.student = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True)
+
+        self.company = CustomUser.objects.create_user(
+            email='example123@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True)
+
+        self.chat = Chat.objects.create()
+        ChatMembers.objects.create(chat=self.chat, user=self.student)
+        ChatMembers.objects.create(chat=self.chat, user=self.company)
+
+        self.mes_0 = Message.objects.create(chat=self.chat, user=self.student, message=f'{random.randint(1, 99999999)}')
+        self.mes_1 = Message.objects.create(chat=self.chat, user=self.student, message=f'{random.randint(1, 99999999)}')
+        self.mes = Message.objects.create(chat=self.chat, user=self.company, message='Третье')
+        for mes in range(49):
+            Message.objects.create(chat=self.chat, user=self.student, message=f'{random.randint(1, 99999999)}')
+        self.mes1 = Message.objects.create(chat=self.chat, user=self.company, message='Пятидесятое')
+        self.mes2 = Message.objects.create(chat=self.chat, user=self.company, message='пятдесят первое')
+        for mes in range(49):
+            Message.objects.create(chat=self.chat, user=self.student, message=f'{random.randint(1, 99999999)}')
+
+    def test_serializer(self):
+        req = HttpRequest()
+        req.user = self.student
+        req.query_params = {'message_id': str(self.mes.id)}
+        # req.query_params = {}
+        context = {'request': req}
+
+        serializer = ChatDetailSerializer(self.chat, context=context)
+
+        res = dict(serializer.data)
+        res['messages'] = list(res['messages'])
+        for i, k in enumerate(res['messages']):
+            res['messages'][i] = dict(k)
+
+        self.assertEqual(res, {
+            'companion': {'id': str(self.company.id), 'name': '', 'avatar': None},
+            'messages': [{'created_at': self.mes_1.created_at.isoformat(),
+                          'is_readed': False,
+                          'message': self.mes_1.message,
+                          'user': self.student.id,
+                          'id': str(self.mes_1.id)},
+                         {'created_at': self.mes_0.created_at.isoformat(),
+                          'is_readed': False,
+                          'message': self.mes_0.message,
+                          'user': self.student.id,
+                          'id': str(self.mes_0.id)}],
+            'task': None})
+
