@@ -688,8 +688,8 @@ class GetProfileView(generics.GenericAPIView):
             if Email_V:
                 profile_data['email'] = user.email
 
-            profile_data.pop('replyCount')
-            profile_data.pop("replyReloadDate")
+            profile_data.pop('replyCount', None)
+            profile_data.pop("replyReloadDate", None)
 
             return Response(profile_data, status=status.HTTP_200_OK)
 
