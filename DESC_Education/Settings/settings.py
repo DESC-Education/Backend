@@ -40,6 +40,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -54,11 +55,13 @@ INSTALLED_APPS = [
     'Tasks',
     'Admins',
     'Mail',
+    'Chats',
     'corsheaders',
     'rest_framework_simplejwt',
+    'drf_spectacular_websocket',
     'drf_spectacular',
+    'drf_spectacular_sidecar',
     "django_prometheus",
-    # 'silk'
 ]
 
 MIDDLEWARE = [
@@ -80,7 +83,8 @@ ROOT_URLCONF = 'Settings.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'Mail', 'templates', 'Mail')],
+        'DIRS': [os.path.join(BASE_DIR, 'Mail', 'templates', 'Mail'),
+                 os.path.join(BASE_DIR, 'Chats', 'templates', 'Chats')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -95,6 +99,7 @@ TEMPLATES = [
 
 
 WSGI_APPLICATION = 'Settings.wsgi.application'
+ASGI_APPLICATION = 'Settings.asgi.application'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -157,6 +162,15 @@ CACHES = {
         "BACKEND": "django_prometheus.cache.backends.redis.RedisCache",
         "LOCATION": REDIS_PATH
     }
+}
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [REDIS_PATH],
+        },
+    },
 }
 
 CELERY_BROKER_URL = REDIS_PATH

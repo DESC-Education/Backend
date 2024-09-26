@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/v1/profiles/', include("Profiles.urls")),
     path('api/v1/tasks/', include("Tasks.urls")),
     path('api/v1/admins/', include("Admins.urls")),
+    path('api/v1/chats/', include("Chats.urls")),
 
 
     # Optional UI:
