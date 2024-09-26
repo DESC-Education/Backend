@@ -102,6 +102,10 @@ class CustomUser(AbstractBaseUser):
         else:
             return None
 
+    def get_full_name(self):
+        profile = self.get_profile()
+        return f"{profile.first_name} {profile.last_name}"
+
 
 class VerificationCode(models.Model):
     REGISTRATION_TYPE = "RG"
