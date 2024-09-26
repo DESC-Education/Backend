@@ -13,12 +13,6 @@ from Tasks.models import (
 )
 
 
-class ChatTaskSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Task
-        fields = ['id', 'title']
-
-
 class CompanionSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
@@ -41,6 +35,41 @@ class CompanionSerializer(serializers.ModelSerializer):
             return profile.company_name
         else:
             return f"{profile.first_name} {profile.last_name}"
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = ['message', 'created_at', 'is_readed']
+
+
+class ChatListSerializer(serializers.ModelSerializer):
+    lastMessage = serializers.SerializerMethodField()
+    companion = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Task
+        fields = ['id', 'lastMessage', 'companion']
+
+    @staticmethod
+    def get_lastMessage(obj):
+        last_message = obj.message_set.order_by('-created_at').first()
+        return MessageSerializer(last_message).data if last_message else None
+
+    def get_companion(self, obj):
+        # Получаем собеседника (предполагаем, что у чата два участника)
+        members = obj.members.all()
+        if members.count() > 1:
+            current_user = self.context['request'].user
+            companion = members.exclude(id=current_user.id).first()
+            return CompanionSerializer(companion).data if companion else None
+        return None
+
+
+class ChatTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ['id', 'title']
 
 
 class ChatSerializer(serializers.ModelSerializer):

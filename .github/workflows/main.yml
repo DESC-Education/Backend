@@ -79,7 +79,7 @@ jobs:
         cd DESC_Education
         python manage.py makemigrations
         python manage.py migrate
-        python manage.py test --noinput --parallel
+        python manage.py test --noinput 
   
   deploy:
     needs: tests

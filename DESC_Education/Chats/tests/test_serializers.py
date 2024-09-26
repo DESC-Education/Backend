@@ -4,8 +4,10 @@ from django.test import TestCase
 from rest_framework import serializers
 from django.http.request import HttpRequest
 from Chats.serializers import (
-    ChatSerializer
+    ChatSerializer,
+    ChatListSerializer
 )
+import json
 from Users.models import (
     CustomUser
 )
@@ -17,8 +19,10 @@ from Tasks.models import (
 
 from Chats.models import (
     ChatMembers,
-    Chat
+    Chat,
+    Message
 )
+
 
 class CreateChatSerializerTest(TestCase):
     def setUp(self):
@@ -47,7 +51,7 @@ class CreateChatSerializerTest(TestCase):
             title="Test Task",
             description="Test Description",
             deadline=timezone.now() + timezone.timedelta(days=2),
-            category=TaskCategory.objects.first(),)
+            category=TaskCategory.objects.first(), )
 
         self.company2 = CustomUser.objects.create_user(
             email='example22@example.com',
@@ -88,7 +92,6 @@ class CreateChatSerializerTest(TestCase):
             }
         })
 
-
     def test_validate_student_empty_task_field(self):
         serializer = ChatSerializer(data={
             "companionId": str(self.student2.id),
@@ -122,5 +125,60 @@ class CreateChatSerializerTest(TestCase):
         self.assertEqual(str(serializer.errors.get('companionId')[0]), 'Вы не можете добавлять компанию в чат!')
 
 
+class ChatListSerializerTest(TestCase):
+    def setUp(self):
+        self.maxDiff = None
 
+        self.student = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True)
 
+        self.company = CustomUser.objects.create_user(
+            email='example123@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True)
+
+        self.chat = Chat.objects.create()
+        ChatMembers.objects.create(chat=self.chat, user=self.student)
+        ChatMembers.objects.create(chat=self.chat, user=self.company)
+        Message.objects.create(chat=self.chat, user=self.student, message='Первое')
+        self.mes1 = Message.objects.create(chat=self.chat, user=self.student, message='Последнее')
+
+        self.company2 = CustomUser.objects.create_user(
+            email='123@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True)
+
+        self.chat2 = Chat.objects.create()
+        ChatMembers.objects.create(chat=self.chat2, user=self.student)
+        ChatMembers.objects.create(chat=self.chat2, user=self.company2)
+        Message.objects.create(chat=self.chat2, user=self.student, message='Первое второе')
+        self.mes2 = Message.objects.create(chat=self.chat2, user=self.student, message='Последнее второе')
+
+    def test_serializer_data(self):
+        queryset = Chat.objects.all()
+        req = HttpRequest()
+        req.user = self.student
+        context = {'request': req}
+        serializer = ChatListSerializer(queryset, many=True, context=context)
+        data = serializer.data
+        data[0]['companion'] = dict(data[0]['companion'])
+        data[0]['lastMessage'] = dict(data[0]['lastMessage'])
+        data[1]['companion'] = dict(data[1]['companion'])
+        data[1]['lastMessage'] = dict(data[1]['lastMessage'])
+
+        self.assertEqual(list(serializer.data), [
+            {
+                'id': str(self.chat.id),
+                'companion': {'id': str(self.company.id), 'name': '', 'avatar': None},
+                'lastMessage': {'message': 'Последнее', 'created_at': self.mes1.created_at.isoformat(),
+                                'is_readed': False}},
+            {
+                'id': str(self.chat2.id),
+                'companion': {'id': str(self.company2.id), 'name': '', 'avatar': None},
+                'lastMessage': {'message': 'Последнее второе', 'created_at': self.mes2.created_at.isoformat(),
+                                'is_readed': False}}])

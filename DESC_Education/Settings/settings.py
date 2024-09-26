@@ -97,7 +97,6 @@ TEMPLATES = [
     },
 ]
 
-
 WSGI_APPLICATION = 'Settings.wsgi.application'
 ASGI_APPLICATION = 'Settings.asgi.application'
 
@@ -284,9 +283,11 @@ if DEBUG:
     INSTALLED_APPS += ["debug_toolbar"]
     MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
 if 'test' in sys.argv:
-    # store files in memory, no cleanup after tests are finished
+
     DEFAULT_FILE_STORAGE = 'inmemorystorage.InMemoryStorage'
-    # much faster password hashing, default one is super slow (on purpose)
+    PASSWORD_HASHERS = (
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    )
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -301,26 +302,11 @@ if 'test' in sys.argv:
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
-        'formatters': {
-            'gunicorn_format': {
-                'format': '[%(asctime)s] [%(process)d] [%(levelname)s] %(message)s',
-                'datefmt': '%Y-%m-%d %H:%M:%S',
-            }
-        },
+        'formatters': {'gunicorn_format': {'format': '[%(asctime)s] [%(process)d] [%(levelname)s] %(message)s',
+                                           'datefmt': '%Y-%m-%d %H:%M:%S', }},
         'handlers': {
-            'console': {
-                'level': 'ERROR',
-                'class': 'logging.StreamHandler',
-                'formatter': 'gunicorn_format',
-            },
-        },
-        'root': {
-            'level': 'INFO',
-            'handlers': ["console"],
-            'propagate': False,
-        },
-
-    }
+            'console': {'level': 'ERROR', 'class': 'logging.StreamHandler', 'formatter': 'gunicorn_format', }, },
+        'root': {'level': 'INFO', 'handlers': ["console"], 'propagate': False, }, }
 else:
     DEBUG_TOOLBAR_CONFIG = {'SHOW_TOOLBAR_CALLBACK': lambda request: True, 'IS_RUNNING_TESTS': False}
     sentry_sdk.init(

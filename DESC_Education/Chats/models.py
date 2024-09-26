@@ -34,7 +34,7 @@ class Message(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     message = models.TextField()
-    created_at = models.DateTimeField(auto_created=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
     is_readed = models.BooleanField(default=False)
 
     class Meta:
