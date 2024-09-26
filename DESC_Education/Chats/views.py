@@ -7,11 +7,13 @@ from Settings.permissions import IsCompanyRole, IsStudentRole, EvaluateCompanyRo
 from Chats.serializers import (
     ChatSerializer,
     ChatListSerializer,
+    ChatDetailSerializer,
 )
 from Chats.models import (
     Chat,
     Message,
 )
+
 
 # Create your views here.
 
@@ -45,7 +47,6 @@ class ChatListView(generics.ListAPIView):
     serializer_class = ChatListSerializer
     permission_classes = (IsCompanyRole | IsStudentRole,)
 
-
     def get_queryset(self):
         last_message_time = Message.objects.filter(chat=OuterRef('pk')).order_by('-created_at').values('created_at')[:1]
         return Chat.objects.annotate(last_message_time=Subquery(last_message_time)).order_by('-last_message_time')
@@ -57,3 +58,25 @@ class ChatListView(generics.ListAPIView):
     def get(self, *args, **kwargs):
         return super().get(*args, **kwargs)
 
+
+class ChatDetailView(generics.RetrieveAPIView):
+    serializer_class = ChatDetailSerializer
+    permission_classes = (IsCompanyRole | IsStudentRole,)
+
+    def get_object(self):
+        chat_id = self.kwargs.get('pk')  # Получаем ID чата из URL параметров
+        instance = generics.get_object_or_404(Chat, pk=chat_id)
+
+        if not instance.chatmembers_set.filter(user=self.request.user).exists():
+            self.permission_denied(self.request, message="Данный чат не найден", code=404)
+        return instance
+
+    @extend_schema(
+        tags=["Chats"],
+        summary="Получение detail экземпляра чата",
+        parameters=[
+            OpenApiParameter(name='message_id', type=OpenApiTypes.UUID,),
+        ]
+    )
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)

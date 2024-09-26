@@ -37,10 +37,51 @@ class CompanionSerializer(serializers.ModelSerializer):
             return f"{profile.first_name} {profile.last_name}"
 
 
+class ChatTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ['id', 'title']
+
+
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
-        fields = ['message', 'created_at', 'is_readed']
+        fields = ['id', 'message', 'user', 'created_at', 'is_readed']
+
+
+class ChatDetailSerializer(serializers.ModelSerializer):
+    companion = serializers.SerializerMethodField()
+    task = ChatTaskSerializer()
+    messages = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Chat
+        fields = ['companion', 'task', 'messages']
+
+    def get_companion(self, obj) -> CompanionSerializer:
+        members = obj.members.all()
+        if members.count() > 1:
+            current_user = self.context['request'].user
+            companion = members.exclude(id=current_user.id).first()
+            return CompanionSerializer(companion).data if companion else None
+        return None
+
+    def get_messages(self, obj) -> MessageSerializer:
+        request = self.context['request']
+        message_id = request.query_params.get('message_id')
+        limit = int(request.query_params.get('page_size', 50))  # значение по умолчанию 50
+
+        if message_id is None:
+            messages = Message.objects.filter(chat=obj).order_by('-created_at')[:limit]
+        else:
+            try:
+                reference_message = Message.objects.get(id=message_id, chat=obj)
+                messages = Message.objects.filter(chat=obj, created_at__lt=reference_message.created_at) \
+                               .order_by('-created_at')[:limit]
+            except Message.DoesNotExist:
+                messages = []
+
+        return MessageSerializer(messages, many=True).data
 
 
 class ChatListSerializer(serializers.ModelSerializer):
@@ -52,11 +93,11 @@ class ChatListSerializer(serializers.ModelSerializer):
         fields = ['id', 'lastMessage', 'companion']
 
     @staticmethod
-    def get_lastMessage(obj):
+    def get_lastMessage(obj) -> MessageSerializer:
         last_message = obj.message_set.order_by('-created_at').first()
         return MessageSerializer(last_message).data if last_message else None
 
-    def get_companion(self, obj):
+    def get_companion(self, obj) -> CompanionSerializer:
         # Получаем собеседника (предполагаем, что у чата два участника)
         members = obj.members.all()
         if members.count() > 1:
@@ -64,12 +105,6 @@ class ChatListSerializer(serializers.ModelSerializer):
             companion = members.exclude(id=current_user.id).first()
             return CompanionSerializer(companion).data if companion else None
         return None
-
-
-class ChatTaskSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Task
-        fields = ['id', 'title']
 
 
 class ChatSerializer(serializers.ModelSerializer):
@@ -110,6 +145,6 @@ class ChatSerializer(serializers.ModelSerializer):
 
         return super().validate(attrs)
 
-    def get_companion(self, obj):
+    def get_companion(self, obj) -> CompanionSerializer:
         serializer = CompanionSerializer(instance=self.companion)
         return serializer.data
