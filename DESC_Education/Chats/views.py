@@ -50,7 +50,10 @@ class ChatListView(generics.ListAPIView):
         last_message_time = Message.objects.filter(chat=OuterRef('pk')).order_by('-created_at').values('created_at')[:1]
         return Chat.objects.annotate(last_message_time=Subquery(last_message_time)).order_by('-last_message_time')
 
-
+    @extend_schema(
+        tags=["Chats"],
+        summary="Получение списка чатов"
+    )
     def get(self, *args, **kwargs):
         return super().get(*args, **kwargs)
 
