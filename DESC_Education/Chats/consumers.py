@@ -63,9 +63,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     chat_id=self.chat_id,
                     user_id=self.user.id,
                     message=payload, )
-                return {'message': mes.message, 'id': str(mes.id)}
+                return {'message': mes.message, 'id': str(mes.id), 'viewed': mes.is_readed}
             case "viewed":
                 mes = Message.objects.get(id=payload)
+                mes.viewed = True
+                mes.save()
+                return {'message': mes.message, 'id': str(mes.id), 'viewed': mes.is_readed}
 
 
 
