@@ -32,7 +32,7 @@ class JWTAuthMiddleware(BaseMiddleware):
         if token is None:
             scope["user"] = AnonymousUser()
         else:
-            token = header_token[1].decode("utf-8")
+            token = token[1].decode("utf-8")
             try:
                 AccessToken(token)
             except (InvalidToken, TokenError) as e:
