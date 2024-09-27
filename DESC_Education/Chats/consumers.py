@@ -37,13 +37,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         serializer = WebSocketSerializer(data=json.loads(text_data))
         serializer.is_valid(raise_exception=True)
 
-        mes = await self.create_message(serializer.data)
-        serializer.validated_data['id'] = mes
-        print(serializer.data)
-        print(serializer.validated_data)
+        payload = await self.create_message(serializer.data)
+        serializer.validated_data['payload'] = payload
 
         await self.channel_layer.group_send(
-            self.room_group_name, {'message': serializer.data, 'type': 'chat.message'}
+            self.room_group_name, {'message': serializer.validated_data, 'type': 'chat.message'}
         )
 
     # Receive message from room group
@@ -65,7 +63,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     chat_id=self.chat_id,
                     user_id=self.user.id,
                     message=payload, )
-                return mes.id
+                return {'message': mes.message, 'id': mes.id}
             case "viewed":
                 mes = Message.objects.get(id=payload)
 
