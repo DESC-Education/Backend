@@ -103,7 +103,7 @@ class ChatDetailSerializer(serializers.ModelSerializer):
             return CompanionSerializer(companion).data if companion else None
         return None
 
-    def get_messages(self, obj) -> list[MessageSerializer]:
+    def get_messages(self, obj) -> MessageSerializer(many=True):
         request = self.context['request']
         message_id = request.query_params.get('message_id')
         limit = int(request.query_params.get('page_size', 50))  # значение по умолчанию 50
