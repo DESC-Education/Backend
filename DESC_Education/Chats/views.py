@@ -77,7 +77,9 @@ class ChatDetailView(generics.RetrieveAPIView):
         tags=["Chats"],
         summary="Получение detail экземпляра чата",
         parameters=[
-            OpenApiParameter(name='message_id', type=OpenApiTypes.UUID,),
+            OpenApiParameter(name='messageId', type=OpenApiTypes.UUID, description='Для получения предыдущих '
+                                                                                   'сообщений необходимо указать '
+                                                                                   'последний известный id сообщения '),
         ]
     )
     def get(self, request, *args, **kwargs):
@@ -88,6 +90,10 @@ class SendFileView(generics.GenericAPIView):
     permission_classes = (IsCompanyRole | IsStudentRole,)
     serializer_class = SendFileSerializer
 
+    @extend_schema(
+        tags=["Chats"],
+        summary="Отправка файла в чат",
+    )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():

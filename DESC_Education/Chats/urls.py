@@ -5,7 +5,8 @@ from Chats.views import (
     room,
     CreateChatView,
     ChatListView,
-    ChatDetailView
+    ChatDetailView,
+    SendFileView,
 
 )
 
@@ -18,6 +19,8 @@ urlpatterns = [
     path("chats", ChatListView.as_view(), name="chat_list"),
     path("chat", CreateChatView.as_view(), name="chat_create"),
     path("chat/<uuid:pk>", ChatDetailView.as_view(), name="chat_detail"),
+    path("send_file", SendFileView.as_view(), name="send_file"),
+
 
     # path('profile/requests', AdminProfileVerifyRequestListView.as_view(), name='admin_v_request_list'),
 

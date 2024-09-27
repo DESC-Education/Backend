@@ -105,7 +105,7 @@ class ChatDetailSerializer(serializers.ModelSerializer):
 
     def get_messages(self, obj) -> MessageSerializer(many=True):
         request = self.context['request']
-        message_id = request.query_params.get('message_id')
+        message_id = request.query_params.get('messageId')
         limit = int(request.query_params.get('page_size', 50))  # значение по умолчанию 50
 
         if message_id is None:
@@ -162,12 +162,15 @@ class ChatSerializer(serializers.ModelSerializer):
         self.user = validated_data.pop('user', None)
         self.companion = validated_data.pop('companionId')
 
+
         instance = Chat.objects.create(**validated_data)
+
 
         ChatMembers.objects.create(user=self.user, chat=instance)
         ChatMembers.objects.create(user=self.companion, chat=instance)
 
         return instance
+
 
     def validate(self, attrs):
         user = self.context['request'].user
