@@ -16,8 +16,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_group_name = f"chat_{self.chat_id}"
         self.user = self.scope.get('user')
 
-        # if not await self._check_permissions():
-        #     await self.close(code=4002, reason="Permission denied")
+        if not await self._check_permissions():
+            await self.close(code=4002, reason="Permission denied")
 
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
@@ -64,9 +64,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     user_id=self.user.id,
                     message=payload,)
                 return mes.id
-
-
-
 
 
 
