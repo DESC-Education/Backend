@@ -9,9 +9,9 @@
     <textarea id="chat-log" cols="100" rows="20"></textarea><br>
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-message-submit" type="button" value="Send">
-    {{ room_name|json_script:"room-name" }}
+    {{ chat_id|json_script:"chat_id" }}
     <script>
-        const roomName = JSON.parse(document.getElementById('room-name').textContent);
+        const roomName = JSON.parse(document.getElementById('chat_id').textContent);
 
         const chatSocket = new WebSocket(
             'ws://'
@@ -42,7 +42,8 @@
             const messageInputDom = document.querySelector('#chat-message-input');
             const message = messageInputDom.value;
             chatSocket.send(JSON.stringify({
-                'message': message
+                'payload': message,
+                'type': 'message'
             }));
             messageInputDom.value = '';
         };

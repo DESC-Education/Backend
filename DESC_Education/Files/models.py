@@ -27,11 +27,13 @@ class File(models.Model):
     VERIFICATION_FILE = 'verification_file'
     TASK_FILE = 'task_file'
     SOLUTION_FILE = 'solution_file'
+    CHAT_FILE = 'chat_file'
 
     TYPE_CHOISES = [
         (VERIFICATION_FILE, "Файлы верификации"),
         (TASK_FILE, "Файлы задач"),
-        (SOLUTION_FILE, "Файлы решений")
+        (SOLUTION_FILE, "Файлы решений"),
+        (CHAT_FILE, "Файлы чатов")
     ]
 
     id = models.UUIDField(primary_key=True,
@@ -45,12 +47,15 @@ class File(models.Model):
     type = models.CharField(choices=TYPE_CHOISES, max_length=20)
 
     def save(self, *args, **kwargs):
-        if self.type == self.VERIFICATION_FILE:
-            self.file.name = f'users/{self.content_object.user.id}/verification_files/{self.file.name}'
-        elif self.type == self.TASK_FILE:
-            self.file.name = f'users/{self.content_object.user.id}/tasks/{self.content_object.id}/{self.file.name}'
-        elif self.type == self.SOLUTION_FILE:
-            self.file.name = f'users/{self.content_object.user.id}/solutions/{self.content_object.id}/{self.file.name}'
+        match self.type:
+            case self.VERIFICATION_FILE:
+                self.file.name = f'users/{self.content_object.user.id}/verification_files/{self.file.name}'
+            case self.TASK_FILE:
+                self.file.name = f'users/{self.content_object.user.id}/tasks/{self.content_object.id}/{self.file.name}'
+            case self.SOLUTION_FILE:
+                self.file.name = f'users/{self.content_object.user.id}/solutions/{self.content_object.id}/{self.file.name}'
+            case self.CHAT_FILE:
+                self.file.name = f'chats/{self.content_object.id}/{self.file.name}'
 
         super(File, self).save(*args, **kwargs)
 

@@ -2,8 +2,12 @@ from django.db import models
 from Users.models import CustomUser
 from django.utils import timezone
 import uuid
+from django.contrib.contenttypes.fields import GenericRelation
 from Tasks.models import (
     Task,
+)
+from Files.models import (
+    File
 )
 
 
@@ -34,6 +38,7 @@ class Message(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     message = models.TextField()
+    file = GenericRelation(File)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     is_readed = models.BooleanField(default=False)
 

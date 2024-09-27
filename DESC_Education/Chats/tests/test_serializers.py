@@ -3,11 +3,14 @@ from django.utils import timezone
 from django.test import TestCase
 from rest_framework import serializers
 from django.http.request import HttpRequest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from Chats.serializers import (
     ChatSerializer,
     ChatListSerializer,
-    ChatDetailSerializer
+    ChatDetailSerializer,
+    SendFileSerializer,
 )
+from Files.models import File
 import json
 from Users.models import (
     CustomUser
@@ -125,6 +128,20 @@ class CreateChatSerializerTest(TestCase):
         serializer.is_valid()
         self.assertEqual(str(serializer.errors.get('companionId')[0]), 'Вы не можете добавлять компанию в чат!')
 
+    def test_duplicate(self):
+        serializer = ChatSerializer(data={
+            "companionId": str(self.student.id),
+            "taskId": str(self.task.id)
+        })
+        req = HttpRequest()
+        req.user = self.company
+        serializer.context['request'] = req
+        serializer.is_valid()
+        instance = serializer.save(user=self.company)
+        instance2 = serializer.save(user=self.company)
+        self.assertEqual(instance2.id, instance.id)
+        self.assertEqual(len(Chat.objects.all()), 1)
+
 
 class ChatListSerializerTest(TestCase):
     def setUp(self):
@@ -175,14 +192,18 @@ class ChatListSerializerTest(TestCase):
         self.assertEqual(list(serializer.data), [
             {
                 'id': str(self.chat.id),
+                'task': None,
                 'companion': {'id': str(self.company.id), 'name': '', 'avatar': None},
-                'lastMessage': {'message': 'Последнее', 'created_at': self.mes1.created_at.isoformat(),
-                                'is_readed': False, 'user': self.company.id, 'id': str(self.mes1.id)}},
+                'lastMessage': {'message': 'Последнее', 'createdAt': self.mes1.created_at.isoformat(),
+                                'isReaded': False, 'user': {'id': str(self.company.id), 'name': '', 'avatar': None},
+                                'id': str(self.mes1.id)}},
             {
                 'id': str(self.chat2.id),
+                'task': None,
                 'companion': {'id': str(self.company2.id), 'name': '', 'avatar': None},
-                'lastMessage': {'message': 'Последнее второе', 'created_at': self.mes2.created_at.isoformat(),
-                                'is_readed': False, 'user': self.student.id, 'id': str(self.mes2.id)}}])
+                'lastMessage': {'message': 'Последнее второе', 'createdAt': self.mes2.created_at.isoformat(),
+                                'isReaded': False, 'user': {'id': str(self.student.id), 'name': ' ', 'avatar': None},
+                                'id': str(self.mes2.id)}}])
 
 
 class ChatDetailSerializerTest(TestCase):
@@ -231,15 +252,66 @@ class ChatDetailSerializerTest(TestCase):
 
         self.assertEqual(res, {
             'companion': {'id': str(self.company.id), 'name': '', 'avatar': None},
-            'messages': [{'created_at': self.mes_1.created_at.isoformat(),
-                          'is_readed': False,
+            'messages': [{'createdAt': self.mes_1.created_at.isoformat(),
+                          'isReaded': False,
                           'message': self.mes_1.message,
-                          'user': self.student.id,
+                          'user': {'avatar': None,
+                                   'id': str(self.student.id),
+                                   'name': ' '},
                           'id': str(self.mes_1.id)},
-                         {'created_at': self.mes_0.created_at.isoformat(),
-                          'is_readed': False,
+                         {'createdAt': self.mes_0.created_at.isoformat(),
+                          'isReaded': False,
                           'message': self.mes_0.message,
-                          'user': self.student.id,
+                          'user': {'avatar': None,
+                                   'id': str(self.student.id),
+                                   'name': ' '},
                           'id': str(self.mes_0.id)}],
             'task': None})
 
+
+class SendFileSerializerTest(TestCase):
+    def setUp(self):
+        self.maxDiff = None
+
+        self.student = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True)
+
+        self.company = CustomUser.objects.create_user(
+            email='example123@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True)
+
+        self.company2 = CustomUser.objects.create_user(
+            email='example1232@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True)
+
+        self.chat = Chat.objects.create()
+        ChatMembers.objects.create(chat=self.chat, user=self.student)
+        ChatMembers.objects.create(chat=self.chat, user=self.company)
+
+    def test_validation(self):
+        req = HttpRequest()
+        req.user = self.student
+        context = {'request': req}
+        serializer = SendFileSerializer(context=context, data={
+            'file': SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            'chat': str(self.chat.id)
+        })
+
+        self.assertTrue(serializer.is_valid())
+        instance = serializer.save(
+            type=File.CHAT_FILE
+        )
+        file = File.objects.all().first()
+        self.assertEqual(file, instance)
+        self.assertEqual(str(instance), f'chats/{self.chat.id}/test.jpg')
+        self.assertEqual(serializer.data, {
+            'name': 'test',
+            'extension': 'jpg',
+            'path': f'chats/{str(self.chat.id)}/test.jpg'})
