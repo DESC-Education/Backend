@@ -239,7 +239,7 @@ class ChatDetailSerializerTest(TestCase):
     def test_serializer(self):
         req = HttpRequest()
         req.user = self.student
-        req.query_params = {'message_id': str(self.mes.id)}
+        req.query_params = {'messageId': str(self.mes.id)}
         # req.query_params = {}
         context = {'request': req}
 

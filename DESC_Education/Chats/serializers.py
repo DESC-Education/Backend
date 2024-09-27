@@ -162,12 +162,15 @@ class ChatSerializer(serializers.ModelSerializer):
         self.user = validated_data.pop('user', None)
         self.companion = validated_data.pop('companionId')
 
+
         instance = Chat.objects.create(**validated_data)
+
 
         ChatMembers.objects.create(user=self.user, chat=instance)
         ChatMembers.objects.create(user=self.companion, chat=instance)
 
         return instance
+
 
     def validate(self, attrs):
         user = self.context['request'].user

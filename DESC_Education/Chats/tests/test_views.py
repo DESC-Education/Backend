@@ -3,6 +3,7 @@ from rest_framework.test import APITestCase
 from django.urls import reverse
 from Tasks.models import TaskCategory, Task
 from Users.models import CustomUser
+from django.core.files.uploadedfile import SimpleUploadedFile
 from Profiles.models import StudentProfile
 import random
 from Chats.models import (
@@ -187,7 +188,7 @@ class ChatDetailViewTest(APITestCase):
         self.assertEqual(data[49].get('id'), str(self.mes2.id))
 
     def test_offset_200(self):
-        res = self.client.get(reverse('chat_detail', kwargs={'pk': self.chat.id}), {'message_id': str(self.mes.id)},
+        res = self.client.get(reverse('chat_detail', kwargs={'pk': self.chat.id}), {'messageId': str(self.mes.id)},
                                HTTP_AUTHORIZATION=f'Bearer {self.student.get_token()["accessToken"]}')
 
         data = res.data.get('messages')
@@ -195,3 +196,36 @@ class ChatDetailViewTest(APITestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data[0].get('id'), str(self.mes_1.id))
         self.assertEqual(data[-1].get('id'), str(self.mes_0.id))
+
+class SendFileViewTest(APITestCase):
+    def setUp(self):
+        self.maxDiff = None
+
+        self.student = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True)
+        profile = self.student.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
+        self.company = CustomUser.objects.create_user(
+            email='example123@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True)
+
+        self.chat = Chat.objects.create()
+        ChatMembers.objects.create(chat=self.chat, user=self.student)
+        ChatMembers.objects.create(chat=self.chat, user=self.company)
+
+
+    def test_200(self):
+        res = self.client.post(reverse('send_file'), {
+            "file": SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            'chat': str(self.chat.id)
+        }, HTTP_AUTHORIZATION=f'Bearer {self.student.get_token()["accessToken"]}')
+
+        self.assertEqual(dict(res.data), {'name': 'test', 'extension': 'jpg', 'path': f'chats/{str(self.chat.id)}/test.jpg'})
+        self.assertEqual(res.status_code, 201)

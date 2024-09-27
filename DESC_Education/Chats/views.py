@@ -90,6 +90,10 @@ class SendFileView(generics.GenericAPIView):
     permission_classes = (IsCompanyRole | IsStudentRole,)
     serializer_class = SendFileSerializer
 
+    @extend_schema(
+        tags=["Chats"],
+        summary="Отправка файла в чат",
+    )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
