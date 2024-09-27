@@ -69,7 +69,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def _check_permissions(self):
         if isinstance(self.user, AnonymousUser):
             return False
-        chat = Chat.objects.filter(pk=self.room_id, members=self.user).first()
+        chat = Chat.objects.filter(pk=self.chat_id, members=self.user).first()
         if chat:
             return True
         else:
