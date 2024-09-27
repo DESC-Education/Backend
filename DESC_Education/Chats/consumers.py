@@ -38,7 +38,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         serializer.is_valid(raise_exception=True)
 
         mes = await self.create_message(serializer.data)
-        serializer.validated_data['id'] = mes.id
+        serializer.validated_data['id'] = mes
 
         await self.channel_layer.group_send(
             self.room_group_name, {'message': serializer.data, 'type': 'chat.message'}
