@@ -105,7 +105,7 @@ class ChatDetailSerializer(serializers.ModelSerializer):
 
     def get_messages(self, obj) -> MessageSerializer(many=True):
         request = self.context['request']
-        message_id = request.query_params.get('message_id')
+        message_id = request.query_params.get('messageId')
         limit = int(request.query_params.get('page_size', 50))  # значение по умолчанию 50
 
         if message_id is None:

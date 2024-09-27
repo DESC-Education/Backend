@@ -77,7 +77,10 @@ class ChatDetailView(generics.RetrieveAPIView):
         tags=["Chats"],
         summary="Получение detail экземпляра чата",
         parameters=[
-            OpenApiParameter(name='message_id', type=OpenApiTypes.UUID,),
+            OpenApiParameter(name='messageId', type=OpenApiTypes.UUID, description='Для получения предыдущих '
+                                                                                   'сообщений необходимо указать '
+                                                                                   'последний известный id сообщения '
+                                                                                   'в параметре messageId'),
         ]
     )
     def get(self, request, *args, **kwargs):
