@@ -27,7 +27,7 @@ class WebSocketSerializer(serializers.Serializer):
     ]
     id = serializers.UUIDField(required=False)
     type = serializers.ChoiceField(choices=CHOISES, default=MESSAGE)
-    payload = serializers.CharField(required=False)
+    payload = serializers.JSONField(required=False)
 
 
 class SendFileSerializer(FileSerializer):
