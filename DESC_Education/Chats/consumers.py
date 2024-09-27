@@ -39,6 +39,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         mes = await self.create_message(serializer.data)
         serializer.validated_data['id'] = mes
+        print(serializer.data)
+        print(serializer.validated_data)
 
         await self.channel_layer.group_send(
             self.room_group_name, {'message': serializer.data, 'type': 'chat.message'}
@@ -64,6 +66,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     user_id=self.user.id,
                     message=payload, )
                 return mes.id
+            case "viewed":
+                mes = Message.objects.get(id=payload)
+
+
 
     @database_sync_to_async
     def _check_permissions(self):
