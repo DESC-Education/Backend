@@ -10,6 +10,7 @@ from Chats.models import (
 
 )
 
+
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.chat_id = self.scope["url_route"]["kwargs"]["room_id"]
@@ -48,7 +49,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         serializer = WebSocketSerializer(data=event['message'])
         serializer.is_valid(raise_exception=True)
 
-
         # Send message to WebSocket
         await self.send(text_data=json.dumps(serializer.validated_data))
 
@@ -62,11 +62,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 mes = Message.objects.create(
                     chat_id=self.chat_id,
                     user_id=self.user.id,
-                    message=payload,)
+                    message=payload, )
                 return mes.id
-
-
-
 
     @database_sync_to_async
     def _check_permissions(self):
