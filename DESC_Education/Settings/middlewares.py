@@ -11,7 +11,7 @@ from urllib.parse import parse_qs
 from jwt import decode as jwt_decode
 from django.conf import settings
 import json
-
+from urllib.parse import parse_qs
 
 @database_sync_to_async
 def get_user(validated_token):
@@ -28,7 +28,7 @@ class JWTAuthMiddleware(BaseMiddleware):
     async def __call__(self, scope, receive, send):
         close_old_connections()
 
-        header_token = next((i for i in scope["headers"] if i[0] == b'authorization'), None)
+        header_token = next((i for i in scope["headers"] if i[0] == b'sec-websocket-protocol'), None)
         if header_token is None:
             scope["user"] = AnonymousUser()
         else:
