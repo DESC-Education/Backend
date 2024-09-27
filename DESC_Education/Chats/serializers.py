@@ -12,6 +12,39 @@ from Tasks.models import (
     Task
 )
 
+from Files.models import File
+from Files.serializers import FileSerializer
+
+
+class WebSocketSerializer(serializers.Serializer):
+    MESSAGE = 'message'
+    FILE = 'file'
+    VIEWED = 'viewed'
+    CHOISES = [
+        (MESSAGE, 'Сообщение'),
+        (VIEWED, 'Отметка о прочтении'),
+        (FILE, 'Файл')
+    ]
+    id = serializers.UUIDField(required=False)
+    type = serializers.ChoiceField(choices=CHOISES, default=MESSAGE)
+    payload = serializers.CharField(required=False)
+
+
+class SendFileSerializer(FileSerializer):
+    chat = serializers.PrimaryKeyRelatedField(queryset=Chat.objects.all(), required=True, write_only=True)
+
+    class Meta(FileSerializer.Meta):
+        fields = FileSerializer.Meta.fields + ('chat',)
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        chat = attrs.get('chat')
+        if not chat.chatmembers_set.filter(user=user).exists():
+            raise serializers.ValidationError({'chat': 'Данный чат не найден'})
+
+        attrs['content_object'] = attrs.pop('chat')
+        return super().validate(attrs)
+
 
 class CompanionSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
@@ -44,9 +77,13 @@ class ChatTaskSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
+    user = CompanionSerializer()
+    createdAt = serializers.DateTimeField(source='created_at')
+    isReaded = serializers.BooleanField(source='is_readed')
+
     class Meta:
         model = Message
-        fields = ['id', 'message', 'user', 'created_at', 'is_readed']
+        fields = ['id', 'message', 'user', 'createdAt', 'isReaded']
 
 
 class ChatDetailSerializer(serializers.ModelSerializer):
@@ -66,7 +103,7 @@ class ChatDetailSerializer(serializers.ModelSerializer):
             return CompanionSerializer(companion).data if companion else None
         return None
 
-    def get_messages(self, obj) -> MessageSerializer:
+    def get_messages(self, obj) -> list[MessageSerializer]:
         request = self.context['request']
         message_id = request.query_params.get('message_id')
         limit = int(request.query_params.get('page_size', 50))  # значение по умолчанию 50
@@ -87,10 +124,11 @@ class ChatDetailSerializer(serializers.ModelSerializer):
 class ChatListSerializer(serializers.ModelSerializer):
     lastMessage = serializers.SerializerMethodField()
     companion = serializers.SerializerMethodField()
+    task = ChatTaskSerializer()
 
     class Meta:
-        model = Task
-        fields = ['id', 'lastMessage', 'companion']
+        model = Chat
+        fields = ['id', 'lastMessage', 'companion', 'task']
 
     @staticmethod
     def get_lastMessage(obj) -> MessageSerializer:
