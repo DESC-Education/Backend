@@ -28,11 +28,11 @@ class JWTAuthMiddleware(BaseMiddleware):
     async def __call__(self, scope, receive, send):
         close_old_connections()
 
-        header_token = next((i for i in scope["headers"] if i[0] == b'sec-websocket-protocol'), None)
-        if header_token is None:
+        token = next((i for i in scope["headers"] if i[0] == b'sec-websocket-protocol'), None)
+        if token is None:
             scope["user"] = AnonymousUser()
         else:
-            token = header_token[1].decode("utf-8").split(' ')[1]
+            token = header_token[1].decode("utf-8")
             try:
                 AccessToken(token)
             except (InvalidToken, TokenError) as e:
