@@ -68,19 +68,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 files = payload.get('files', None)
 
                 mes_response = None
-                if message:
-                    mes = Message.objects.create(
-                        chat_id=self.chat_id,
-                        user_id=self.user.id,
-                        message=message)
-                    mes_response = MessageSerializer(instance=mes).data
+                mes = Message.objects.create(
+                    chat_id=self.chat_id,
+                    user_id=self.user.id,
+                    message=message)
+                # mes_response = MessageSerializer(instance=mes).data
 
-                files_response = None
                 if files:
                     query_files = File.objects.filter(id__in=files)
-                    files_response = FileSerializer(instance=query_files, many=True).data
+                    print(query_files[0].content_object, self.chat_id)
+                    if query_files[0].content_object == self.chat_id:
+                        for file in query_files:
+                            file.content_object = mes
+                            file.save()
 
-                return {'message': mes_response, 'files': files_response}
+                return MessageSerializer(instance=mes).data
 
             case "viewed":
                 mes = Message.objects.filter(id=payload).first()
