@@ -9,7 +9,8 @@ from Chats.serializers import (
     ChatListSerializer,
     ChatDetailSerializer,
     SendFileSerializer,
-    CompanionSerializer
+    CompanionSerializer,
+    MessageSerializer
 )
 from Files.models import File
 import json
@@ -197,14 +198,14 @@ class ChatListSerializerTest(TestCase):
                 'companion': {'id': str(self.company.id), 'name': '', 'avatar': None},
                 'lastMessage': {'message': 'Последнее', 'createdAt': self.mes1.created_at.isoformat(),
                                 'isReaded': False, 'user': {'id': str(self.company.id), 'name': '', 'avatar': None},
-                                'id': str(self.mes1.id)}},
+                                'id': str(self.mes1.id), 'files': []}},
             {
                 'id': str(self.chat2.id),
                 'task': None,
                 'companion': {'id': str(self.company2.id), 'name': '', 'avatar': None},
                 'lastMessage': {'message': 'Последнее второе', 'createdAt': self.mes2.created_at.isoformat(),
                                 'isReaded': False, 'user': {'id': str(self.student.id), 'name': ' ', 'avatar': None},
-                                'id': str(self.mes2.id)}}])
+                                'id': str(self.mes2.id), 'files': []}}])
 
 
 class ChatDetailSerializerTest(TestCase):
@@ -256,6 +257,7 @@ class ChatDetailSerializerTest(TestCase):
             'messages': [{'createdAt': self.mes_1.created_at.isoformat(),
                           'isReaded': False,
                           'message': self.mes_1.message,
+                          'files': [],
                           'user': {'avatar': None,
                                    'id': str(self.student.id),
                                    'name': ' '},
@@ -263,6 +265,7 @@ class ChatDetailSerializerTest(TestCase):
                          {'createdAt': self.mes_0.created_at.isoformat(),
                           'isReaded': False,
                           'message': self.mes_0.message,
+                          'files': [],
                           'user': {'avatar': None,
                                    'id': str(self.student.id),
                                    'name': ' '},
@@ -320,6 +323,7 @@ class SendFileSerializerTest(TestCase):
             'path': f'/api/media/chats/{str(self.chat.id)}/test.jpg'})
 
 
+
 class CompanionSerializerTest(TestCase):
     def setUp(self):
         self.maxDiff = None
@@ -342,3 +346,58 @@ class CompanionSerializerTest(TestCase):
             'name': str(self.student.get_full_name()),
             'avatar': f'/api/media/{self.profile.logo_img.name}'
         })
+
+
+class MessageSerializerTest(TestCase):
+    def setUp(self):
+        self.maxDiff = None
+
+        self.student = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True)
+        self.chat = Chat.objects.create()
+        self.mes = Message.objects.create(
+            chat_id=self.chat.id,
+            user_id=self.student.id,
+            message='123'
+        )
+        self.file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            content_object=self.mes,
+            type=File.CHAT_FILE
+        )
+        self.file2 = File.objects.create(
+            file=SimpleUploadedFile(name="test2.jpg", content=b"file_content", content_type="image/jpeg"),
+            content_object=self.mes,
+            type=File.CHAT_FILE
+        )
+
+
+    def test_serialize(self):
+        res = MessageSerializer(instance=self.mes).data
+
+        self.assertEqual(dict(res),
+                         {'id': str(self.mes.id),
+                          'message': '123',
+                          'user': {'id': str(self.student.id),
+                                   'name': ' ',
+                                   'avatar': None},
+                          'createdAt': self.mes.created_at.isoformat(),
+                          'isReaded': False,
+                          'files': [
+                              {'id': str(self.file.id),
+                               'size': 12,
+                               'name': 'test',
+                               'extension': 'jpg',
+                               'path': f'/api/media/chats/{str(self.mes.id)}/test.jpg'},
+                              {'id': str(self.file2.id),
+                               'size': 12,
+                               'name': 'test2',
+                               'extension': 'jpg',
+                               'path': f'/api/media/chats/{str(self.mes.id)}/test2.jpg'}]})
+
+
+
+
