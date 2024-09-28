@@ -887,22 +887,34 @@ class StudentTasksMyViewTest(APITestCase):
         solution = Solution.objects.create(
             task=self.task_1,
             user=self.student,
-            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
             status=Solution.COMPLETED,
+        )
+        file = File.objects.create(
+            content_object=solution,
+            type=File.SOLUTION_FILE,
+            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
         )
 
         solution2 = Solution.objects.create(
             task=self.task_4,
             user=self.student,
-            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
             status=Solution.PENDING,
+        )
+        file = File.objects.create(
+            content_object=solution2,
+            type=File.SOLUTION_FILE,
+            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
         )
 
         solution3 = Solution.objects.create(
             task=self.task_2,
             user=self.student,
-            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
             status=Solution.PENDING,
+        )
+        file = File.objects.create(
+            content_object=solution3,
+            type=File.SOLUTION_FILE,
+            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
         )
 
     def test_get_student_active_200(self):
@@ -979,8 +991,12 @@ class EvaluateSolutionViewTest(APITestCase):
         self.solution = Solution.objects.create(
             task=self.task_1,
             user=self.student,
-            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
             description="Test Solution Description",
+        )
+        file = File.objects.create(
+            content_object=self.solution,
+            type=File.SOLUTION_FILE,
+            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
         )
 
     def test_evaluate_solution(self):

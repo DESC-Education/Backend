@@ -74,10 +74,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     message=message)
                 # mes_response = MessageSerializer(instance=mes).data
 
+                print(files)
                 if files:
                     query_files = File.objects.filter(id__in=files)
+                    print(query_files)
                     print(query_files[0].object_id, self.chat_id)
-                    if query_files[0].content_object == self.chat_id:
+                    if query_files[0].object_id == self.chat_id:
                         for file in query_files:
                             file.content_object = mes
                             file.save()
