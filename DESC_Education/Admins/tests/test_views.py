@@ -77,7 +77,8 @@ class AdminProfileVerifyRequestDetailViewTest(APITestCase):
 
         file = File.objects.create(
             file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
-            content_object=self.student.get_profile()
+            content_object=self.student.get_profile(),
+            type=File.VERIFICATION_FILE
         )
         profile = self.student.get_profile()
         profile.reply_reload_date = timezone.now() + timezone.timedelta(minutes=10)
