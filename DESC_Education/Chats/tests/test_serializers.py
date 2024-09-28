@@ -3,7 +3,10 @@ from django.utils import timezone
 from django.test import TestCase
 from rest_framework import serializers
 from django.http.request import HttpRequest
+from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.conf import settings
+import os
 from Chats.serializers import (
     ChatSerializer,
     ChatListSerializer,
@@ -365,17 +368,24 @@ class MessageSerializerTest(TestCase):
         )
         self.file = File.objects.create(
             file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
-            content_object=self.mes,
+            content_object=self.chat,
             type=File.CHAT_FILE
         )
         self.file2 = File.objects.create(
             file=SimpleUploadedFile(name="test2.jpg", content=b"file_content", content_type="image/jpeg"),
-            content_object=self.mes,
+            content_object=self.chat,
             type=File.CHAT_FILE
         )
 
 
     def test_serialize(self):
+        self.file.content_object = self.mes
+        self.file.save()
+        self.file2.content_object = self.mes
+        self.file2.save()
+
+
+
         res = MessageSerializer(instance=self.mes).data
 
         self.assertEqual(dict(res),
@@ -391,12 +401,12 @@ class MessageSerializerTest(TestCase):
                                'size': 12,
                                'name': 'test',
                                'extension': 'jpg',
-                               'path': f'/api/media/chats/{str(self.mes.id)}/test.jpg'},
+                               'path': f'/api/media/chats/{str(self.chat.id)}/test.jpg'},
                               {'id': str(self.file2.id),
                                'size': 12,
                                'name': 'test2',
                                'extension': 'jpg',
-                               'path': f'/api/media/chats/{str(self.mes.id)}/test2.jpg'}]})
+                               'path': f'/api/media/chats/{str(self.chat.id)}/test2.jpg'}]})
 
 
 

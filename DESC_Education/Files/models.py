@@ -5,6 +5,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
+from django.conf import settings
+import os
+
 
 def validate_file_type(value):
     valid_extensions = ['.pdf', '.jpg', '.png']
@@ -22,6 +25,17 @@ def validate_file_size(value):
         print(f"File size is acceptable: {value.size}")
 
 
+def get_file_path(instance, filename):
+    match instance.type:
+        case instance.VERIFICATION_FILE:
+            return f'users/{instance.content_object.user.id}/verification_files/{filename}'
+        case instance.TASK_FILE:
+            return f'users/{instance.content_object.user.id}/tasks/{instance.content_object.id}/{filename}'
+        case instance.SOLUTION_FILE:
+            return f'users/{instance.content_object.user.id}/solutions/{instance.content_object.id}/{filename}'
+        case instance.CHAT_FILE:
+            return f'chats/{instance.content_object.id}/{filename}'
+
 
 class File(models.Model):
     VERIFICATION_FILE = 'verification_file'
@@ -29,11 +43,12 @@ class File(models.Model):
     SOLUTION_FILE = 'solution_file'
     CHAT_FILE = 'chat_file'
 
+
     TYPE_CHOISES = [
         (VERIFICATION_FILE, "Файлы верификации"),
         (TASK_FILE, "Файлы задач"),
         (SOLUTION_FILE, "Файлы решений"),
-        (CHAT_FILE, "Файлы чатов")
+        (CHAT_FILE, "Файлы чатов"),
     ]
 
     id = models.UUIDField(primary_key=True,
@@ -43,21 +58,9 @@ class File(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.UUIDField()
     content_object = GenericForeignKey(ct_field='content_type', fk_field='object_id')
-    file = models.FileField(max_length=200, validators=[validate_file_type, validate_file_size])
+    file = models.FileField(upload_to=get_file_path, max_length=200, validators=[validate_file_type, validate_file_size])
     type = models.CharField(choices=TYPE_CHOISES, max_length=20)
 
-    def save(self, *args, **kwargs):
-        match self.type:
-            case self.VERIFICATION_FILE:
-                self.file.name = f'users/{self.content_object.user.id}/verification_files/{self.file.name}'
-            case self.TASK_FILE:
-                self.file.name = f'users/{self.content_object.user.id}/tasks/{self.content_object.id}/{self.file.name}'
-            case self.SOLUTION_FILE:
-                self.file.name = f'users/{self.content_object.user.id}/solutions/{self.content_object.id}/{self.file.name}'
-            case self.CHAT_FILE:
-                self.file.name = f'chats/{self.content_object.id}/{self.file.name}'
-
-        super(File, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.file.name
