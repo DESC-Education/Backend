@@ -3,7 +3,6 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser
 from Chats.models import Chat
-from drf_spectacular_websocket.decorators import extend_ws_schema
 from Chats.serializers import (WebSocketSerializer)
 from Files.models import File
 from Files.serializers import FileSerializer
@@ -31,12 +30,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-    @extend_ws_schema(
-        type='receive',
-        summary='send_message_summary',
-        description='send_message_description',
-        request=None,
-    )
+
     # Receive message from WebSocket
     async def receive(self, text_data=None, bytes_data=None):
         serializer = WebSocketSerializer(data=json.loads(text_data))
@@ -67,23 +61,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 message = payload.get('message', None)
                 files = payload.get('files', None)
 
-                mes_response = None
                 mes = Message.objects.create(
                     chat_id=self.chat_id,
                     user_id=self.user.id,
                     message=message)
-                # mes_response = MessageSerializer(instance=mes).data
 
-                print(files)
                 if files:
                     query_files = File.objects.filter(id__in=files)
-                    print(query_files)
-                    print(query_files[0].object_id, self.chat_id)
-                    if query_files[0].object_id == self.chat_id:
+                    if str(query_files[0].content_object.id) == str(self.chat_id):
                         for file in query_files:
                             file.content_object = mes
                             file.save()
-                            print(file)
 
                 return MessageSerializer(instance=mes).data
 

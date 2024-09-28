@@ -58,9 +58,7 @@ INSTALLED_APPS = [
     'Chats',
     'corsheaders',
     'rest_framework_simplejwt',
-    'drf_spectacular_websocket',
     'drf_spectacular',
-    'drf_spectacular_sidecar',
     "django_prometheus",
 ]
 

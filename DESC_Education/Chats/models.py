@@ -46,4 +46,4 @@ class Message(models.Model):
         ordering = ['created_at']
 
     def __str__(self):
-        return f"{self.author}: \n{message}"
+        return f"{self.user}: \n{message}"
