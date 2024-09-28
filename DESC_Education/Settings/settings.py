@@ -111,7 +111,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'Settings.pagination.CustomPageNumberPagination',
     'PAGE_SIZE': 50,
-    'UPLOADED_FILES_USE_URL': False
+    'UPLOADED_FILES_USE_URL': True,
+
 
 }
 
