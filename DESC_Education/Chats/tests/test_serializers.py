@@ -317,7 +317,7 @@ class SendFileSerializerTest(TestCase):
             'size': file.file.size,
             'name': 'test',
             'extension': 'jpg',
-            'path': f'chats/{str(self.chat.id)}/test.jpg'})
+            'path': f'/api/media/chats/{str(self.chat.id)}/test.jpg'})
 
 
 class CompanionSerializerTest(TestCase):

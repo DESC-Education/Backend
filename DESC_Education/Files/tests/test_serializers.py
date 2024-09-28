@@ -73,7 +73,7 @@ class CustomFileSerializerTest(TestCase):
             'id': str(instance.id),
             'name': 'test',
             'extension': 'jpg',
-            'path': f'users/{self.student.id}/verification_files/test.jpg',
+            'path': f'/api/media/users/{self.student.id}/verification_files/test.jpg',
             'size': instance.file.size
         })
 

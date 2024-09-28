@@ -29,7 +29,7 @@ class FileSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_path(obj) -> str:
-        return obj.file.name
+        return obj.file.url
 
     @staticmethod
     def get_extension(obj) -> str:
