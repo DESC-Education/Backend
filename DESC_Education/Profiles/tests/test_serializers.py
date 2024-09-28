@@ -1,6 +1,5 @@
 import random
 import uuid
-
 import rest_framework.generics
 from django.urls import reverse
 import json
@@ -139,25 +138,37 @@ class GetStudentProfileSerializerTest(TestCase):
         self.solution = Solution.objects.create(
             task=self.task_1,
             user=self.student,
-            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
             description="Test Solution Description",
             status=Solution.COMPLETED,
+        )
+        file = File.objects.create(
+            content_object=self.solution,
+            type=File.SOLUTION_FILE,
+            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
         )
 
         self.solution = Solution.objects.create(
             task=self.task_2,
             user=self.student,
-            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
             description="Test Solution Description",
             status=Solution.COMPLETED,
+        )
+        file = File.objects.create(
+            content_object=self.solution,
+            type=File.SOLUTION_FILE,
+            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
         )
 
         self.solution = Solution.objects.create(
             task=self.task_3,
             user=self.student,
-            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
             description="Test Solution Description",
             status=Solution.COMPLETED,
+        )
+        file = File.objects.create(
+            content_object=self.solution,
+            type=File.SOLUTION_FILE,
+            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
         )
 
     def test_serialize_leadTaskCategories(self):

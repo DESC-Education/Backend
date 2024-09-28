@@ -67,6 +67,10 @@ class check_student_profile_levelTest(TestCase):
                 user=user,
                 task=task,
                 description=f"Test Solution Description {random.randint(1, 100)}",
+            )
+            file = File.objects.create(
+                content_object=solution,
+                type=File.SOLUTION_FILE,
                 file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
             )
 

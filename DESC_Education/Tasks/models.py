@@ -106,8 +106,7 @@ class Solution(models.Model):
 
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='solutions')
     description = models.TextField(max_length=2000, null=True, blank=True)
-    # files = GenericRelation(File)
-    file = models.FileField(upload_to=user_solution_directory_path, max_length=500)
+    files = GenericRelation(File)
     company_comment = models.TextField(max_length=1000, blank=True, null=True)
 
     class Meta:
