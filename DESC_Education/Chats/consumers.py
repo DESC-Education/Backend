@@ -5,6 +5,11 @@ from django.contrib.auth.models import AnonymousUser
 from Chats.models import Chat
 from drf_spectacular_websocket.decorators import extend_ws_schema
 from Chats.serializers import (WebSocketSerializer)
+from Files.models import File
+from Files.serializers import FileSerializer
+from Chats.serializers import (
+    MessageSerializer
+)
 from Chats.models import (
     Message,
 
@@ -59,17 +64,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         match type:
             case 'message':
-                mes = Message.objects.create(
-                    chat_id=self.chat_id,
-                    user_id=self.user.id,
-                    message=payload, )
-                return {'message': mes.message, 'id': str(mes.id), 'viewed': mes.is_readed}
+                message = payload.get('message', None)
+                files = payload.get('files', None)
+
+                mes_response = None
+                if message:
+                    mes = Message.objects.create(
+                        chat_id=self.chat_id,
+                        user_id=self.user.id,
+                        message=message)
+                    mes_response = MessageSerializer(instance=mes).data
+
+                files_response = None
+                if files:
+                    query_files = File.objects.filter(id__in=files)
+                    files_response = FileSerializer(instance=query_files, many=True).data
+
+                return {'message': mes_response, 'files': files_response}
+
             case "viewed":
-                mes = Message.objects.get(id=payload)
+                mes = Message.objects.filter(id=payload).first()
                 mes.is_readed = True
                 mes.save()
-                return {'message': mes.message, 'id': str(mes.id), 'viewed': mes.is_readed}
-
+                return MessageSerializer(instance=mes).data
 
 
     @database_sync_to_async
