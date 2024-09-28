@@ -17,7 +17,7 @@ class FileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = File
-        fields = ('file', 'name', 'extension', 'path')
+        fields = ('id', 'size', 'file', 'name', 'extension', 'path')
 
     @staticmethod
     def get_size(obj):
