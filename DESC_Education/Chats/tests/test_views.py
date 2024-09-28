@@ -11,6 +11,7 @@ from Chats.models import (
     Message,
     ChatMembers
 )
+from Files.models import File
 
 
 class CreateChatViewTest(APITestCase):
@@ -226,6 +227,6 @@ class SendFileViewTest(APITestCase):
             "file": SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
             'chat': str(self.chat.id)
         }, HTTP_AUTHORIZATION=f'Bearer {self.student.get_token()["accessToken"]}')
-
-        self.assertEqual(dict(res.data), {'name': 'test', 'extension': 'jpg', 'path': f'chats/{str(self.chat.id)}/test.jpg'})
+        file = File.objects.all().first()
+        self.assertEqual(dict(res.data), {'id': str(file.id), 'size': file.file.size, 'name': 'test', 'extension': 'jpg', 'path': f'chats/{str(self.chat.id)}/test.jpg'})
         self.assertEqual(res.status_code, 201)
