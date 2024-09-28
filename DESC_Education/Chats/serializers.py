@@ -79,12 +79,12 @@ class ChatTaskSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     user = CompanionSerializer()
     createdAt = serializers.DateTimeField(source='created_at')
-    isReaded = serializers.BooleanField(source='is_readed')
+    isRead = serializers.BooleanField(source='is_readed')
     files = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
-        fields = ['id', 'message', 'user', 'createdAt', 'isReaded', 'files']
+        fields = ['id', 'message', 'user', 'createdAt', 'isRead', 'files']
 
     def get_files(self, obj) -> FileSerializer(many=True):
         return FileSerializer(obj.files, many=True).data
