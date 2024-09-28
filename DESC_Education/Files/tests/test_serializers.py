@@ -67,12 +67,14 @@ class CustomFileSerializerTest(TestCase):
             'file': SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
         })
         serializer.is_valid(raise_exception=True)
-        serializer.save(content_object=self.student_profile, type=File.VERIFICATION_FILE)
+        instance = serializer.save(content_object=self.student_profile, type=File.VERIFICATION_FILE)
 
         self.assertEqual(dict(serializer.data), {
+            'id': str(instance.id),
             'name': 'test',
             'extension': 'jpg',
-            'path': f'users/{self.student.id}/verification_files/test.jpg'
+            'path': f'users/{self.student.id}/verification_files/test.jpg',
+            'size': instance.file.size
         })
 
     def test_file_validate_available_extension(self):

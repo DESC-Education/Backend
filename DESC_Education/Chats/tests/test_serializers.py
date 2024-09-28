@@ -312,6 +312,8 @@ class SendFileSerializerTest(TestCase):
         self.assertEqual(file, instance)
         self.assertEqual(str(instance), f'chats/{self.chat.id}/test.jpg')
         self.assertEqual(serializer.data, {
+            'id': str(file.id),
+            'size': file.file.size,
             'name': 'test',
             'extension': 'jpg',
             'path': f'chats/{str(self.chat.id)}/test.jpg'})

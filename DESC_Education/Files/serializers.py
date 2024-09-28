@@ -13,7 +13,7 @@ class FileSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     extension = serializers.SerializerMethodField()
     path = serializers.SerializerMethodField()
-    size = serializers.SerializerMethodField
+    size = serializers.SerializerMethodField()
 
     class Meta:
         model = File
