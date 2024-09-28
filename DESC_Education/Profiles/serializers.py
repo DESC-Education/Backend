@@ -198,12 +198,18 @@ class GetStudentProfileSerializer(BaseProfileSerializer):
     replyReloadDate = serializers.DateTimeField(source="reply_reload_date", read_only=True)
     leadTaskCategories = serializers.SerializerMethodField()
     level = serializers.SerializerMethodField()
+    tasksCompleted = serializers.SerializerMethodField()
 
     class Meta(BaseProfileSerializer.Meta):
         model = StudentProfile
         fields = BaseProfileSerializer.Meta.fields + \
                  ('formOfEducation', 'admissionYear', 'university', 'faculty', 'skills',
-                  'specialty', 'replyCount', 'replyReloadDate', 'profession', 'leadTaskCategories', "level")
+                  'specialty', 'replyCount', 'replyReloadDate', 'profession', 'leadTaskCategories', "level",
+                  'tasksCompleted')
+
+    @staticmethod
+    def get_tasksCompleted(obj) -> int:
+        return obj.user.solutions.count()
 
     @staticmethod
     def get_level(obj) -> dict:
