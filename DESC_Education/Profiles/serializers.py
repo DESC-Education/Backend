@@ -74,7 +74,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     lastName = serializers.CharField(source="last_name", required=True)
     telegramLink = serializers.URLField(source="telegram_link", required=False)
     vkLink = serializers.URLField(source="vk_link", required=False)
-    logoImg = serializers.ImageField(source="logo_img", read_only=True)
+    logoImg = serializers.SerializerMethodField()
     skills = serializers.PrimaryKeyRelatedField(many=True, queryset=Skill.objects.all(), required=True)
     verification = serializers.SerializerMethodField(read_only=True)
 
@@ -83,6 +83,10 @@ class BaseProfileSerializer(serializers.ModelSerializer):
         fields = ('id', 'firstName', 'lastName', 'description', 'phone', 'phoneVisibility', 'emailVisibility',
                   'logoImg', 'telegramLink', 'vkLink', 'timezone', 'city', 'skills', 'verification')
         read_only_fields = ['id', 'user']
+
+    @staticmethod
+    def get_logoImg(obj):
+        return obj.logo_img.url if obj.logo_img else None
 
     @staticmethod
     def get_verification(obj) -> str:

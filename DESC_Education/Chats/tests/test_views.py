@@ -228,5 +228,5 @@ class SendFileViewTest(APITestCase):
             'chat': str(self.chat.id)
         }, HTTP_AUTHORIZATION=f'Bearer {self.student.get_token()["accessToken"]}')
         file = File.objects.all().first()
-        self.assertEqual(dict(res.data), {'id': str(file.id), 'size': file.file.size, 'name': 'test', 'extension': 'jpg', 'path': f'chats/{str(self.chat.id)}/test.jpg'})
+        self.assertEqual(dict(res.data), {'id': str(file.id), 'size': file.file.size, 'name': 'test', 'extension': 'jpg', 'path': f'/api/media/chats/{str(self.chat.id)}/test.jpg'})
         self.assertEqual(res.status_code, 201)
