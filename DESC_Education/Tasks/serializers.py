@@ -19,11 +19,14 @@ from Files.models import File
 class UserProfileSerializer(serializers.ModelSerializer):
     firstName = serializers.CharField(source='first_name')
     lastName = serializers.CharField(source='last_name')
-    logoImg = serializers.ImageField(source='logo_img')
+    logoImg = serializers.SerializerMethodField()
 
     class Meta:
         model = StudentProfile
         fields = ('firstName', 'lastName', 'logoImg')
+
+    def get_logoImg(self, obj):
+        return obj.logo_img.url if obj.logo_img else None
 
 
 class SolutionSerializer(serializers.ModelSerializer):
@@ -78,11 +81,14 @@ class SolutionSerializer(serializers.ModelSerializer):
 
 class ProfileTaskSerializer(serializers.ModelSerializer):
     companyName = serializers.CharField(source='company_name', read_only=True)
-    logoImg = serializers.ImageField(source='logo_img', read_only=True)
+    logoImg = serializers.SerializerMethodField()
 
     class Meta:
         model = apps.get_model('Profiles', 'CompanyProfile')
         fields = ('companyName', 'logoImg')
+
+    def get_logoImg(self, obj):
+        return obj.logo_img.url if obj.logo_img else None
 
 
 class FilterSerializer(serializers.ModelSerializer):
@@ -262,7 +268,7 @@ class TaskListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ('id', 'title', 'description', 'deadline', 'createdAt', 'profile', 'category')
+        fields = ('id', 'title', 'user', 'description', 'deadline', 'createdAt', 'profile', 'category')
 
     @staticmethod
     def get_profile(obj) -> ProfileTaskSerializer:
