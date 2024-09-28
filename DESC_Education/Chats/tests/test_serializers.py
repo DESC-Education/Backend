@@ -200,14 +200,14 @@ class ChatListSerializerTest(TestCase):
                 'task': None,
                 'companion': {'id': str(self.company.id), 'name': '', 'avatar': None},
                 'lastMessage': {'message': 'Последнее', 'createdAt': self.mes1.created_at.isoformat(),
-                                'isReaded': False, 'user': {'id': str(self.company.id), 'name': '', 'avatar': None},
+                                'isRead': False, 'user': {'id': str(self.company.id), 'name': '', 'avatar': None},
                                 'id': str(self.mes1.id), 'files': []}},
             {
                 'id': str(self.chat2.id),
                 'task': None,
                 'companion': {'id': str(self.company2.id), 'name': '', 'avatar': None},
                 'lastMessage': {'message': 'Последнее второе', 'createdAt': self.mes2.created_at.isoformat(),
-                                'isReaded': False, 'user': {'id': str(self.student.id), 'name': ' ', 'avatar': None},
+                                'isRead': False, 'user': {'id': str(self.student.id), 'name': ' ', 'avatar': None},
                                 'id': str(self.mes2.id), 'files': []}}])
 
 
@@ -258,7 +258,7 @@ class ChatDetailSerializerTest(TestCase):
         self.assertEqual(res, {
             'companion': {'id': str(self.company.id), 'name': '', 'avatar': None},
             'messages': [{'createdAt': self.mes_1.created_at.isoformat(),
-                          'isReaded': False,
+                          'isRead': False,
                           'message': self.mes_1.message,
                           'files': [],
                           'user': {'avatar': None,
@@ -266,7 +266,7 @@ class ChatDetailSerializerTest(TestCase):
                                    'name': ' '},
                           'id': str(self.mes_1.id)},
                          {'createdAt': self.mes_0.created_at.isoformat(),
-                          'isReaded': False,
+                          'isRead': False,
                           'message': self.mes_0.message,
                           'files': [],
                           'user': {'avatar': None,
@@ -395,7 +395,7 @@ class MessageSerializerTest(TestCase):
                                    'name': ' ',
                                    'avatar': None},
                           'createdAt': self.mes.created_at.isoformat(),
-                          'isReaded': False,
+                          'isRead': False,
                           'files': [
                               {'id': str(self.file.id),
                                'size': 12,
