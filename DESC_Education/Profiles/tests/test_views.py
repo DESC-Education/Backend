@@ -158,6 +158,7 @@ class CreateProfileViewTest(APITestCase):
         faculty = dict(FacultySerializer(self.faculty).data)
         faculty['university'] = faculty.get('university')
         expected_data['faculty'] = faculty
+        expected_data['tasksCompleted'] = 0
         expected_data['level'] = {'name': profile.get_level_id_display(), 'value': profile.level_id}
 
         result = dict(res.data)
@@ -256,6 +257,7 @@ class CreateProfileViewTest(APITestCase):
         faculty = dict(FacultySerializer(self.faculty).data)
         faculty['university'] = faculty.get('university')
         expected_data['faculty'] = faculty
+        expected_data['tasksCompleted'] = 0
         expected_data['level'] = {'name': profile.get_level_id_display(), 'value': profile.level_id}
 
         result = dict(res.data)
@@ -458,6 +460,8 @@ class GetProfileTest(APITestCase):
         faculty['university'] = faculty.get('university')
         expected_data['city'] = dict(CitySerializer(self.city).data)
         expected_data['faculty'] = faculty
+        expected_data['tasksCompleted'] = 0
+
 
 
         result = dict(res.data)
