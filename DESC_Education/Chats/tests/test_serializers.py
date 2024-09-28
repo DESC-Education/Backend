@@ -9,6 +9,7 @@ from Chats.serializers import (
     ChatListSerializer,
     ChatDetailSerializer,
     SendFileSerializer,
+    CompanionSerializer
 )
 from Files.models import File
 import json
@@ -317,3 +318,27 @@ class SendFileSerializerTest(TestCase):
             'name': 'test',
             'extension': 'jpg',
             'path': f'chats/{str(self.chat.id)}/test.jpg'})
+
+
+class CompanionSerializerTest(TestCase):
+    def setUp(self):
+        self.maxDiff = None
+
+        self.student = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True)
+
+        self.profile = self.student.get_profile()
+        self.profile.logo_img = SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg")
+        self.profile.save()
+
+    def test_serialize(self):
+        res = CompanionSerializer(instance=self.student).data
+
+        self.assertEqual(dict(res), {
+            'id': str(self.student.id),
+            'name': str(self.student.get_full_name()),
+            'avatar': f'/api/media/{self.profile.logo_img.name}'
+        })

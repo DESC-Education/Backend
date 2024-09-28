@@ -60,7 +60,7 @@ class CompanionSerializer(serializers.ModelSerializer):
         if not logo:
             return None
         else:
-            return logo.path
+            return logo.url
 
     def get_name(self, obj):
         profile = obj.get_profile()
