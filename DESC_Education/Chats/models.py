@@ -24,7 +24,7 @@ class Chat(models.Model):
 class ChatMembers(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
-    is_favorite = models.BooleanField(default=False)
+    is_favorite = models.DateTimeField(default=None, null=True)
 
     class Meta:
         unique_together = ('user', 'chat')
