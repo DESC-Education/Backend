@@ -130,10 +130,22 @@ class ChatListSerializer(serializers.ModelSerializer):
     lastMessage = serializers.SerializerMethodField()
     companion = serializers.SerializerMethodField()
     task = ChatTaskSerializer()
+    isFavorite = serializers.SerializerMethodField()
+
 
     class Meta:
         model = Chat
-        fields = ['id', 'lastMessage', 'companion', 'task']
+        fields = ['id', 'lastMessage', 'companion', 'task', 'isFavorite']
+
+
+    def get_isFavorite(self, obj) -> bool:
+        request = self.context['request']
+        user = request.user
+        chat_member = obj.chatmembers_set.filter(user=user, chat=obj).first()
+        if chat_member.is_favorite is None:
+            return False
+        else:
+            return True
 
     @staticmethod
     def get_lastMessage(obj) -> MessageSerializer:
@@ -148,6 +160,19 @@ class ChatListSerializer(serializers.ModelSerializer):
             companion = members.exclude(id=current_user.id).first()
             return CompanionSerializer(companion).data if companion else None
         return None
+
+
+class ChatChangeFavoriteSerializer(ChatListSerializer):
+    chatId = serializers.UUIDField(write_only=True)
+
+    class Meta(ChatListSerializer.Meta):
+        fields = ChatListSerializer.Meta.fields + ['chatId']
+
+
+
+
+
+
 
 
 class ChatSerializer(serializers.ModelSerializer):

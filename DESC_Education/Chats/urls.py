@@ -7,6 +7,7 @@ from Chats.views import (
     ChatListView,
     ChatDetailView,
     SendFileView,
+    ChatChangeFavoriteView,
 
 )
 
@@ -20,6 +21,7 @@ urlpatterns = [
     path("chat", CreateChatView.as_view(), name="chat_create"),
     path("chat/<uuid:pk>", ChatDetailView.as_view(), name="chat_detail"),
     path("send_file", SendFileView.as_view(), name="send_file"),
+    path("chat/<uuid:pk>/favorite", ChatChangeFavoriteView.as_view(), name="chat_change_favorite"),
 
 
     # path('profile/requests', AdminProfileVerifyRequestListView.as_view(), name='admin_v_request_list'),
