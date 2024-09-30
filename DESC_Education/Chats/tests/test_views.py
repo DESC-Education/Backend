@@ -109,11 +109,24 @@ class ChatListViewTest(APITestCase):
         profile.verification = StudentProfile.VERIFIED
         profile.save()
 
+        self.student2 = CustomUser.objects.create_user(
+            email='example222@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True)
+        profile = self.student2.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
         self.company = CustomUser.objects.create_user(
             email='example123@example.com',
             password='password',
             role=CustomUser.COMPANY_ROLE,
             is_verified=True)
+
+        self.chat = Chat.objects.create()
+        ChatMembers.objects.create(chat=self.chat, user=self.student2)
+        ChatMembers.objects.create(chat=self.chat, user=self.company)
 
         self.chat = Chat.objects.create()
         ChatMembers.objects.create(chat=self.chat, user=self.student)
@@ -230,3 +243,66 @@ class SendFileViewTest(APITestCase):
         file = File.objects.all().first()
         self.assertEqual(dict(res.data), {'id': str(file.id), 'size': file.file.size, 'name': 'test', 'extension': 'jpg', 'path': f'/api/media/chats/{str(self.chat.id)}/test.jpg'})
         self.assertEqual(res.status_code, 201)
+
+
+class ChatChangeFavoriteTest(APITestCase):
+    def setUp(self):
+        self.maxDiff = None
+
+        self.student = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True)
+        profile = self.student.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
+        self.student2 = CustomUser.objects.create_user(
+            email='example222@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True)
+        profile = self.student2.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
+        self.company = CustomUser.objects.create_user(
+            email='example123@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True)
+
+        self.chat3 = Chat.objects.create()
+        ChatMembers.objects.create(chat=self.chat3, user=self.student2)
+        ChatMembers.objects.create(chat=self.chat3, user=self.company)
+
+        self.chat = Chat.objects.create()
+        ChatMembers.objects.create(chat=self.chat, user=self.student)
+        ChatMembers.objects.create(chat=self.chat, user=self.company)
+        Message.objects.create(chat=self.chat, user=self.student, message='Первое')
+        self.mes1 = Message.objects.create(chat=self.chat, user=self.student, message='Последнее')
+
+        self.company2 = CustomUser.objects.create_user(
+            email='123@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True)
+
+        self.chat2 = Chat.objects.create()
+        ChatMembers.objects.create(chat=self.chat2, user=self.student)
+        ChatMembers.objects.create(chat=self.chat2, user=self.company2)
+        Message.objects.create(chat=self.chat2, user=self.student, message='Первое второе')
+        self.mes2 = Message.objects.create(chat=self.chat2, user=self.student, message='Последнее второе')
+
+
+
+
+    def test_200(self):
+        res = self.client.get(reverse('chat_change_favorite', kwargs={"pk": str(self.chat.id)}),
+                              HTTP_AUTHORIZATION=f'Bearer {self.student.get_token()["accessToken"]}')
+
+        data = list(res.data.get('results'))
+        self.assertEqual(data[0].get('id'), str(self.chat.id))
+        self.assertTrue(data[0].get("isFavorite"))
+

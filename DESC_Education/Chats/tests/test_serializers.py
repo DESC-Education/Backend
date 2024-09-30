@@ -251,6 +251,7 @@ class ChatListSerializerTest(TestCase):
             {
                 'id': str(self.chat.id),
                 'task': None,
+                'isFavorite': False,
                 'companion': {'id': str(self.company.id), 'name': '', 'avatar': None},
                 'lastMessage': {'message': 'Последнее', 'createdAt': self.mes1.created_at.isoformat(),
                                 'isRead': False, 'user': {'id': str(self.company.id), 'name': '', 'avatar': None},
@@ -258,6 +259,7 @@ class ChatListSerializerTest(TestCase):
             {
                 'id': str(self.chat2.id),
                 'task': None,
+                'isFavorite': False,
                 'companion': {'id': str(self.company2.id), 'name': '', 'avatar': None},
                 'lastMessage': {'message': 'Последнее второе', 'createdAt': self.mes2.created_at.isoformat(),
                                 'isRead': False, 'user': {'id': str(self.student.id), 'name': ' ', 'avatar': None},
