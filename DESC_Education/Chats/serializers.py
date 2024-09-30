@@ -11,6 +11,7 @@ from Chats.models import (
 from Tasks.models import (
     Task
 )
+from django.db.models import Q
 
 from Files.models import File
 from Files.serializers import FileSerializer
@@ -165,13 +166,20 @@ class ChatSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         self.user = validated_data.pop('user', None)
         self.companion = validated_data.pop('companionId')
+        task = validated_data.get('task')
+
+
+        queryset = Chat.objects.filter(Q(chatmembers__user=self.user) and Q(chatmembers__user=self.companion), task=task)
+
+        if queryset.exists():
+            return queryset.first()
 
 
         instance = Chat.objects.create(**validated_data)
 
-
         ChatMembers.objects.create(user=self.user, chat=instance)
         ChatMembers.objects.create(user=self.companion, chat=instance)
+
 
         return instance
 

@@ -147,6 +147,59 @@ class CreateChatSerializerTest(TestCase):
         self.assertEqual(instance2.id, instance.id)
         self.assertEqual(len(Chat.objects.all()), 1)
 
+    def test_duplicate_with_another_task(self):
+        serializer = ChatSerializer(data={
+            "companionId": str(self.student.id),
+            "taskId": str(self.task.id)
+        })
+        req = HttpRequest()
+        req.user = self.company
+        serializer.context['request'] = req
+        serializer.is_valid()
+        instance = serializer.save(user=self.company)
+
+        serializer2 = ChatSerializer(data={
+            "companionId": str(self.student.id)
+        })
+        req = HttpRequest()
+        req.user = self.company
+        serializer2.context['request'] = req
+        serializer2.is_valid()
+        instance2 = serializer2.save(user=self.company)
+
+        self.assertEqual(len(Chat.objects.all()), 2)
+
+        serializer3 = ChatSerializer(data={
+            "companionId": str(self.student.id)
+        })
+        req = HttpRequest()
+        req.user = self.company
+        serializer3.context['request'] = req
+        serializer3.is_valid()
+        instance3 = serializer3.save(user=self.company)
+
+        self.assertEqual(instance3, instance2)
+        self.assertEqual(len(Chat.objects.all()), 2)
+
+        serializer4 = ChatSerializer(data={
+            "companionId": str(self.company.id),
+            "taskId": str(self.task.id)
+        })
+        req = HttpRequest()
+        req.user = self.student
+        serializer4.context['request'] = req
+        serializer4.is_valid()
+        instance4 = serializer4.save(user=self.company)
+
+        self.assertEqual(instance, instance4)
+        self.assertEqual(len(Chat.objects.all()), 2)
+
+
+
+
+
+
+
 
 class ChatListSerializerTest(TestCase):
     def setUp(self):
