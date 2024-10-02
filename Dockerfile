@@ -24,7 +24,8 @@ CMD python manage.py makemigrations --noinput\
     && python manage.py collectstatic --noinput\
 #    && python manage.py test\
 #    && python manage.py runserver 0.0.0.0:4000
-    && gunicorn Settings.wsgi:application -c gunicorn_conf.py
+#    && gunicorn Settings.wsgi:application -c gunicorn_conf.py
+    && python uvicorn_conf.py
 
 
 
