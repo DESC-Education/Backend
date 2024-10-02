@@ -38,6 +38,7 @@ def notify_student_profile_verification(sender, instance: ProfileVerifyRequest, 
 
 @receiver(post_save, sender=Message)
 def notify_new_message(sender, instance: Message, created, **kwargs):
+    print(created)
     chatmember = instance.chat.chatmembers_set.filter(~Q(user=instance.user), Q(chat=instance.chat)).first()
     print(chatmember)
     if chatmember:
