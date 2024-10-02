@@ -54,16 +54,16 @@ class ChatListView(generics.ListAPIView):
     serializer_class = ChatListSerializer
     permission_classes = (IsCompanyRole | IsStudentRole,)
 
-
     def get_queryset(self):
         last_message_time = Message.objects.filter(chat=OuterRef('pk')).order_by('-created_at').values('created_at')[:1]
         return (Chat.objects.filter(
             chatmembers__user=self.request.user)
-                .annotate(last_message_time=Subquery(last_message_time),
-                          is_favorite=Coalesce(Subquery(ChatMembers.objects.filter(chat=OuterRef('pk'),
-                                                                                   user=self.request.user)
-                                                        .values('is_favorite')[:1]), Value(None)))
-                .order_by('-is_favorite', '-last_message_time'))
+                    .annotate(last_message_time=Subquery(last_message_time),
+                              is_favorite=Subquery(ChatMembers.objects.filter(chat=OuterRef('pk'),
+                                                                              user=self.request.user)
+                                                   .values('is_favorite')[:1]))
+                    .order_by(F('is_favorite').desc(nulls_last=True), F('last_message_time').desc(nulls_last=True)))
+
 
     @extend_schema(
         tags=["Chats"],
@@ -127,12 +127,11 @@ class ChatChangeFavoriteView(ChatListView):
             self.permission_denied(self.request, message="Данный чат не найден", code=404)
         return chat_member.first()
 
-
     @extend_schema(
         tags=["Chats"],
         summary="Добавление/удаления чата из favorite",
     )
-    def get(self, request, pk,  *args, **kwargs):
+    def get(self, request, pk, *args, **kwargs):
         member: ChatMembers = self.get_object()
         if member.is_favorite is None:
             member.is_favorite = timezone.now()
@@ -141,4 +140,3 @@ class ChatChangeFavoriteView(ChatListView):
         member.save()
 
         return super().get(request, pk, *args, **kwargs)
-
