@@ -2,6 +2,7 @@ from django.test import TestCase
 from Notifications.models import Notification
 from Users.models import CustomUser
 from Profiles.models import StudentProfile, ProfileVerifyRequest
+from Chats.models import Chat, Message, ChatMembers
 from django.urls import reverse
 from asgiref.sync import async_to_sync
 import asyncio
@@ -59,3 +60,28 @@ class NotifyProfileVerificationTest(TestCase):
     def test_student_signal(self):
         self.base_test(self.student)
         self.base_test(self.company)
+
+
+
+class NotifyNewMessageTest(TestCase):
+    def setUp(self):
+        self.student = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+
+        self.company = CustomUser.objects.create_user(
+            email='example2@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+
+        self.chat = Chat.objects.create()
+        ChatMembers.objects.create(chat=self.chat, user=self.student)
+        ChatMembers.objects.create(chat=self.chat, user=self.company)
+
+    def test_signal(self):
+        Message.objects.create(chat=self.chat, user=self.student, message="123")
