@@ -42,6 +42,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 INSTALLED_APPS = [
     'daphne',
+    'django_eventstream',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -57,6 +58,7 @@ INSTALLED_APPS = [
     'Admins',
     'Mail',
     'Chats',
+    'Notifications',
     'corsheaders',
     'rest_framework_simplejwt',
     'drf_spectacular',
@@ -108,12 +110,36 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
     ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+        'django_eventstream.renderers.SSEEventRenderer',
+        'django_eventstream.renderers.BrowsableAPIEventStreamRenderer'
+    ],
     'DEFAULT_PAGINATION_CLASS': 'Settings.pagination.CustomPageNumberPagination',
     'PAGE_SIZE': 50,
     'UPLOADED_FILES_USE_URL': True,
 
 
 }
+
+
+# EVENTSTREAM_STORAGE_CLASS = 'django_eventstream.storage.DjangoModelStorage'
+EVENTSTREAM_CHANNELMANAGER_CLASS = 'Notifications.channelmanager.ChannelManager'
+EVENTSTREAM_ALLOW_ORIGINS = ['*']
+EVENTSTREAM_ALLOW_CREDENTIALS = True
+EVENTSTREAM_ALLOW_HEADERS = 'Authorization'
+EVENTSTREAM_REDIS = {
+    'username': config.REDIS_USER.get_secret_value(),
+    'password': config.REDIS_PASSWORD.get_secret_value(),
+    'host': config.REDIS_HOST,
+    'port': config.REDIS_PORT,
+    'db': 0,
+}
+
+
+
+
 
 PROMETHEUS_METRICS_EXPORT_PORT_RANGE = range(4001, 4050)
 
