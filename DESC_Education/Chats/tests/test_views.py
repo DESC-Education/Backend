@@ -292,6 +292,9 @@ class ChatChangeFavoriteTest(APITestCase):
         self.chat2 = Chat.objects.create()
         ChatMembers.objects.create(chat=self.chat2, user=self.student)
         ChatMembers.objects.create(chat=self.chat2, user=self.company2)
+        self.chat3 = Chat.objects.create()
+        ChatMembers.objects.create(chat=self.chat3, user=self.student)
+        ChatMembers.objects.create(chat=self.chat3, user=self.company2)
         Message.objects.create(chat=self.chat2, user=self.student, message='Первое второе')
         self.mes2 = Message.objects.create(chat=self.chat2, user=self.student, message='Последнее второе')
 
@@ -299,10 +302,23 @@ class ChatChangeFavoriteTest(APITestCase):
 
 
     def test_200(self):
+        import pprint
+        # pprint.pprint(list(Chat.objects.all()))
+        df = self.client.get(reverse('chat_list'), kwargs={"pk": str(self.chat.id)},
+                             HTTP_AUTHORIZATION=f'Bearer {self.student.get_token()["accessToken"]}')
+
+        pprint.pprint(list(df.data.get('results')))
         res = self.client.get(reverse('chat_change_favorite', kwargs={"pk": str(self.chat.id)}),
                               HTTP_AUTHORIZATION=f'Bearer {self.student.get_token()["accessToken"]}')
-
+        print("*" * 50)
         data = list(res.data.get('results'))
+
+        pprint.pprint(data)
+        print("*" * 50)
         self.assertEqual(data[0].get('id'), str(self.chat.id))
         self.assertTrue(data[0].get("isFavorite"))
+
+        df3 = self.client.get(reverse('chat_list'), kwargs={"pk": str(self.chat.id)},
+                             HTTP_AUTHORIZATION=f'Bearer {self.student.get_token()["accessToken"]}')
+        pprint.pprint(list(df3.data.get('results')))
 

@@ -13,7 +13,7 @@ from Notifications.serializers import NotificationSerializer
 
 class Test(generics.GenericAPIView):
     def get(self, request, user_id, *args, **kwargs):
-        send_event(f"user-{user_id}", 'notification', {"message": "Hello, world!"})
+        send_event(f"user-{user_id}", 'message', {"message": "Hello, world!"})
         return Response(200)
 
 
