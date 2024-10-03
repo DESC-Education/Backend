@@ -2,6 +2,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser
+from django.db.models import Q
 from Chats.models import Chat
 from Chats.serializers import (WebSocketSerializer)
 from Files.models import File
@@ -29,7 +30,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-
 
     # Receive message from WebSocket
     async def receive(self, text_data=None, bytes_data=None):
@@ -61,7 +61,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 message = payload.get('message', None)
                 files = payload.get('files', None)
 
-
                 if not files and not message:
                     print(123)
                     return
@@ -81,11 +80,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 return MessageSerializer(instance=mes).data
 
             case "viewed":
-                mes = Message.objects.filter(id=payload).first()
-                mes.is_readed = True
-                mes.save()
-                return MessageSerializer(instance=mes).data
+                mes = Message.objects.get(id=payload)
 
+                if not (mes.user != self.user and str(mes.chat.id) == self.chat_id):
+                    return None
+
+                messages = Message.objects.filter(Q(is_readed=False) and
+                                                  Q(created_at__lte=mes.created_at) and
+                                                  ~Q(user=self.user)).update(is_readed=True)
+
+                updated_messages = Message.objects.filter(Q(is_readed=False) and
+                                                  Q(created_at__lte=mes.created_at) and
+                                                  ~Q(user=self.user))
+
+
+                return MessageSerializer(instance=updated_messages, many=True).data
 
     @database_sync_to_async
     def _check_permissions(self):
