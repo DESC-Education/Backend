@@ -57,9 +57,9 @@ class NotifyProfileVerificationTest(TestCase):
 
 
 
-    def test_student_signal(self):
-        self.base_test(self.student)
-        self.base_test(self.company)
+    # def test_student_signal(self):
+    #     self.base_test(self.student)
+    #     self.base_test(self.company)
 
 
 

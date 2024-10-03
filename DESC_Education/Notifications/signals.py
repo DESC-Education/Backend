@@ -25,23 +25,12 @@ def notify_student_profile_verification(sender, instance: ProfileVerifyRequest, 
                                         ProfileVerifyRequest.APPROVED]:
             start_time = time.time()
 
-            message_dict = {
-                ProfileVerifyRequest.APPROVED: "Ваш профиль был подтвержден",
-                ProfileVerifyRequest.REJECTED: "К сожалению, ваш профиль был отклонен."
+            data = {
+                "user_id": instance.profile.user.id,
+                "notification_status": instance.status
             }
-            #
-            notification = Notification.objects.create(
-                user=instance.profile.user,
-                message=message_dict[instance.status],
-                type=Notification.VERIFICATION_TYPE,
-                title="Проверка профиля"
-            )
-            serializer = NotificationSerializer(notification)
-            send_event(f"user-{instance.profile.user.id}", 'notification', serializer.data)
+            EventStreamSendNotification.delay(data, Notification.VERIFICATION_TYPE)
 
-
-            # serialized_instance = serializers.serialize('json', [instance])
-            # EventStreamSendNotification.delay(serialized_instance, Notification.VERIFICATION_TYPE)
             print(time.time() - start_time)
 
 
