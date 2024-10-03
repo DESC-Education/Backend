@@ -8,10 +8,12 @@ from django.core import serializers
 
 @shared_task
 def EventStreamSendNotification(serialized_instance, type):
-    instance = serializers.deserialize('json', serialized_instance)
+    deserialized_objects = serializers.deserialize('json', serialized_instance)
+    deserialized_objects = [i.object for i in deserialized_objects]
+    instance = deserialized_objects[0]
+    instance.profile = deserialized_objects[1]
     print(instance)
-    instance = [i.object for i in instance][0]
-    print(instance)
+    print(instance.profile)
     match type:
         case Notification.VERIFICATION_TYPE:
             message_dict = {
