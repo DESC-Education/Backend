@@ -7,13 +7,9 @@ from django.core import serializers
 
 
 @shared_task
-def EventStreamSendNotification(serialized_instance, type):
-    deserialized_objects = serializers.deserialize('json', serialized_instance)
-    deserialized_objects = [i.object for i in deserialized_objects]
-    instance = deserialized_objects[0]
-    instance.profile = deserialized_objects[1]
-    print(instance)
-    print(instance.profile)
+def EventStreamSendNotification(data, type):
+    user_id = data.get('user_id')
+    notification_status = data.get('notification_status')
     match type:
         case Notification.VERIFICATION_TYPE:
             message_dict = {
@@ -22,11 +18,11 @@ def EventStreamSendNotification(serialized_instance, type):
             }
 
             notification = Notification.objects.create(
-                user=instance.profile.user,
-                message=message_dict[instance.status],
+                user_id=user_id,
+                message=message_dict[notification_status],
                 type=Notification.VERIFICATION_TYPE,
                 title="Верификация профиля"
             )
             serializer = NotificationSerializer(notification)
-            send_event(f"user-{instance.profile.user.id}", 'notification', serializer.data)
+            send_event(f"user-{user_id}", 'notification', serializer.data)
 
