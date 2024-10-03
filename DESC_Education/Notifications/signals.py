@@ -32,6 +32,8 @@ def notify_student_profile_verification(sender, instance: ProfileVerifyRequest, 
                 title="Проверка профиля"
             )
             serializer = NotificationSerializer(notification)
+            print(instance.profile.user.id)
+            print(serializer.data)
             send_event(f"user-{instance.profile.user.id}", 'notification', serializer.data)
 
 
