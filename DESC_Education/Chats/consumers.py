@@ -82,7 +82,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             case "viewed":
                 mes = Message.objects.get(id=payload)
 
-                if not (mes.user != self.user and str(mes.chat.id) == self.chat_id):
+                if not (str(mes.user.id) != str(self.user) and str(mes.chat.id) == str(self.chat_id)):
+                    print("message None")
                     return None
 
                 messages = Message.objects.filter(Q(is_readed=False) and
