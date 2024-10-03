@@ -32,24 +32,17 @@ def notify_student_profile_verification(sender, instance: ProfileVerifyRequest, 
                 title="Проверка профиля"
             )
             serializer = NotificationSerializer(notification)
-            print(instance.profile.user.id)
-            print(serializer.data)
             send_event(f"user-{instance.profile.user.id}", 'notification', serializer.data)
 
 
 
 @receiver(post_save, sender=Message)
 def notify_new_message(sender, instance: Message, created, **kwargs):
-    print(created)
     chatmember = instance.chat.chatmembers_set.filter(~Q(user=instance.user), Q(chat=instance.chat)).first()
-    print(chatmember)
     if chatmember:
         user = chatmember.user
-        print(user)
-        print(user.id)
         serializer = MessageNotificationSerializer(instance, data={'user': user.id})
         serializer.is_valid()
-        print(serializer.data)
         send_event(f"user-{user.id}", 'newMessage', serializer.data)
 
 

@@ -35,6 +35,8 @@ class MyTests(TestCase):
         ChatMembers.objects.create(chat=self.chat, user=self.student)
         ChatMembers.objects.create(chat=self.chat, user=self.company)
 
+        self.mes = Message.objects.create(chat=self.chat, user=self.company, message="123")
+
         self.file_1 = File.objects.create(
             content_object=self.chat,
             file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
@@ -81,12 +83,13 @@ class MyTests(TestCase):
         self.assertEqual(len(payload.get('files')), 2)
 
 
-        await communicator.send_json_to({"payload": str(mes.id),
+        await communicator.send_json_to({"payload": str(self.mes.id),
                                          "type": "viewed"})
         message = json.loads(await communicator.receive_from())
         payload = json.loads(message.get('payload'))
 
-        self.assertTrue(payload.get('isRead'))
+
+        self.assertTrue(payload[0].get('isRead'))
 
 
         await communicator.disconnect()
