@@ -250,7 +250,7 @@ class RegistrationView(generics.GenericAPIView):
             )
 
 
-            res = tasks.send_auth_registration_code.delay(email, Vcode.code)
+            tasks.MailVerifyRegistration.delay(email, Vcode.code)
             # send_auth_registration_code(email, Vcode.code)
 
             return Response({"message": "Код подтверждения отправлен на электронную почту"},
