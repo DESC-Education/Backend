@@ -62,8 +62,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 files = payload.get('files', None)
 
                 if not files and not message:
-                    print(123)
-                    return
+                    return None
 
                 mes = Message.objects.create(
                     chat_id=self.chat_id,
@@ -83,7 +82,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 mes = Message.objects.get(id=payload)
 
                 if not (str(mes.user.id) != str(self.user) and str(mes.chat.id) == str(self.chat_id)):
-                    print("message None")
                     return None
 
                 messages = Message.objects.filter(Q(is_readed=False) and

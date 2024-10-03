@@ -132,6 +132,10 @@ class ChatListViewTest(APITestCase):
         ChatMembers.objects.create(chat=self.chat, user=self.student)
         ChatMembers.objects.create(chat=self.chat, user=self.company)
         Message.objects.create(chat=self.chat, user=self.student, message='Первое')
+        Message.objects.create(chat=self.chat, user=self.company, message='Первое')
+        Message.objects.create(chat=self.chat, user=self.company, message='Первое')
+        Message.objects.create(chat=self.chat, user=self.company, message='Первое')
+        Message.objects.create(chat=self.chat, user=self.company, message='Первое')
         self.mes1 = Message.objects.create(chat=self.chat, user=self.student, message='Последнее')
 
         self.company2 = CustomUser.objects.create_user(
