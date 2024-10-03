@@ -131,12 +131,17 @@ class ChatListSerializer(serializers.ModelSerializer):
     companion = serializers.SerializerMethodField()
     task = ChatTaskSerializer()
     isFavorite = serializers.SerializerMethodField()
+    unreadCount = serializers.SerializerMethodField()
 
 
     class Meta:
         model = Chat
-        fields = ['id', 'lastMessage', 'companion', 'task', 'isFavorite']
+        fields = ['id', 'lastMessage', 'companion', 'task', 'isFavorite', 'unreadCount']
 
+    def get_unreadCount(self, obj) -> int:
+        request = self.context['request']
+        user = request.user
+        return obj.message_set.filter(Q(is_readed=False) and ~Q(user=user)).count()
 
     def get_isFavorite(self, obj) -> bool:
         request = self.context['request']
