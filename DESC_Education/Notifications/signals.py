@@ -31,7 +31,7 @@ def notify_student_profile_verification(sender, instance: ProfileVerifyRequest, 
             }
             EventStreamSendNotification.delay(data, Notification.VERIFICATION_TYPE)
 
-            print(time.time() - start_time)
+            # print(time.time() - start_time)
 
 
 
