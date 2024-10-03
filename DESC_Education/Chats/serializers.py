@@ -141,7 +141,7 @@ class ChatListSerializer(serializers.ModelSerializer):
     def get_unreadCount(self, obj) -> int:
         request = self.context['request']
         user = request.user
-        queryset = obj.message_set.filter(Q(is_readed=False) and ~Q(user=user))#.filter(Q(is_readed=False) & ~Q(user=user)).count()
+        queryset = obj.message_set.filter(is_readed=False and ~Q(user=user))#.filter(Q(is_readed=False) & ~Q(user=user)).count()
         print(f"\n{'*'*10}\n")
         print(user.id)
         print(user)
@@ -149,7 +149,7 @@ class ChatListSerializer(serializers.ModelSerializer):
             print(f"message_user = {i.user}|{i.user.id}   isreaded: {i.is_readed}")
         print(queryset.count())
         print(f"\n{'*' * 10}\n")
-        return obj.message_set.filter(Q(is_readed=False) and ~Q(user=user)).count()
+        return queryset.count()
 
     def get_isFavorite(self, obj) -> bool:
         request = self.context['request']
