@@ -14,21 +14,36 @@ class MessageNotificationSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), write_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
 
-    unreadChatCount = serializers.SerializerMethodField(read_only=True)
+    unreadChatsCount = serializers.SerializerMethodField(read_only=True)
+    unreadCount = serializers.SerializerMethodField(read_only=True)
     message = serializers.CharField(read_only=True)
     chat = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Message
-        fields = ['chat', 'message', 'createdAt', 'unreadChatCount', 'user']
+        fields = ['chat', 'message', 'createdAt', 'unreadChatsCount', 'unreadCount', 'user']
 
     def get_chat(self, obj):
         return obj.chat.id
 
-    def get_unreadChatCount(self, obj):
+    def get_queryset(self):
         user = self.validated_data.get('user')
-        queryset = Message.objects.filter(is_readed=False)
+        if hasattr(self, 'queryset'):
+            return self.queryset
+        else:
+            self.queryset = Message.objects.filter(is_readed=False).filter(Q(chat__members=user) and ~Q(user=user))
+            return self.queryset
+
+
+
+    def get_unreadCount(self, obj) -> int:
+        queryset = self.get_queryset()
+        return queryset.filter(chat=obj.chat).count()
+
+
+    def get_unreadChatsCount(self, obj) -> int:
+        user = self.validated_data.get('user')
+        queryset = self.get_queryset()
         if user:
-            return queryset.filter(Q(chat__members=user) and ~Q(user=user))\
-                .aggregate(Count('chat', distinct=True)).get('chat__count')
+            return queryset.aggregate(Count('chat', distinct=True)).get('chat__count')
         return None
