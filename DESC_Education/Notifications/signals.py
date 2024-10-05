@@ -12,29 +12,11 @@ import time
 from django.core import serializers
 
 
-@receiver(pre_save, sender=ProfileVerifyRequest)
+@receiver(post_save, sender=ProfileVerifyRequest)
 def notify_student_profile_verification(sender, instance: ProfileVerifyRequest, **kwargs):
-    try:
-        obj: ProfileVerifyRequest = sender.objects.get(pk=instance.pk)
-    except sender.DoesNotExist:
-        pass
-    else:
-        if obj.status == ProfileVerifyRequest.PENDING \
-                and instance.status in [ProfileVerifyRequest.REJECTED,
-                                        ProfileVerifyRequest.APPROVED]:
-
-            data = {
-                "user_id": instance.profile.user.id,
-                "notification_status": instance.status
-            }
-            EventStreamSendNotification.delay(data, Notification.VERIFICATION_TYPE)
-
-
+    EventStreamSendNotification.delay(instance.id, Notification.VERIFICATION_TYPE)
 
 
 @receiver(post_save, sender=Message)
 def notify_new_message(sender, instance: Message, created, **kwargs):
     EventStreamSendNotifyNewMessage.delay(instance.id)
-
-
-
