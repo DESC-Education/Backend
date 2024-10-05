@@ -4,10 +4,14 @@ from Chats.models import Message, Chat
 from django.db.models import Q, Count, Sum
 from Users.models import CustomUser
 
+
 class NotificationSerializer(serializers.ModelSerializer):
+    createdAt = serializers.DateTimeField(source="created_at")
+    isRead = serializers.BooleanField(source="is_read")
+
     class Meta:
         model = Notification
-        fields = '__all__'
+        fields = ['createdAt', 'isRead', 'user', 'id', 'type', 'title', 'message', 'payload']
 
 
 class MessageNotificationSerializer(serializers.ModelSerializer):
@@ -34,12 +38,9 @@ class MessageNotificationSerializer(serializers.ModelSerializer):
             self.queryset = Message.objects.filter(is_readed=False).filter(Q(chat__members=user) and ~Q(user=user))
             return self.queryset
 
-
-
     def get_unreadCount(self, obj) -> int:
         queryset = self.get_queryset()
         return queryset.filter(chat=obj.chat).count()
-
 
     def get_unreadChatsCount(self, obj) -> int:
         user = self.validated_data.get('user')
