@@ -129,13 +129,7 @@ EVENTSTREAM_CHANNELMANAGER_CLASS = 'Notifications.channelmanager.ChannelManager'
 EVENTSTREAM_ALLOW_ORIGINS = ['*']
 EVENTSTREAM_ALLOW_CREDENTIALS = True
 EVENTSTREAM_ALLOW_HEADERS = 'Authorization'
-EVENTSTREAM_REDIS = {
-    'username': config.REDIS_USER.get_secret_value(),
-    'password': config.REDIS_PASSWORD.get_secret_value(),
-    'host': config.REDIS_HOST,
-    'port': config.REDIS_PORT,
-    'db': 0,
-}
+
 
 
 
@@ -348,3 +342,10 @@ else:
         profiles_sample_rate=1.0,
         environment=config.SENTRY_ENV,
     )
+    EVENTSTREAM_REDIS = {
+        'username': config.REDIS_USER.get_secret_value(),
+        'password': config.REDIS_PASSWORD.get_secret_value(),
+        'host': config.REDIS_HOST,
+        'port': config.REDIS_PORT,
+        'db': 0,
+    }

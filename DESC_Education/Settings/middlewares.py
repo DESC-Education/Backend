@@ -12,15 +12,17 @@ from jwt import decode as jwt_decode
 from django.conf import settings
 import json
 from urllib.parse import parse_qs
+from Users.models import CustomUser
+
+
 
 @database_sync_to_async
 def get_user(validated_token):
-    User = get_user_model()
     try:
-        user = User.objects.get(id=validated_token["user_id"])
+        user = CustomUser.objects.get(id=validated_token["user_id"])
         return user
 
-    except User.DoesNotExist:
+    except CustomUser.DoesNotExist:
         return AnonymousUser()
 
 
@@ -29,7 +31,6 @@ class JWTAuthMiddleware(BaseMiddleware):
         close_old_connections()
 
         token = parse_qs(scope["query_string"].decode("utf8"))["token"][0]
-        # token = next((i for i in scope["headers"] if i[0] == b'sec-websocket-protocol'), None)
         if token is None:
             scope["user"] = AnonymousUser()
         else:
@@ -37,7 +38,6 @@ class JWTAuthMiddleware(BaseMiddleware):
             try:
                 AccessToken(token)
             except (InvalidToken, TokenError) as e:
-                print(str(e))
                 await send({
                     'type': 'websocket.accept',
                 })
