@@ -10,24 +10,26 @@ import time
 
 
 @shared_task
-def EventStreamSendNotification(data, type):
-    user_id = data.get('user_id')
-    notification_status = data.get('notification_status')
+def EventStreamSendNotification(instance_id, type):
+
     match type:
         case Notification.VERIFICATION_TYPE:
+            instance = ProfileVerifyRequest.objects.get(id=instance_id)
+            if instance.status not in [ProfileVerifyRequest.APPROVED, ProfileVerifyRequest.REJECTED]:
+                return
             message_dict = {
                 ProfileVerifyRequest.APPROVED: "Ваш профиль был подтвержден",
                 ProfileVerifyRequest.REJECTED: "К сожалению, ваш профиль был отклонен."
             }
 
             notification = Notification.objects.create(
-                user_id=user_id,
-                message=message_dict[notification_status],
+                user_id=instance.profile.user.id,
+                message=message_dict[instance.status],
                 type=Notification.VERIFICATION_TYPE,
                 title="Верификация профиля"
             )
             serializer = NotificationSerializer(notification)
-            send_event(f"user-{user_id}", 'notification', serializer.data)
+            send_event(f"user-{instance.profile.user.id}", 'notification', serializer.data)
 
 
 @shared_task
