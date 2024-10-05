@@ -2,8 +2,11 @@ from celery import shared_task
 from Notifications.models import Notification
 from Profiles.models import ProfileVerifyRequest
 from django.core import serializers
-
-
+from Notifications.serializers import NotificationSerializer, MessageNotificationSerializer
+from django_eventstream import send_event
+from Chats.models import ChatMembers, Message, Chat
+from django.db.models import Q
+import time
 
 
 @shared_task
@@ -26,3 +29,13 @@ def EventStreamSendNotification(data, type):
             serializer = NotificationSerializer(notification)
             send_event(f"user-{user_id}", 'notification', serializer.data)
 
+
+@shared_task
+def EventStreamSendNotifyNewMessage(message_id):
+    instance = Message.objects.get(id=message_id)
+    chat_member = ChatMembers.objects.filter(~Q(user=instance.user) and Q(chat=instance.chat)).first()
+    if chat_member:
+        user = chat_member.user
+        serializer = MessageNotificationSerializer(instance, data={'user': user.id})
+        serializer.is_valid()
+        send_event(f"user-{user.id}", 'newMessage', serializer.data)

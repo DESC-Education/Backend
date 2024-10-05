@@ -309,7 +309,9 @@ if DEBUG:
     INSTALLED_APPS += ["debug_toolbar"]
     MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
 if 'test' in sys.argv:
-
+    CELERY_BROKER_BACKEND = "memory"
+    CELERY_TASK_EAGER_PROPAGATES = True
+    CELERY_TASK_ALWAYS_EAGER = True
     DEFAULT_FILE_STORAGE = 'inmemorystorage.InMemoryStorage'
     PASSWORD_HASHERS = (
         'django.contrib.auth.hashers.MD5PasswordHasher',
