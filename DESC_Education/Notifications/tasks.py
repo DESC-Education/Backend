@@ -39,7 +39,7 @@ def EventStreamSendNotification(instance_id, type):
             serializer = NotificationSerializer(notification)
             send_event(f"user-{str(instance.profile.user.id)}", 'notification', serializer.data)
 
-        case Notification.SOLUTION_TYPE:
+        case Notification.EVALUATION_TYPE:
             instance = Solution.objects.get(id=instance_id)
             if instance.status not in [Solution.FAILED, Solution.COMPLETED]:
                 return
@@ -53,13 +53,34 @@ def EventStreamSendNotification(instance_id, type):
             notification = Notification.objects.create(
                 user=instance.user,
                 message=message_dict[instance.status],
-                type=Notification.SOLUTION_TYPE,
+                type=Notification.EVALUATION_TYPE,
                 title="Ваше решение оценено",
                 payload=solution_serializer
             )
 
             serializer = NotificationSerializer(notification)
             send_event(f"user-{str(instance.user.id)}", 'notification', serializer.data)
+
+        case Notification.SOLUTION_TYPE:
+            instance = Solution.objects.get(id=instance_id)
+
+            solution_serializer = dict(SolutionSerializer(instance).data)
+            solution_serializer['user'] = str(solution_serializer['user'])
+
+            notification = Notification.objects.create(
+                user=instance.task.user,
+                message=f"Добавлено новое решение по вашему заданию {instance.task.title}",
+                type=Notification.SOLUTION_TYPE,
+                title="Новое решение",
+                payload=solution_serializer
+            )
+
+            serializer = NotificationSerializer(notification)
+            send_event(f"user-{str(instance.task.user.id)}", 'notification', serializer.data)
+
+
+
+
 
 
 

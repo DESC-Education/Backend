@@ -50,14 +50,15 @@ class SolutionSerializer(serializers.ModelSerializer):
     status = serializers.ChoiceField(choices=Solution.STATUSES, read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     companyComment = serializers.CharField(source='company_comment', read_only=True)
+    task = serializers.UUIDField(source="task__id", read_only=True)
 
     # read and write
 
     class Meta:
         model = Solution
         fields = ('id', 'user', 'description', 'files', 'files_list', 'userProfile',
-                  'companyComment', 'status', 'createdAt', 'taskId')
-        read_only_fields = ['id', 'task', 'createdAt', 'companyComment', 'user', 'status']
+                  'companyComment', 'status', 'createdAt', 'taskId', 'task')
+        read_only_fields = ['id', 'createdAt', 'companyComment', 'user', 'status']
 
     @staticmethod
     def get_userProfile(obj) -> UserProfileSerializer:
@@ -76,7 +77,6 @@ class SolutionSerializer(serializers.ModelSerializer):
                 serializer.save(type=File.SOLUTION_FILE, content_object=instance)
 
         return instance
-
 
 
 class ProfileTaskSerializer(serializers.ModelSerializer):
@@ -226,7 +226,6 @@ class TaskSerializer(serializers.ModelSerializer):
     def get_solutionsCount(self, obj) -> int:
         return obj.solutions.count()
 
-
     def __init__(self, *args, **kwargs):
         super(TaskSerializer, self).__init__(*args, **kwargs)
         request = self.context.get('request')
@@ -259,7 +258,6 @@ class TaskSerializer(serializers.ModelSerializer):
                 serializer.save(type=File.TASK_FILE, content_object=instance)
 
         return instance
-
 
 
 class TaskListSerializer(serializers.ModelSerializer):

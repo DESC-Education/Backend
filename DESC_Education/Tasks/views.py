@@ -130,6 +130,8 @@ class SolutionView(generics.GenericAPIView):
         profile.reply_count -= 1
         profile.save()
 
+        EventStreamSendNotification.delay(str(serializer.data.get('id')), Notification.SOLUTION_TYPE)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -291,5 +293,5 @@ class EvaluateSolutionView(generics.GenericAPIView):
 
         serializer.save()
         solution_id = str(serializer.data.get('id'))
-        EventStreamSendNotification.delay(solution_id, Notification.SOLUTION_TYPE)
+        EventStreamSendNotification.delay(solution_id, Notification.EVALUATION_TYPE)
         return Response(serializer.data, status=status.HTTP_200_OK)
