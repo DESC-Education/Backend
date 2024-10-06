@@ -485,6 +485,7 @@ class AuthView(generics.GenericAPIView):
             notifications = NotificationSerializer(self.get_queryset(), many=True).data
             data["notifications"] = notifications
 
+
             return Response(data,
                             status=status.HTTP_200_OK)
 

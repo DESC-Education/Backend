@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from Users.models import CustomUser
+from Chats.models import Chat, Message
+from django.db.models import Subquery, OuterRef, Count, Q
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -8,11 +10,21 @@ class CustomUserSerializer(serializers.ModelSerializer):
     isSuperuser = serializers.BooleanField(source="is_superuser")
     createdAt = serializers.DateTimeField(source="created_at")
     isVerified = serializers.BooleanField(source="is_verified")
+    unreadChatCount = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
         fields = ["id", "email", "role", "isActive", "isStaff", "isSuperuser",
-                  'isVerified', 'createdAt']
+                  'isVerified', 'createdAt', 'unreadChatCount']
+
+    def get_unreadChatCount(self, obj):
+        chats_id = list(obj.chatmembers_set.all().values_list('chat', flat=True))
+        chats = Chat.objects.annotate(
+            unread_message_count=Count('message',
+                                       filter=Q(message__is_readed=False) & ~Q(message__user=obj))) \
+            .filter(unread_message_count__gte=1, id__in=chats_id).count()
+
+        return chats
 
 
 class EmptySerializer(serializers.Serializer):
@@ -39,7 +51,6 @@ class RegistrationSerializer(serializers.Serializer):
 
 
 class VerifyRegistrationSerializer(serializers.Serializer):
-
     code = serializers.IntegerField()
     email = serializers.EmailField()
 

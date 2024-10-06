@@ -1,5 +1,5 @@
 from rest_framework.test import APITestCase
-
+from Chats.models import Chat, ChatMembers, Message
 from Users.models import (
     CustomUser,
     CustomUserManager,
@@ -234,6 +234,23 @@ class AuthViewTest(APITestCase):
             password="test123",
             is_verified=True,
         )
+        self.company = CustomUser.objects.create_user(
+            email="test_company@mail.com",
+            password="test123",
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True,
+        )
+        self.chat = Chat.objects.create()
+        ChatMembers.objects.create(user=self.user, chat=self.chat)
+        ChatMembers.objects.create(user=self.company, chat=self.chat)
+        Message.objects.create(chat=self.chat, message="123", user=self.user)
+        Message.objects.create(chat=self.chat, message="123", user=self.company)
+        Message.objects.create(chat=self.chat, message="123", user=self.company)
+
+        self.chat = Chat.objects.create()
+        ChatMembers.objects.create(user=self.user, chat=self.chat)
+        ChatMembers.objects.create(user=self.company, chat=self.chat)
+        Message.objects.create(chat=self.chat, message="123", user=self.company)
 
     def test_auth_200(self):
         tokens = self.user.get_token()
@@ -250,7 +267,8 @@ class AuthViewTest(APITestCase):
                     "isSuperuser": self.user.is_superuser,
                     "isVerified": self.user.is_verified,
                     'createdAt': self.user.created_at.isoformat(),
-                    'notifications': []
+                    'notifications': [],
+                    'unreadChatCount': 2
                 }
             )
         self.assertEqual(res.status_code, 200)
