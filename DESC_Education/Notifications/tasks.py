@@ -7,7 +7,11 @@ from django_eventstream import send_event
 from Chats.models import ChatMembers, Message, Chat
 from Chats.serializers import ChatSerializer
 from django.db.models import Q
+from django.http.request import HttpRequest
+from Tasks.models import Solution
+from Chats.serializers import ChatDetailSerializer, ChatListSerializer
 import time
+from Users.models import CustomUser
 
 
 @shared_task
@@ -24,7 +28,7 @@ def EventStreamSendNotification(instance_id, type):
             }
 
             notification = Notification.objects.create(
-                user_id=instance.profile.user.id,
+                user=instance.profile.user,
                 message=message_dict[instance.status],
                 type=Notification.VERIFICATION_TYPE,
                 title="Верификация профиля"
@@ -32,26 +36,56 @@ def EventStreamSendNotification(instance_id, type):
             serializer = NotificationSerializer(notification)
             send_event(f"user-{instance.profile.user.id}", 'notification', serializer.data)
 
+        case Notification.SOLUTION_TYPE:
+            instance = Solution.objects.get(id=instance_id)
+            if instance.status not in [Solution.FAILED, Solution.COMPLETED]:
+                return
+            message_dict = {
+                Solution.FAILED: f"Ваше рещение по заданию {instance.task.title} было оценено как не выполненое.",
+                Solution.COMPLETED: f"Ваше рещение по заданию {instance.task.title} было оценено как успешно выполненое."
+            }
+
+            notification = Notification.objects.create(
+                user=instance.user,
+                message=message_dict[instance.status],
+                type=Notification.SOLUTION_TYPE,
+                title="Ваше решение оценено",
+                payload={'solutionId': str(instance.id),
+                         'taskId': str(instance.task.id)}
+
+            )
+
+            serializer = NotificationSerializer(notification)
+            send_event(f"user-{instance.user.id}", 'notification', serializer.data)
+
+
+
+
 
 @shared_task
 def EventStreamSendNotifyNewMessage(message_id):
+    type = 'newMessage'
     instance = Message.objects.get(id=message_id)
+    count_messages = instance.chat.messages.count()
+    if count_messages == 1:
+        type = 'newChat'
+
     chat_member = ChatMembers.objects.filter(~Q(user=instance.user) & Q(chat=instance.chat)).first()
-    if chat_member:
-        user = chat_member.user
-        serializer = MessageNotificationSerializer(instance, data={'user': user.id})
-        serializer.is_valid()
-        send_event(f"user-{user.id}", 'newMessage', serializer.data)
+    if not chat_member:
+        return
+    user = chat_member.user
+    match type:
+        case 'newMessage':
+            serializer = MessageNotificationSerializer(instance, data={'user': user.id})
+            serializer.is_valid()
+            send_event(f"user-{user.id}", 'newMessage', serializer.data)
+        case 'newChat':
+            req = HttpRequest()
+            req.user = user
+            context = {'request': req}
+            serializer = ChatListSerializer(instance.chat, context=context)
+            send_event(f"user-{user.id}", 'newMessage', serializer.data)
 
 
-@shared_task
-def EventStreamSendNotifyNewChat(new_chat_id, user_id):
-    instance = Chat.objects.get(id=new_chat_id)
-    chat_member = ChatMembers.objects.filter(~Q(user_id=user_id) & Q(chat=instance)).first()
-    if chat_member:
-        # user = chat_member.user
-        # serializer = ChatSerializer(instance)
-        # serializer.is_valid()
-        # serializer.save(user=user)
-        # print(serializer.data)
-        send_event(f"user-{user.id}", 'newMessage', serializer.data)
+
+

@@ -98,7 +98,7 @@ class ChatDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ['companion', 'task', 'messages']
+        fields = ['companion', 'task', 'messages', 'id']
 
     def get_companion(self, obj) -> CompanionSerializer:
         members = obj.members.all()
@@ -142,7 +142,7 @@ class ChatListSerializer(serializers.ModelSerializer):
     def get_unreadCount(self, obj) -> int:
         request = self.context['request']
         user = request.user
-        queryset = obj.message_set.filter(Q(is_readed=False) and ~Q(user=user))
+        queryset = obj.messages.filter(Q(is_readed=False) and ~Q(user=user))
         return queryset.count()
 
     def get_isFavorite(self, obj) -> bool:
@@ -156,7 +156,7 @@ class ChatListSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_lastMessage(obj) -> MessageSerializer:
-        last_message = obj.message_set.order_by('-created_at').first()
+        last_message = obj.messages.order_by('-created_at').first()
         return MessageSerializer(last_message).data if last_message else None
 
     def get_companion(self, obj) -> CompanionSerializer:

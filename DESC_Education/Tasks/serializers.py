@@ -124,7 +124,7 @@ class TaskPatternSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TaskPattern
-        fields = ("id", 'title', 'description', 'catFilters')
+        fields = ("id", 'title', 'description', 'catFilters', 'category')
 
     @staticmethod
     def get_catFilters(obj) -> FilterCategorySerializer:
@@ -284,4 +284,4 @@ class EvaluateSolutionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Solution
-        fields = ('status', 'companyComment')
+        fields = ('status', 'companyComment', 'id')

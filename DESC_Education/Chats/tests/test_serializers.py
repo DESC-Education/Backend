@@ -313,6 +313,7 @@ class ChatDetailSerializerTest(TestCase):
             res['messages'][i] = dict(k)
 
         self.assertEqual(res, {
+            'id': str(self.chat.id),
             'companion': {'id': str(self.company.id), 'name': '', 'avatar': None},
             'messages': [{'createdAt': self.mes_1.created_at.isoformat(),
                           'isRead': False,

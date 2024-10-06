@@ -10,6 +10,8 @@ from django.utils.decorators import method_decorator
 from rest_framework import filters
 from django.db.models import Q
 from django.utils import timezone
+from Notifications.tasks import EventStreamSendNotification
+from Notifications.models import Notification
 from Settings.pagination import CustomPageNumberPagination
 from Profiles.models import (
     StudentProfile
@@ -288,5 +290,6 @@ class EvaluateSolutionView(generics.GenericAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         serializer.save()
-
+        solution_id = str(serializer.data.get('id'))
+        EventStreamSendNotification.delay(solution_id, Notification.SOLUTION_TYPE)
         return Response(serializer.data, status=status.HTTP_200_OK)

@@ -35,7 +35,7 @@ class Message(models.Model):
                           default=uuid.uuid4,
                           editable=False,
                           unique=True)
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name="messages")
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     message = models.TextField()
     files = GenericRelation(File)
