@@ -280,7 +280,7 @@ class TaskListSerializer(serializers.ModelSerializer):
 
 
 class EvaluateSolutionSerializer(serializers.ModelSerializer):
-    companyComment = serializers.CharField(source='company_comment', write_only=True, required=False)
+    companyComment = serializers.CharField(source='company_comment', write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = Solution
