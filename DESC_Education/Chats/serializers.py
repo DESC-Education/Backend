@@ -11,7 +11,7 @@ from Chats.models import (
 from Tasks.models import (
     Task
 )
-from django.db.models import Q
+from django.db.models import Q, Count
 
 from Files.models import File
 from Files.serializers import FileSerializer
@@ -136,7 +136,8 @@ class ChatListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ['id', 'lastMessage', 'companion', 'task', 'isFavorite', 'unreadCount']
+        fields = ['id', 'lastMessage', 'companion', 'task', 'isFavorite',
+                  'unreadCount']
 
     def get_unreadCount(self, obj) -> int:
         request = self.context['request']
