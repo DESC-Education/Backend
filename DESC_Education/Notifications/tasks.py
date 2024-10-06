@@ -8,6 +8,7 @@ from Chats.models import ChatMembers, Message, Chat
 from Chats.serializers import ChatSerializer
 from django.db.models import Q
 from django.http.request import HttpRequest
+from Tasks.models import Solution
 from Chats.serializers import ChatDetailSerializer, ChatListSerializer
 import time
 from Users.models import CustomUser
@@ -35,6 +36,29 @@ def EventStreamSendNotification(instance_id, type):
             serializer = NotificationSerializer(notification)
             send_event(f"user-{instance.profile.user.id}", 'notification', serializer.data)
 
+        case Notification.SOLUTION_TYPE:
+            instance = Solution.objects.get(id=instance_id)
+            if instance.status not in [Solution.FAILED, Solution.COMPLETED]:
+                return
+            message_dict = {
+                Solution.FAILED: f"Ваше рещение по заданию {instance.task.title} было оценено как не выполненое.",
+                Solution.COMPLETED: f"Ваше рещение по заданию {instance.task.title} было оценено как успешно выполненое."
+            }
+
+            notification = Notification.objects.create(
+                user_id=instance.user.id,
+                message=message_dict[instance.status],
+                type=Notification.SOLUTION_TYPE,
+                title="Ваше решение оценено",
+                payload={'solutionId': instance.id}
+            )
+
+            serializer = NotificationSerializer(notification)
+            send_event(f"user-{instance.user.id}", 'notification', serializer.data)
+
+
+
+
 
 @shared_task
 def EventStreamSendNotifyNewMessage(message_id):
@@ -59,6 +83,7 @@ def EventStreamSendNotifyNewMessage(message_id):
             context = {'request': req}
             serializer = ChatListSerializer(instance.chat, context=context)
             send_event(f"user-{user.id}", 'newMessage', serializer.data)
+
 
 
 
