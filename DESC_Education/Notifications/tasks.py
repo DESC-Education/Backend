@@ -36,7 +36,7 @@ def EventStreamSendNotification(instance_id, type):
 @shared_task
 def EventStreamSendNotifyNewMessage(message_id):
     instance = Message.objects.get(id=message_id)
-    chat_member = ChatMembers.objects.filter(~Q(user=instance.user) and Q(chat=instance.chat)).first()
+    chat_member = ChatMembers.objects.filter(~Q(user=instance.user) & Q(chat=instance.chat)).first()
     if chat_member:
         user = chat_member.user
         serializer = MessageNotificationSerializer(instance, data={'user': user.id})
@@ -48,7 +48,7 @@ def EventStreamSendNotifyNewMessage(message_id):
 @shared_task
 def EventStreamSendNotifyNewChat(new_chat_id, user_id):
     instance = Chat.objects.get(id=new_chat_id)
-    chat_member = ChatMembers.objects.filter(~Q(user_id=user_id) and Q(chat=instance)).first()
+    chat_member = ChatMembers.objects.filter(~Q(user_id=user_id) & Q(chat=instance)).first()
     if chat_member:
         # user = chat_member.user
         # serializer = ChatSerializer(instance)
