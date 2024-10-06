@@ -20,20 +20,20 @@ class Test(generics.GenericAPIView):
         return Response(200)
 
 
-class NotificationListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticatedAndVerified]
-    serializer_class = NotificationSerializer
-
-    def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user,
-                                           created_at__gte=(timezone.now() - timezone.timedelta(days=7)))
-
-    @extend_schema(
-        tags=["Notifications"],
-        summary="Получение списка уведомлений",
-    )
-    def get(self, *args, **kwargs):
-        return super().get(*args, **kwargs)
+# class NotificationListView(generics.ListAPIView):
+#     permission_classes = [IsAuthenticatedAndVerified]
+#     serializer_class = NotificationSerializer
+#
+#     def get_queryset(self):
+#         return Notification.objects.filter(user=self.request.user,
+#                                            created_at__gte=(timezone.now() - timezone.timedelta(days=7)))
+#
+#     @extend_schema(
+#         tags=["Notifications"],
+#         summary="Получение списка уведомлений",
+#     )
+#     def get(self, *args, **kwargs):
+#         return super().get(*args, **kwargs)
 
 
 class EventsUser(EventsViewSet):

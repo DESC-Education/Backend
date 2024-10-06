@@ -34,7 +34,7 @@ def EventStreamSendNotification(instance_id, type):
                 title="Верификация профиля"
             )
             serializer = NotificationSerializer(notification)
-            send_event(f"user-{instance.profile.user.id}", 'notification', serializer.data)
+            send_event(f"user-{str(instance.profile.user.id)}", 'notification', serializer.data)
 
         case Notification.SOLUTION_TYPE:
             instance = Solution.objects.get(id=instance_id)
@@ -56,7 +56,8 @@ def EventStreamSendNotification(instance_id, type):
             )
 
             serializer = NotificationSerializer(notification)
-            send_event(f"user-{instance.user.id}", 'notification', serializer.data)
+            print(str(instance.user.id))
+            send_event(f"user-{str(instance.user.id)}", 'notification', serializer.data)
 
 
 
