@@ -56,7 +56,6 @@ def EventStreamSendNotification(instance_id, type):
             )
 
             serializer = NotificationSerializer(notification)
-            print(serializer.data)
             send_event(f"user-{instance.user.id}", 'notification', serializer.data)
 
 
