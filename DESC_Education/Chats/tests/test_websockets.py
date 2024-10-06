@@ -35,7 +35,9 @@ class MyTests(TransactionTestCase):
         ChatMembers.objects.create(chat=self.chat, user=self.student)
         ChatMembers.objects.create(chat=self.chat, user=self.company)
 
+        Message.objects.create(chat=self.chat, user=self.company, message="123")
         self.mes = Message.objects.create(chat=self.chat, user=self.company, message="123")
+
 
         self.file_1 = File.objects.create(
             content_object=self.chat,
@@ -88,8 +90,7 @@ class MyTests(TransactionTestCase):
         message = json.loads(await communicator.receive_from())
         payload = json.loads(message.get('payload'))
 
-
-        self.assertTrue(payload[0].get('isRead'))
+        self.assertTrue(payload.get('isRead'))
 
 
         await communicator.disconnect()

@@ -84,16 +84,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 if not (str(mes.user.id) != str(self.user) and str(mes.chat.id) == str(self.chat_id)):
                     return None
 
-                messages = Message.objects.filter(Q(is_readed=False) and
-                                                  Q(created_at__lte=mes.created_at) and
-                                                  ~Q(user=self.user)).update(is_readed=True)
-
-                updated_messages = Message.objects.filter(Q(is_readed=False) and
-                                                  Q(created_at__lte=mes.created_at) and
+                messages = Message.objects.filter(Q(is_readed=False) &
+                                                  Q(created_at__lte=mes.created_at) &
                                                   ~Q(user=self.user))
+                messages.update(is_readed=True)
+                mes.is_readed = True
 
-
-                return MessageSerializer(instance=updated_messages, many=True).data
+                return MessageSerializer(instance=mes).data
 
     @database_sync_to_async
     def _check_permissions(self):
