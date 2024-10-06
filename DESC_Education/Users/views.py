@@ -473,20 +473,13 @@ class AuthView(generics.GenericAPIView):
         }
 
     )
-    def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user,
-                                           created_at__gte=(timezone.now() - timezone.timedelta(days=7)))
 
     def get(self, request):
         try:
             user = request.user
             serializer = CustomUserSerializer(user)
-            data = dict(serializer.data)
-            notifications = NotificationSerializer(self.get_queryset(), many=True).data
-            data["notifications"] = notifications
 
-
-            return Response(data,
+            return Response(serializer.data,
                             status=status.HTTP_200_OK)
 
         except Exception as e:
