@@ -28,13 +28,8 @@ class CustomUserSerializer(serializers.ModelSerializer):
         return NotificationSerializer(queryset, many=True).data
 
     def get_unreadChatsCount(self, obj) -> int:
-        chats_id = list(obj.chatmembers_set.all().values_list('chat', flat=True))
-        chats = Chat.objects.annotate(
-            unread_message_count=Count('message',
-                                       filter=Q(message__is_readed=False) & ~Q(message__user=obj))) \
-            .filter(unread_message_count__gte=1, id__in=chats_id).count()
-
-        return chats
+        return Message.objects.filter(is_readed=False).filter(Q(chat__members=obj) & ~Q(user=obj))\
+            .aggregate(Count('chat', distinct=True)).get('chat__count')
 
 
 class EmptySerializer(serializers.Serializer):

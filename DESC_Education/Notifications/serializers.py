@@ -35,7 +35,7 @@ class MessageNotificationSerializer(serializers.ModelSerializer):
         if hasattr(self, 'queryset'):
             return self.queryset
         else:
-            self.queryset = Message.objects.filter(is_readed=False).filter(Q(chat__members=user) and ~Q(user=user))
+            self.queryset = Message.objects.filter(is_readed=False).filter(Q(chat__members=user) & ~Q(user=user))
             return self.queryset
 
     def get_unreadCount(self, obj) -> int:

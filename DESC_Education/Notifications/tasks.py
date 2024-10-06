@@ -41,7 +41,6 @@ def EventStreamSendNotifyNewMessage(message_id):
         user = chat_member.user
         serializer = MessageNotificationSerializer(instance, data={'user': user.id})
         serializer.is_valid()
-        print(user.id)
         send_event(f"user-{user.id}", 'newMessage', serializer.data)
 
 
