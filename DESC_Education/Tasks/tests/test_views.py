@@ -1012,3 +1012,73 @@ class EvaluateSolutionViewTest(APITestCase):
         self.assertEqual(res.data, {'status': 'completed', "id": str(self.solution.id)})
         self.assertEqual(res.status_code, 200)
         self.assertEqual(solution.status, "completed")
+
+
+
+class CreateReviewViewTest(APITestCase):
+    def setUp(self):
+        self.student = CustomUser.objects.create_user(
+            email='example2@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        profile = self.student.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
+        self.student_token = self.student.get_token()['accessToken']
+
+        self.company = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+        profile = self.company.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
+        self.company_token = self.company.get_token()['accessToken']
+
+        self.task_1 = Task.objects.create(
+            user=self.company,
+            title="Test Task",
+            description="Test Task Description",
+            deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
+            category=TaskCategory.objects.first(),
+        )
+        self.task_1.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task_1
+        )
+        self.task_1.files.add(file)
+
+        self.solution = Solution.objects.create(
+            task=self.task_1,
+            user=self.student,
+            description="Test Solution Description",
+        )
+        file = File.objects.create(
+            content_object=self.solution,
+            type=File.SOLUTION_FILE,
+            file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
+        )
+
+    def test_review_200(self):
+        res = self.client.post(reverse('review_create'),
+                               {
+                                   'solution': str(self.solution.id),
+                                   'rating': 5,
+                                   'text': "Test Comment",
+                               },
+                               HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
+
+        self.assertEqual(dict(res.data), {'id': str(res.data.get("id")),
+                                          'text': 'Test Comment',
+                                          'rating': 5,
+                                          'solution': self.solution.id})
+        self.assertEqual(res.status_code, 200)
+

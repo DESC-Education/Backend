@@ -8,12 +8,21 @@ from Tasks.models import (
     Filter,
     Task,
     Solution,
-    TaskPattern
+    TaskPattern,
+    Review
 )
 from Users.models import CustomUser
 from Profiles.models import StudentProfile
 from Files.serializers import FileSerializer
 from Files.models import File
+
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = '__all__'
+
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -51,12 +60,13 @@ class SolutionSerializer(serializers.ModelSerializer):
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     companyComment = serializers.CharField(source='company_comment', read_only=True)
     task = serializers.SerializerMethodField(read_only=True)
+    review = ReviewSerializer(read_only=True)
     # read and write
 
     class Meta:
         model = Solution
         fields = ('id', 'user', 'description', 'files', 'files_list', 'userProfile',
-                  'companyComment', 'status', 'createdAt', 'taskId', 'task')
+                  'companyComment', 'status', 'createdAt', 'taskId', 'task', 'review')
         read_only_fields = ['id', 'createdAt', 'companyComment', 'user', 'status']
 
     @staticmethod

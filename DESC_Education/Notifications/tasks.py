@@ -10,8 +10,8 @@ from Chats.models import ChatMembers, Message, Chat
 from Chats.serializers import ChatSerializer
 from django.db.models import Q
 from django.http.request import HttpRequest
-from Tasks.models import Solution
-from Tasks.serializers import SolutionSerializer
+from Tasks.models import Solution, Review
+from Tasks.serializers import SolutionSerializer, ReviewSerializer
 from Chats.serializers import ChatDetailSerializer, ChatListSerializer
 import time
 from Users.models import CustomUser
@@ -78,6 +78,23 @@ def EventStreamSendNotification(instance_id, type):
             serializer = NotificationSerializer(notification)
 
             send_event(f"user-{str(instance.task.user.id)}", 'notification', serializer.data)
+
+
+        case Notification.REVIEW_TYPE:
+            instance = Review.objects.get(id=instance_id)
+            review_serializer = dict(ReviewSerializer(instance).data)
+            review_serializer['solution'] = str(review_serializer['solution'])
+
+            notification = Notification.objects.create(
+                user=instance.solution.user,
+                message=f"Вам оставили новый отзыв по вашему решнию: {instance.solution.task.title}",
+                type=Notification.REVIEW_TYPE,
+                title="Новый отзыв",
+                payload=review_serializer
+            )
+            serializer = NotificationSerializer(notification)
+
+            send_event(f"user-{str(instance.solution.user.id)}", 'notification', serializer.data)
 
 
 

@@ -22,6 +22,7 @@ from Tasks.serializers import (
     SolutionSerializer,
     TaskCategorySerializer,
     FilterCategorySerializer,
+    ReviewSerializer,
     # StudentTasksMySerializer,
     TaskCategoryWithFiltersSerializer,
     TaskPatternSerializer,
@@ -279,7 +280,7 @@ class EvaluateSolutionView(generics.GenericAPIView):
 
     def get_object(self, pk):
         obj = get_object_or_404(Solution, pk=pk)
-
+        self.check_object_permissions(self.request, obj)
         return obj
 
     @extend_schema(
@@ -295,3 +296,36 @@ class EvaluateSolutionView(generics.GenericAPIView):
         solution_id = str(serializer.data.get('id'))
         EventStreamSendNotification.delay(solution_id, Notification.EVALUATION_TYPE)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+class ReviewCreateView(generics.GenericAPIView):
+    serializer_class = ReviewSerializer
+    permission_classes = [EvaluateCompanyRole]
+
+    def get_object(self, pk):
+        instance = get_object_or_404(Solution, pk=pk)
+        self.check_object_permissions(self.request, instance)
+        return instance
+
+    def check_permission(self, instance):
+        if instance.task.user != self.request.user:
+            raise PermissionDenied("Вы можете оставить отзыв только для решений своих заданий")
+
+    @extend_schema(
+        tags=["Tasks"],
+        summary="Оставление отзыва о решении компанией"
+    )
+    def post(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        self.check_permission(serializer.validated_data.get('solution'))
+        serializer.save()
+        solution_id = str(serializer.data.get('id'))
+        EventStreamSendNotification.delay(solution_id, Notification.REVIEW_TYPE)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
