@@ -302,6 +302,8 @@ LOGGING = {
 if DEBUG:
     INSTALLED_APPS += ["debug_toolbar"]
     MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
+
+
 if 'test' in sys.argv:
     CELERY_BROKER_BACKEND = "memory"
     CELERY_TASK_EAGER_PROPAGATES = True
@@ -310,12 +312,6 @@ if 'test' in sys.argv:
     PASSWORD_HASHERS = (
         'django.contrib.auth.hashers.MD5PasswordHasher',
     )
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
