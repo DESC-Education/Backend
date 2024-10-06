@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from channels.testing import WebsocketCommunicator
 from Chats.consumers import ChatConsumer
 from Users.models import CustomUser
@@ -13,7 +13,7 @@ from Chats.serializers import MessageSerializer
 from Files.models import File
 
 
-class MyTests(TestCase):
+class MyTests(TransactionTestCase):
     def setUp(self) -> None:
         self.student = CustomUser.objects.create_user(
             email='test@example.com',

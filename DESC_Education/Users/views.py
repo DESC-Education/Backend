@@ -10,6 +10,7 @@ import time
 from Mail import tasks
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 import logging
+from django.utils import timezone
 from Users.models import (
     CustomUser,
     VerificationCode,
@@ -41,6 +42,8 @@ from Users.smtp import (
     send_password_change_code,
     send_mail_change_code
 )
+from Notifications.models import Notification
+from Notifications.serializers import NotificationSerializer
 
 
 # Create your views here.
@@ -229,12 +232,10 @@ class RegistrationView(generics.GenericAPIView):
             password = serializer.validated_data['password']
             role = serializer.validated_data['role']
 
-
             if CustomUser.objects.filter(email=email).exists():
                 return Response(
                     {'message': 'Адрес электронной почты уже зарегистрирован'},
                     status=status.HTTP_406_NOT_ACCEPTABLE)
-
 
             user = CustomUser.objects.create_user(
                 email=email,
@@ -242,13 +243,11 @@ class RegistrationView(generics.GenericAPIView):
                 role=role
             )
 
-
             Vcode: VerificationCode = VerificationCode.objects.create(
                 user=user,
                 code=random.randint(1000, 9999),
                 type=VerificationCode.REGISTRATION_TYPE
             )
-
 
             tasks.MailVerifyRegistration.delay(email, Vcode.code)
             # send_auth_registration_code(email, Vcode.code)
@@ -474,12 +473,19 @@ class AuthView(generics.GenericAPIView):
         }
 
     )
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user,
+                                           created_at__gte=(timezone.now() - timezone.timedelta(days=7)))
+
     def get(self, request):
         try:
             user = request.user
             serializer = CustomUserSerializer(user)
+            data = dict(serializer.data)
+            notifications = NotificationSerializer(self.get_queryset(), many=True).data
+            data["notifications"] = notifications
 
-            return Response(serializer.data,
+            return Response(data,
                             status=status.HTTP_200_OK)
 
         except Exception as e:
@@ -635,12 +641,9 @@ class SendVerifyCodeView(generics.GenericAPIView):
                             return Response({"message": "Проверочный код по-прежнему активен, повторите попытку позже"},
                                             status=status.HTTP_409_CONFLICT)
 
-
                     Vcode_reg = VerificationCode.objects.create(user=user,
                                                                 code=str(random.randint(1000, 9999)),
                                                                 type=VerificationCode.REGISTRATION_TYPE)
-
-
 
                     send_auth_registration_code(email, Vcode_reg.code)
 
@@ -661,7 +664,6 @@ class SendVerifyCodeView(generics.GenericAPIView):
                         if code.get_time() < 55:
                             return Response({"message": "Проверочный код по-прежнему активен, повторите попытку позже"},
                                             status=status.HTTP_409_CONFLICT)
-
 
                     Vcode_email = VerificationCode.objects.create(user=request.user,
                                                                   code=str(random.randint(1000, 9999)),
@@ -885,7 +887,6 @@ class ChangeEmailView(generics.GenericAPIView):
                                 status=status.HTTP_404_NOT_FOUND)
             Vcode = Vcode.first()
 
-
             if not Vcode.is_valid():
                 return Response({"message": "Проверочный код не найден или срок действия истек"},
                                 status=status.HTTP_404_NOT_FOUND)
@@ -913,7 +914,6 @@ class TestDeleteView(generics.GenericAPIView):
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             CustomUser.objects.filter(email=serializer.validated_data['email']).delete()
-
 
             return Response(status=status.HTTP_200_OK)
 
