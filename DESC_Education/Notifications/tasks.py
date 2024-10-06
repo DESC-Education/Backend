@@ -76,6 +76,7 @@ def EventStreamSendNotification(instance_id, type):
             )
 
             serializer = NotificationSerializer(notification)
+
             send_event(f"user-{str(instance.task.user.id)}", 'notification', serializer.data)
 
 

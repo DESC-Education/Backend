@@ -79,5 +79,6 @@ class SolutionSerializerTest(TestCase):
                                           'logoImg': None},
                           'companyComment': None,
                           'status': 'completed',
+                          'task': str(self.task.id),
                           'createdAt': self.solution.created_at.isoformat()})
 

@@ -50,8 +50,7 @@ class SolutionSerializer(serializers.ModelSerializer):
     status = serializers.ChoiceField(choices=Solution.STATUSES, read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     companyComment = serializers.CharField(source='company_comment', read_only=True)
-    task = serializers.UUIDField(source="task__id", read_only=True)
-
+    task = serializers.SerializerMethodField(read_only=True)
     # read and write
 
     class Meta:
@@ -60,6 +59,9 @@ class SolutionSerializer(serializers.ModelSerializer):
                   'companyComment', 'status', 'createdAt', 'taskId', 'task')
         read_only_fields = ['id', 'createdAt', 'companyComment', 'user', 'status']
 
+    @staticmethod
+    def get_task(obj) -> str:
+        return str(obj.task.id)
     @staticmethod
     def get_userProfile(obj) -> UserProfileSerializer:
         return UserProfileSerializer(obj.user.get_profile()).data
