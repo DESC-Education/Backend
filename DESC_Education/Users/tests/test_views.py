@@ -240,7 +240,7 @@ class AuthViewTest(APITestCase):
         res = self.client.get(reverse('auth'), headers={"Authorization": f"Bearer {tokens.get('accessToken')}"},
                               content_type="application/json")
 
-        self.assertEqual(res.status_code, 200)
+
         self.assertEqual(dict(res.data), {
                     "id": str(self.user.id),
                     "email": self.user.email,
@@ -250,8 +250,10 @@ class AuthViewTest(APITestCase):
                     "isSuperuser": self.user.is_superuser,
                     "isVerified": self.user.is_verified,
                     'createdAt': self.user.created_at.isoformat(),
+                    'notifications': []
                 }
             )
+        self.assertEqual(res.status_code, 200)
 
     def test_invalid_auth_401(self):
         res = self.client.get(reverse('auth'), content_type="application/json")

@@ -3,7 +3,6 @@ from Users.models import CustomUser
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    # lastLogin = serializers.CharField(source="last_login")
     isActive = serializers.BooleanField(source="is_active")
     isStaff = serializers.BooleanField(source="is_staff")
     isSuperuser = serializers.BooleanField(source="is_superuser")

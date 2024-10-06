@@ -39,9 +39,6 @@ class NotificationListView(generics.ListAPIView):
 class EventsUser(EventsViewSet):
     permission_classes = [IsAuthenticatedAndVerified]
 
-    def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user)
-
     @extend_schema(
         tags=["Notifications"],
         summary="Подключение к sse уведомлений",
