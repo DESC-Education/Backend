@@ -284,4 +284,4 @@ class EvaluateSolutionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Solution
-        fields = ('status', 'companyComment')
+        fields = ('status', 'companyComment', 'id')

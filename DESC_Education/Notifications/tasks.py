@@ -28,7 +28,7 @@ def EventStreamSendNotification(instance_id, type):
             }
 
             notification = Notification.objects.create(
-                user_id=instance.profile.user.id,
+                user=instance.profile.user,
                 message=message_dict[instance.status],
                 type=Notification.VERIFICATION_TYPE,
                 title="Верификация профиля"
@@ -46,14 +46,17 @@ def EventStreamSendNotification(instance_id, type):
             }
 
             notification = Notification.objects.create(
-                user_id=instance.user.id,
+                user=instance.user,
                 message=message_dict[instance.status],
                 type=Notification.SOLUTION_TYPE,
                 title="Ваше решение оценено",
-                payload={'solutionId': instance.id}
+                payload={'solutionId': str(instance.id),
+                         'taskId': str(instance.task.id)}
+
             )
 
             serializer = NotificationSerializer(notification)
+            print(serializer.data)
             send_event(f"user-{instance.user.id}", 'notification', serializer.data)
 
 

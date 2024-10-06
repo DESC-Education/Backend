@@ -1009,6 +1009,6 @@ class EvaluateSolutionViewTest(APITestCase):
 
         solution: Solution = Solution.objects.first()
 
-        self.assertEqual(res.data, {'status': 'completed'})
+        self.assertEqual(res.data, {'status': 'completed', "id": str(self.solution.id)})
         self.assertEqual(res.status_code, 200)
         self.assertEqual(solution.status, "completed")

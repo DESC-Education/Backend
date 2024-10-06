@@ -290,6 +290,6 @@ class EvaluateSolutionView(generics.GenericAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         serializer.save()
-
-        EventStreamSendNotification.delay(serializer.data.get('id'), Notification.SOLUTION_TYPE)
+        solution_id = str(serializer.data.get('id'))
+        EventStreamSendNotification.delay(solution_id, Notification.SOLUTION_TYPE)
         return Response(serializer.data, status=status.HTTP_200_OK)
