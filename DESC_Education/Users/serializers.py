@@ -2,6 +2,9 @@ from rest_framework import serializers
 from Users.models import CustomUser
 from Chats.models import Chat, Message
 from django.db.models import Subquery, OuterRef, Count, Q
+from Notifications.serializers import NotificationSerializer
+from Notifications.models import Notification
+from django.utils import timezone
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -10,14 +13,21 @@ class CustomUserSerializer(serializers.ModelSerializer):
     isSuperuser = serializers.BooleanField(source="is_superuser")
     createdAt = serializers.DateTimeField(source="created_at")
     isVerified = serializers.BooleanField(source="is_verified")
-    unreadChatCount = serializers.SerializerMethodField()
+    unreadChatsCount = serializers.SerializerMethodField()
+    notifications = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
         fields = ["id", "email", "role", "isActive", "isStaff", "isSuperuser",
-                  'isVerified', 'createdAt', 'unreadChatCount']
+                  'isVerified', 'createdAt', 'unreadChatsCount', 'notifications']
 
-    def get_unreadChatCount(self, obj):
+    def get_notifications(self, obj) -> NotificationSerializer(many=True):
+        queryset = Notification.objects.filter(user=obj,
+                                               created_at__gte=(timezone.now() - timezone.timedelta(days=7)))
+
+        return NotificationSerializer(queryset, many=True).data
+
+    def get_unreadChatsCount(self, obj) -> int:
         chats_id = list(obj.chatmembers_set.all().values_list('chat', flat=True))
         chats = Chat.objects.annotate(
             unread_message_count=Count('message',
