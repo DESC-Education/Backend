@@ -23,6 +23,7 @@ from Tasks.serializers import (
     TaskCategorySerializer,
     FilterCategorySerializer,
     ReviewSerializer,
+    ReviewListSerializer,
     # StudentTasksMySerializer,
     TaskCategoryWithFiltersSerializer,
     TaskPatternSerializer,
@@ -34,7 +35,8 @@ from Tasks.models import (
     TaskCategory,
     FilterCategory,
     Filter,
-    TaskPattern
+    TaskPattern,
+    Review
 )
 
 
@@ -329,3 +331,18 @@ class ReviewCreateView(generics.GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+
+class ReviewListView(generics.ListAPIView):
+    serializer_class = ReviewListSerializer
+    permission_classes = [IsStudentRole]
+
+
+    def get_queryset(self):
+        return Review.objects.filter(solution__user=self.request.user)
+
+    @extend_schema(
+        tags=["Tasks"],
+        summary="Получение всех отзывов"
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
