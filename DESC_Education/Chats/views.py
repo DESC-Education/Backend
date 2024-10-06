@@ -6,6 +6,7 @@ from django.db.models.functions import Coalesce
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from Files.models import File
 from django.utils import timezone
+from Notifications.tasks import EventStreamSendNotifyNewChat
 from django.shortcuts import get_object_or_404
 from Settings.permissions import IsCompanyRole, IsStudentRole, EvaluateCompanyRole, IsCompanyOrStudentRole
 from Chats.serializers import (
@@ -46,6 +47,7 @@ class CreateChatView(generics.GenericAPIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer.save(user=request.user)
+        # EventStreamSendNotifyNewChat.delay(serializer.data.get('id'), request.user.id)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 

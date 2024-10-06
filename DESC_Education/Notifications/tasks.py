@@ -5,6 +5,7 @@ from django.core import serializers
 from Notifications.serializers import NotificationSerializer, MessageNotificationSerializer
 from django_eventstream import send_event
 from Chats.models import ChatMembers, Message, Chat
+from Chats.serializers import ChatSerializer
 from django.db.models import Q
 import time
 
@@ -40,4 +41,18 @@ def EventStreamSendNotifyNewMessage(message_id):
         user = chat_member.user
         serializer = MessageNotificationSerializer(instance, data={'user': user.id})
         serializer.is_valid()
+        print(user.id)
+        send_event(f"user-{user.id}", 'newMessage', serializer.data)
+
+
+@shared_task
+def EventStreamSendNotifyNewChat(new_chat_id, user_id):
+    instance = Chat.objects.get(id=new_chat_id)
+    chat_member = ChatMembers.objects.filter(~Q(user_id=user_id) and Q(chat=instance)).first()
+    if chat_member:
+        # user = chat_member.user
+        # serializer = ChatSerializer(instance)
+        # serializer.is_valid()
+        # serializer.save(user=user)
+        # print(serializer.data)
         send_event(f"user-{user.id}", 'newMessage', serializer.data)
