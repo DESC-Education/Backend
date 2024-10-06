@@ -18,6 +18,7 @@ from Tasks.models import (
     Task,
     TaskCategory,
     FilterCategory,
+    Review,
     Filter,
     Solution
 )
@@ -32,6 +33,7 @@ from Tasks.serializers import (
     # StudentTasksMySerializer,
 )
 from Files.models import File
+
 
 class TaskViewTest(APITestCase):
     @staticmethod
@@ -242,6 +244,7 @@ class TaskListViewTest(APITestCase):
 
         self.assertEqual(dict(res.data).get('results')[0], dict(expected_data.data))
 
+
 class SolutionDetailViewTest(APITestCase):
 
     def get_expected_data(self, task):
@@ -451,8 +454,6 @@ class SolutionListViewTest(APITestCase):
         self.assertEqual([str(self.solution_2.id), str(self.solution.id)], createdAt)
 
 
-
-
 class TaskDetailViewTest(APITestCase):
 
     def get_expected_data(self, task):
@@ -525,7 +526,6 @@ class TaskDetailViewTest(APITestCase):
             content_object=self.task
         )
         self.task.files.add(file)
-
 
         self.solution = Solution.objects.create(
             task=self.task,
@@ -612,7 +612,7 @@ class TestSolutionView(APITestCase):
         self.example_data = {
             'taskId': self.task.id,
             'description': "Test Task Description",
-            'files_list': [SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),]
+            'files_list': [SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"), ]
         }
 
     def get_expected_data(self, solution):
@@ -1014,7 +1014,6 @@ class EvaluateSolutionViewTest(APITestCase):
         self.assertEqual(solution.status, "completed")
 
 
-
 class CreateReviewViewTest(APITestCase):
     def setUp(self):
         self.student = CustomUser.objects.create_user(
@@ -1076,9 +1075,96 @@ class CreateReviewViewTest(APITestCase):
                                },
                                HTTP_AUTHORIZATION=f'Bearer {self.company_token}')
 
-        self.assertEqual(dict(res.data), {'id': str(res.data.get("id")),
+        review = Review.objects.all().first()
+        self.assertEqual(dict(res.data), {'id': str(review.id),
                                           'text': 'Test Comment',
                                           'rating': 5,
+                                          'createdAt': review.created_at.isoformat(),
                                           'solution': self.solution.id})
         self.assertEqual(res.status_code, 200)
 
+
+class ReviewListViewTest(APITestCase):
+    def setUp(self):
+        self.student = CustomUser.objects.create_user(
+            email='example2@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        profile = self.student.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
+        self.student_token = self.student.get_token()['accessToken']
+
+        self.company = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+        profile = self.company.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
+        self.company_token = self.company.get_token()['accessToken']
+
+        self.task_1 = Task.objects.create(
+            user=self.company,
+            title="Test Task",
+            description="Test Task Description",
+            deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
+            category=TaskCategory.objects.first(),
+        )
+        self.task_1.filters.set([Filter.objects.first()])
+        file = File.objects.create(
+            file=SimpleUploadedFile(name="test.jpg", content=b"file_content", content_type="image/jpeg"),
+            type=File.TASK_FILE,
+            content_object=self.task_1
+        )
+        self.task_1.files.add(file)
+
+        self.solution_1 = Solution.objects.create(
+            task=self.task_1,
+            user=self.student,
+            description="Test Solution Description",
+        )
+
+        self.task_2 = Task.objects.create(
+            user=self.company,
+            title="Test Task",
+            description="Test Task Description",
+            deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
+            category=TaskCategory.objects.first(),
+        )
+        self.task_2.filters.set([Filter.objects.first()])
+
+        self.solution_2 = Solution.objects.create(
+            task=self.task_2,
+            user=self.student,
+            description="Test Solution Description",
+        )
+
+        self.review_1 = Review.objects.create(solution=self.solution_1, rating=4, text="Test Comment 1")
+        self.review_2 = Review.objects.create(solution=self.solution_2, rating=5, text="Test Comment 2")
+
+    def test_get_reviews_200(self):
+        res = self.client.get(reverse('review_list'),
+                              HTTP_AUTHORIZATION=f'Bearer {self.student_token}')
+
+        self.assertEqual(list(res.data.get('results')), [
+            {'created_at': self.review_2.created_at.isoformat(),
+             'id': str(self.review_2.id),
+             'profile': {'companyName': '', 'logoImg': None, 'id': str(self.company.get_profile().id)},
+             'rating': 5,
+             'solution': self.review_2.solution.id,
+             'text': 'Test Comment 2'},
+            {'created_at': self.review_1.created_at.isoformat(),
+             'id': str(self.review_1.id),
+             'profile': {'companyName': '', 'logoImg': None, 'id': str(self.company.get_profile().id)},
+             'rating': 4,
+             'solution': self.review_1.solution.id,
+             'text': 'Test Comment 1'}]
+                         )
+        self.assertEqual(res.status_code, 200)

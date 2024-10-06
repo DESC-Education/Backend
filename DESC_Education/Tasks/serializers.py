@@ -17,12 +17,12 @@ from Files.serializers import FileSerializer
 from Files.models import File
 
 
-
 class ReviewSerializer(serializers.ModelSerializer):
+    createdAt = serializers.DateTimeField(source='created_at', read_only=True)
+
     class Meta:
         model = Review
-        fields = '__all__'
-
+        fields = ('id', 'rating', 'text', 'createdAt', 'solution')
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -72,6 +72,7 @@ class SolutionSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_task(obj) -> str:
         return str(obj.task.id)
+
     @staticmethod
     def get_userProfile(obj) -> UserProfileSerializer:
         return UserProfileSerializer(obj.user.get_profile()).data
@@ -94,13 +95,31 @@ class SolutionSerializer(serializers.ModelSerializer):
 class ProfileTaskSerializer(serializers.ModelSerializer):
     companyName = serializers.CharField(source='company_name', read_only=True)
     logoImg = serializers.SerializerMethodField()
+    id = serializers.SerializerMethodField()
 
     class Meta:
         model = apps.get_model('Profiles', 'CompanyProfile')
-        fields = ('companyName', 'logoImg')
+        fields = ('companyName', 'logoImg', 'id')
 
+    def get_id(self, obj):
+        return str(obj.id)
     def get_logoImg(self, obj):
         return obj.logo_img.url if obj.logo_img else None
+
+
+class ReviewListSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Review
+        fields = '__all__'
+
+    def get_profile(self, obj) -> str:
+        try:
+            profile = obj.solution.task.user.get_profile()
+            return ProfileTaskSerializer(profile).data
+        except:
+            return None
 
 
 class FilterSerializer(serializers.ModelSerializer):

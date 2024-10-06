@@ -126,6 +126,11 @@ class Review(models.Model):
     )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
-    solution = models.OneToOneField(Solution, related_name='solution', on_delete=models.CASCADE)
+    solution = models.OneToOneField(Solution, related_name='review', on_delete=models.CASCADE)
     text = models.CharField(max_length=250)
     rating = models.IntegerField(choices=RATING, default=1)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+
+
+    class Meta:
+        ordering = ['-created_at']

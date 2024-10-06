@@ -5,12 +5,13 @@ from django.urls import reverse
 import json
 from django.utils import timezone
 from django.test import TestCase
-from Tasks.models import (Task, TaskCategory, Solution, Filter, FilterCategory)
+from Tasks.models import (Task, TaskCategory, Solution, Filter, FilterCategory, Review)
 from Files.models import File
 from django.core.files.uploadedfile import SimpleUploadedFile
 from Tasks.serializers import SolutionSerializer
 from Users.models import CustomUser
 from Profiles.models import StudentProfile
+
 
 
 class SolutionSerializerTest(TestCase):
@@ -61,6 +62,14 @@ class SolutionSerializerTest(TestCase):
             type=File.SOLUTION_FILE,
             file=SimpleUploadedFile(name="solution.txt", content=b"solution_content", content_type="text/plain"),
         )
+        #
+        self.review = Review.objects.create(
+            solution=self.solution,
+            rating=5,
+            text="Test Comment",
+        )
+
+
 
     def test_serialize(self):
         serializer = SolutionSerializer(instance=self.solution)
@@ -74,6 +83,13 @@ class SolutionSerializerTest(TestCase):
                                'extension': 'txt',
                                'path': f'/api/media/users/{str(self.student.id)}/solutions/{self.solution.id}/solution.txt'
                                }],
+                          'review': {
+                              'id': str(self.review.id),
+                              'rating': 5,
+                              'text': 'Test Comment',
+                              'createdAt': self.review.created_at.isoformat(),
+                              'solution': self.solution.id
+                          },
                           'userProfile': {'firstName': '',
                                           'lastName': '',
                                           'logoImg': None},
