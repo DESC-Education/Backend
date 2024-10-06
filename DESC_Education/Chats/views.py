@@ -1,12 +1,11 @@
 from django.shortcuts import render
 from rest_framework import generics, status
 from rest_framework.response import Response
-from django.db.models import OuterRef, Subquery, Max, F, Value
+from django.db.models import OuterRef, Subquery, Max, F, Value, Count
 from django.db.models.functions import Coalesce
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from Files.models import File
 from django.utils import timezone
-from Notifications.tasks import EventStreamSendNotifyNewChat
 from django.shortcuts import get_object_or_404
 from Settings.permissions import IsCompanyRole, IsStudentRole, EvaluateCompanyRole, IsCompanyOrStudentRole
 from Chats.serializers import (
@@ -47,7 +46,6 @@ class CreateChatView(generics.GenericAPIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer.save(user=request.user)
-        EventStreamSendNotifyNewChat.delay(request.data.get('companionId'), serializer.data.get('id'))
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -60,12 +58,13 @@ class ChatListView(generics.ListAPIView):
         last_message_time = Message.objects.filter(chat=OuterRef('pk')).order_by('-created_at').values('created_at')[:1]
         return (Chat.objects.filter(
             chatmembers__user=self.request.user)
-                    .annotate(last_message_time=Subquery(last_message_time),
-                              is_favorite=Subquery(ChatMembers.objects.filter(chat=OuterRef('pk'),
-                                                                              user=self.request.user)
-                                                   .values('is_favorite')[:1]))
-                    .order_by(F('is_favorite').desc(nulls_last=True), F('last_message_time').desc(nulls_last=True)))
-
+                .annotate(
+            num_messages=Count('messages'),
+            last_message_time=Subquery(last_message_time),
+            is_favorite=Subquery(ChatMembers.objects.filter(chat=OuterRef('pk'),
+                                                            user=self.request.user)
+                                 .values('is_favorite')[:1])).filter(num_messages__gte=1)
+                .order_by(F('is_favorite').desc(nulls_last=True), F('last_message_time').desc(nulls_last=True)))
 
     @extend_schema(
         tags=["Chats"],

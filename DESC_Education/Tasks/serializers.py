@@ -124,7 +124,7 @@ class TaskPatternSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TaskPattern
-        fields = ("id", 'title', 'description', 'catFilters')
+        fields = ("id", 'title', 'description', 'catFilters', 'category')
 
     @staticmethod
     def get_catFilters(obj) -> FilterCategorySerializer:

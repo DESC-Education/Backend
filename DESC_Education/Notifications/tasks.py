@@ -8,7 +8,7 @@ from Chats.models import ChatMembers, Message, Chat
 from Chats.serializers import ChatSerializer
 from django.db.models import Q
 from django.http.request import HttpRequest
-from Chats.serializers import ChatDetailSerializer
+from Chats.serializers import ChatDetailSerializer, ChatListSerializer
 import time
 from Users.models import CustomUser
 
@@ -38,23 +38,27 @@ def EventStreamSendNotification(instance_id, type):
 
 @shared_task
 def EventStreamSendNotifyNewMessage(message_id):
+    type = 'newMessage'
     instance = Message.objects.get(id=message_id)
+    count_messages = instance.chat.messages.count()
+    if count_messages == 1:
+        type = 'newChat'
+
     chat_member = ChatMembers.objects.filter(~Q(user=instance.user) & Q(chat=instance.chat)).first()
-    if chat_member:
-        user = chat_member.user
-        serializer = MessageNotificationSerializer(instance, data={'user': user.id})
-        serializer.is_valid()
-        send_event(f"user-{user.id}", 'newMessage', serializer.data)
+    if not chat_member:
+        return
+    user = chat_member.user
+    match type:
+        case 'newMessage':
+            serializer = MessageNotificationSerializer(instance, data={'user': user.id})
+            serializer.is_valid()
+            send_event(f"user-{user.id}", 'newMessage', serializer.data)
+        case 'newChat':
+            req = HttpRequest()
+            req.user = user
+            context = {'request': req}
+            serializer = ChatListSerializer(instance.chat, context=context)
+            send_event(f"user-{user.id}", 'newMessage', serializer.data)
 
 
-@shared_task
-def EventStreamSendNotifyNewChat(user_id, chat_id):
-    request_user = CustomUser.objects.get(pk=user_id)
-    instance = Chat.objects.get(id=chat_id)
-    req = HttpRequest()
-    req.query_params = {}
-    req.user = request_user
-    context = {'request': req}
-    serializer = ChatDetailSerializer(instance=instance, context=context)
-    send_event(f"user-{request_user.id}", 'newChat', serializer.data)
 
