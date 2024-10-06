@@ -7,7 +7,10 @@ from django_eventstream import send_event
 from Chats.models import ChatMembers, Message, Chat
 from Chats.serializers import ChatSerializer
 from django.db.models import Q
+from django.http.request import HttpRequest
+from Chats.serializers import ChatDetailSerializer
 import time
+from Users.models import CustomUser
 
 
 @shared_task
@@ -45,13 +48,13 @@ def EventStreamSendNotifyNewMessage(message_id):
 
 
 @shared_task
-def EventStreamSendNotifyNewChat(new_chat_id, user_id):
-    instance = Chat.objects.get(id=new_chat_id)
-    chat_member = ChatMembers.objects.filter(~Q(user_id=user_id) & Q(chat=instance)).first()
-    if chat_member:
-        # user = chat_member.user
-        # serializer = ChatSerializer(instance)
-        # serializer.is_valid()
-        # serializer.save(user=user)
-        # print(serializer.data)
-        send_event(f"user-{user.id}", 'newMessage', serializer.data)
+def EventStreamSendNotifyNewChat(user_id, chat_id):
+    request_user = CustomUser.objects.get(pk=user_id)
+    instance = Chat.objects.get(id=chat_id)
+    req = HttpRequest()
+    req.query_params = {}
+    req.user = request_user
+    context = {'request': req}
+    serializer = ChatDetailSerializer(instance=instance, context=context)
+    send_event(f"user-{request_user.id}", 'newChat', serializer.data)
+

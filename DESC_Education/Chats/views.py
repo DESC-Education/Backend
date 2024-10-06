@@ -47,7 +47,7 @@ class CreateChatView(generics.GenericAPIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer.save(user=request.user)
-        # EventStreamSendNotifyNewChat.delay(serializer.data.get('id'), request.user.id)
+        EventStreamSendNotifyNewChat.delay(request.data.get('companionId'), serializer.data.get('id'))
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 

@@ -98,7 +98,7 @@ class ChatDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ['companion', 'task', 'messages']
+        fields = ['companion', 'task', 'messages', 'id']
 
     def get_companion(self, obj) -> CompanionSerializer:
         members = obj.members.all()
