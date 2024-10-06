@@ -66,7 +66,8 @@ class LoginViewTest(APITestCase):
                              "isStaff": self.user.is_staff,
                              "isSuperuser": self.user.is_superuser,
                              "isVerified": self.user.is_verified,
-                             'createdAt': self.user.created_at.isoformat()
+                             'createdAt': self.user.created_at.isoformat(),
+                             "unreadChatCount": 0
                          }
                          )
         self.assertEqual(type(tokens.get("accessToken")), str)
@@ -184,6 +185,7 @@ class VerifyRegistrationViewTest(APITestCase):
                              "isSuperuser": user.is_superuser,
                              "isVerified": user.is_verified,
                              'createdAt': user.created_at.isoformat(),
+                             'unreadChatCount': 0,
                          })
         self.assertEqual(res.status_code, 200)
         self.assertTrue(user.is_verified)
