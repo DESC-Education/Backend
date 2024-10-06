@@ -177,11 +177,6 @@ class ChatChangeFavoriteSerializer(ChatListSerializer):
 
 
 
-
-
-
-
-
 class ChatSerializer(serializers.ModelSerializer):
     companionId = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(),
                                                      required=True, write_only=True)
