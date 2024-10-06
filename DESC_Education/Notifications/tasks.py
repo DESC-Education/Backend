@@ -9,6 +9,7 @@ from Chats.serializers import ChatSerializer
 from django.db.models import Q
 from django.http.request import HttpRequest
 from Tasks.models import Solution
+from Tasks.serializers import SolutionSerializer
 from Chats.serializers import ChatDetailSerializer, ChatListSerializer
 import time
 from Users.models import CustomUser
@@ -50,13 +51,11 @@ def EventStreamSendNotification(instance_id, type):
                 message=message_dict[instance.status],
                 type=Notification.SOLUTION_TYPE,
                 title="Ваше решение оценено",
-                payload={'solutionId': str(instance.id),
-                         'taskId': str(instance.task.id)}
+                payload=SolutionSerializer(instance).data
 
             )
 
             serializer = NotificationSerializer(notification)
-            print(str(instance.user.id))
             send_event(f"user-{str(instance.user.id)}", 'notification', serializer.data)
 
 
