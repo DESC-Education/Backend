@@ -114,3 +114,18 @@ class Solution(models.Model):
 
     def __str__(self):
         return f"{self.task.title} - {self.user.email}"
+
+
+class Review(models.Model):
+    RATING = (
+        (1, '1'),
+        (2, '2'),
+        (3, '3'),
+        (4, '4'),
+        (5, '5'),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    solution = models.OneToOneField(Solution, related_name='solution', on_delete=models.CASCADE)
+    text = models.CharField(max_length=250)
+    rating = models.IntegerField(choices=RATING, default=1)

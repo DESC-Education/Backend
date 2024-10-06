@@ -11,7 +11,8 @@ from Tasks.views import (
     CompanyTasksMyView,
     StudentTasksMyView,
     TaskPatternPatternListView,
-    EvaluateSolutionView
+    EvaluateSolutionView,
+    ReviewCreateView,
 
 
 )
@@ -26,6 +27,7 @@ urlpatterns = [
     path('solution', SolutionView.as_view(), name='solution'),
     path('solution-list/<uuid:pk>', SolutionListView.as_view(), name='solution-list-by-task'),
     path('solution/<uuid:pk>', SolutionDetailView.as_view(), name='solution_detail'),
+    path('solution/review', ReviewCreateView.as_view(), name='review_create'),
     path('task/categories', TaskCategoryListView.as_view(), name='task_category_list'),
     path('my/company', CompanyTasksMyView.as_view(), name='company_tasks_my'),
     path('my/student', StudentTasksMyView.as_view(), name='student_tasks_my'),
