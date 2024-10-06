@@ -1,3 +1,5 @@
+import json
+
 from celery import shared_task
 from Notifications.models import Notification
 from Profiles.models import ProfileVerifyRequest
@@ -45,14 +47,15 @@ def EventStreamSendNotification(instance_id, type):
                 Solution.FAILED: f"Ваше рещение по заданию {instance.task.title} было оценено как не выполненое.",
                 Solution.COMPLETED: f"Ваше рещение по заданию {instance.task.title} было оценено как успешно выполненое."
             }
+            solution_serializer = dict(SolutionSerializer(instance).data)
+            solution_serializer['user'] = str(solution_serializer['user'])
 
             notification = Notification.objects.create(
                 user=instance.user,
                 message=message_dict[instance.status],
                 type=Notification.SOLUTION_TYPE,
                 title="Ваше решение оценено",
-                payload=SolutionSerializer(instance).data
-
+                payload=solution_serializer
             )
 
             serializer = NotificationSerializer(notification)
