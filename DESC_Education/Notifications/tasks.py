@@ -105,28 +105,28 @@ def EventStreamSendNotification(instance_id, type):
 
 @shared_task
 def EventStreamSendNotifyNewMessage(message_id):
-    type = 'newMessage'
     instance = Message.objects.get(id=message_id)
     count_messages = instance.chat.messages.count()
-    print(count_messages)
-    if count_messages == 1:
-        type = 'newChat'
+
 
     chat_member = ChatMembers.objects.filter(~Q(user=instance.user) & Q(chat=instance.chat)).first()
     if not chat_member:
         return
     user = chat_member.user
-    match type:
-        case 'newMessage':
-            serializer = MessageNotificationSerializer(instance, data={'user': user.id})
-            serializer.is_valid()
-            send_event(f"user-{user.id}", 'newMessage', serializer.data)
-        case 'newChat':
-            req = HttpRequest()
-            req.user = user
-            context = {'request': req}
-            serializer = ChatListSerializer(instance.chat, context=context)
-            send_event(f"user-{user.id}", 'newMessage', serializer.data)
+
+    print(count_messages)
+    print(type(count_messages))
+    print(count_messages == 1)
+    if count_messages == 1:
+        req = HttpRequest()
+        req.user = user
+        context = {'request': req}
+        serializer = ChatListSerializer(instance.chat, context=context)
+        send_event(f"user-{user.id}", 'newMessage', serializer.data)
+    else:
+        serializer = MessageNotificationSerializer(instance, data={'user': user.id})
+        serializer.is_valid()
+        send_event(f"user-{user.id}", 'newMessage', serializer.data)
 
 
 
