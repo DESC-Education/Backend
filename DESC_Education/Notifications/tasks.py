@@ -114,15 +114,12 @@ def EventStreamSendNotifyNewMessage(message_id):
         return
     user = chat_member.user
 
-    print(count_messages)
-    print(type(count_messages))
-    print(count_messages == 1)
     if count_messages == 1:
         req = HttpRequest()
         req.user = user
         context = {'request': req}
         serializer = ChatListSerializer(instance.chat, context=context)
-        send_event(f"user-{user.id}", 'newMessage', serializer.data)
+        send_event(f"user-{user.id}", 'newChat', serializer.data)
     else:
         serializer = MessageNotificationSerializer(instance, data={'user': user.id})
         serializer.is_valid()
