@@ -19,7 +19,6 @@ from Users.models import CustomUser
 
 @shared_task
 def EventStreamSendNotification(instance_id, type):
-
     match type:
         case Notification.VERIFICATION_TYPE:
             instance = ProfileVerifyRequest.objects.get(id=instance_id)
@@ -109,6 +108,7 @@ def EventStreamSendNotifyNewMessage(message_id):
     type = 'newMessage'
     instance = Message.objects.get(id=message_id)
     count_messages = instance.chat.messages.count()
+    print(count_messages)
     if count_messages == 1:
         type = 'newChat'
 
