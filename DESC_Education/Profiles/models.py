@@ -271,16 +271,14 @@ class StudentProfile(BaseProfile):
     objects = StudentProfileManager()
 
     def get_reply_count(self):
-        from Notifications.tasks import EventStreamSendNotification
-        from Notifications.models import Notification
-
         now = tz.now()
         if now >= self.reply_reload_date:
-            print(self.reply_count)
             self.reply_count = self.REPLY_MONTH_COUNT
             self.reply_reload_date = now + tz.timedelta(days=self.REPLY_RELOAD_DAYS)
             self.save()
 
+            from Notifications.tasks import EventStreamSendNotification
+            from Notifications.models import Notification
             EventStreamSendNotification.delay(self.user.id, Notification.COUNT_RESET_TYPE)
 
         return self.reply_count
@@ -288,13 +286,22 @@ class StudentProfile(BaseProfile):
     def check_level(self):
         solved_tasks_count = Task.objects.filter(solutions__user=self.user,
                                                  solutions__status=Solution.COMPLETED)
-
+        level_before = self.level_id
         if solved_tasks_count.count() < 15:
             self.level_id = self.BEGINNER_LEVEL
         elif solved_tasks_count.count() < 30:
             self.level_id = self.ADVANCED_LEVEL
         elif solved_tasks_count.count() <= 60:
             self.level_id = self.EXPERIENCE_LEVEL
+
+        if level_before != self.level_id:
+            from Notifications.tasks import EventStreamSendNotification
+            from Notifications.models import Notification
+
+            EventStreamSendNotification.delay(self.user.id, Notification.LEVEL_TYPE,)
+
+
+
         self.save()
 
 
