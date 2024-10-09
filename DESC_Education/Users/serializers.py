@@ -21,13 +21,15 @@ class CustomUserSerializer(serializers.ModelSerializer):
         fields = ["id", "email", "role", "isActive", "isStaff", "isSuperuser",
                   'isVerified', 'createdAt', 'unreadChatsCount', 'notifications']
 
-    def get_notifications(self, obj) -> NotificationSerializer(many=True):
+    @staticmethod
+    def get_notifications(obj) -> NotificationSerializer(many=True):
         queryset = Notification.objects.filter(user=obj,
                                                created_at__gte=(timezone.now() - timezone.timedelta(days=7)))
 
         return NotificationSerializer(queryset, many=True).data
 
-    def get_unreadChatsCount(self, obj) -> int:
+    @staticmethod
+    def get_unreadChatsCount(obj) -> int:
         return Message.objects.filter(is_readed=False).filter(Q(chat__members=obj) & ~Q(user=obj))\
             .aggregate(Count('chat', distinct=True)).get('chat__count')
 
