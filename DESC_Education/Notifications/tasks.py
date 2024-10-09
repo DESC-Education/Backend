@@ -116,6 +116,10 @@ def EventStreamSendNotification(instance_id, type):
             send_event(f"user-{str(instance.id)}", 'notification', serializer.data)
 
 
+        # case Notification.LEVEL_TYPE:
+        #     insta
+
+
 
 
 

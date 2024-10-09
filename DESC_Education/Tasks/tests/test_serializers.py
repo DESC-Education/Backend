@@ -88,7 +88,11 @@ class SolutionSerializerTest(TestCase):
                               'rating': 5,
                               'text': 'Test Comment',
                               'createdAt': self.review.created_at.isoformat(),
-                              'solution': self.solution.id
+                              'solution': self.solution.id,
+                              'companyProfile': {
+                                  'companyName': '', 'logoImg': None,
+                                  'id': str(self.company.id)
+                              }
                           },
                           'userProfile': {'firstName': '',
                                           'lastName': '',
