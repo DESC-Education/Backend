@@ -1,8 +1,8 @@
 import json
 
 from celery import shared_task
+from django.apps import apps
 from Notifications.models import Notification
-from Profiles.models import ProfileVerifyRequest
 from django.core import serializers
 from Notifications.serializers import NotificationSerializer, MessageNotificationSerializer
 from django_eventstream import send_event
@@ -15,6 +15,11 @@ from Tasks.serializers import SolutionSerializer, ReviewSerializer
 from Chats.serializers import ChatDetailSerializer, ChatListSerializer
 import time
 from Users.models import CustomUser
+
+ProfileVerifyRequest = apps.get_model('Profiles', 'ProfileVerifyRequest')
+
+
+
 
 
 @shared_task
@@ -81,19 +86,36 @@ def EventStreamSendNotification(instance_id, type):
 
         case Notification.REVIEW_TYPE:
             instance = Review.objects.get(id=instance_id)
-            review_serializer = dict(ReviewSerializer(instance).data)
-            review_serializer['solution'] = str(review_serializer['solution'])
+            solution_serializer = dict(SolutionSerializer(instance.solution).data)
+            solution_serializer['user'] = str(solution_serializer['user'])
+            solution_serializer['review']['solution'] = str(solution_serializer['review']['solution'])
 
             notification = Notification.objects.create(
                 user=instance.solution.user,
-                message=f"Вам оставили новый отзыв по вашему решнию: {instance.solution.task.title}",
+                message=f"Вам оставили новый отзыв по вашему решению: {instance.solution.task.title}",
                 type=Notification.REVIEW_TYPE,
                 title="Новый отзыв",
-                payload=review_serializer
+                payload=solution_serializer
             )
             serializer = NotificationSerializer(notification)
 
             send_event(f"user-{str(instance.solution.user.id)}", 'notification', serializer.data)
+
+        case Notification.COUNT_RESET_TYPE:
+            instance = CustomUser.objects.get(id=instance_id)
+
+            notification = Notification.objects.create(
+                user=instance,
+                message=f"Ваше количество откликов пополнено",
+                type=Notification.COUNT_RESET_TYPE,
+                title="Ежемесячное пополнение откликов",
+            )
+
+            serializer = NotificationSerializer(notification)
+
+            send_event(f"user-{str(instance.id)}", 'notification', serializer.data)
+
+
 
 
 
