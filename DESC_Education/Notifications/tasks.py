@@ -116,8 +116,20 @@ def EventStreamSendNotification(instance_id, type):
             send_event(f"user-{str(instance.id)}", 'notification', serializer.data)
 
 
-        # case Notification.LEVEL_TYPE:
-        #     insta
+        case Notification.LEVEL_TYPE:
+            instance = CustomUser.objects.get(id=instance_id)
+            profile = instance.get_profile()
+
+            notification = Notification.objects.create(
+                user=instance,
+                message=f'Ваш уровень повышен до "{profile.get_level_id_display}"',
+                type=Notification.LEVEL_TYPE,
+                title="Ежемесячное пополнение откликов",
+            )
+
+            serializer = NotificationSerializer(notification)
+
+            send_event(f"user-{str(instance.id)}", 'notification', serializer.data)
 
 
 
