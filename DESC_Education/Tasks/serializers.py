@@ -12,9 +12,11 @@ from Tasks.models import (
     Review
 )
 from Users.models import CustomUser
-from Profiles.models import StudentProfile
+from django.apps import apps
 from Files.serializers import FileSerializer
 from Files.models import File
+
+StudentProfile = apps.get_model('Profiles', 'StudentProfile')
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -61,6 +63,7 @@ class SolutionSerializer(serializers.ModelSerializer):
     companyComment = serializers.CharField(source='company_comment', read_only=True)
     task = serializers.SerializerMethodField(read_only=True)
     review = ReviewSerializer(read_only=True)
+
     # read and write
 
     class Meta:
@@ -103,6 +106,7 @@ class ProfileTaskSerializer(serializers.ModelSerializer):
 
     def get_id(self, obj):
         return str(obj.id)
+
     def get_logoImg(self, obj):
         return obj.logo_img.url if obj.logo_img else None
 

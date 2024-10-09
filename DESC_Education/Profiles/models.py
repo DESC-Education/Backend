@@ -5,10 +5,10 @@ from Users.models import CustomUser
 from Tasks.models import Task, Solution
 from django.apps import apps
 import uuid
+from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
-
 from Files.models import (
     File
 )
@@ -222,10 +222,14 @@ class Specialty(models.Model):
 
 
 class StudentProfileManager(models.Manager):
-    def create(self, *args,  **kwargs):
+    def create(self, *args, **kwargs):
         instance = super().create(*args, **kwargs)
         instance.get_reply_count()
         return instance
+
+
+def get_default_reply_reload_date():
+    return timezone.now() + timezone.timedelta(days=StudentProfile.REPLY_RELOAD_DAYS)
 
 
 class StudentProfile(BaseProfile):
@@ -260,18 +264,25 @@ class StudentProfile(BaseProfile):
     specialty = models.ForeignKey(Specialty, on_delete=models.CASCADE, null=True, related_name='specialty')
     admission_year = models.IntegerField(null=True)
     reply_count = models.IntegerField(default=REPLY_MONTH_COUNT, editable=False, blank=True)
-    reply_reload_date = models.DateTimeField(auto_now_add=True, editable=False,
+    reply_reload_date = models.DateTimeField(default=get_default_reply_reload_date, editable=False,
                                              blank=True)
     level_id = models.PositiveSmallIntegerField(choices=LEVEL_CHOICES, default=BEGINNER_LEVEL, editable=False)
 
     objects = StudentProfileManager()
 
     def get_reply_count(self):
+        from Notifications.tasks import EventStreamSendNotification
+        from Notifications.models import Notification
+
         now = tz.now()
         if now >= self.reply_reload_date:
+            print(self.reply_count)
             self.reply_count = self.REPLY_MONTH_COUNT
             self.reply_reload_date = now + tz.timedelta(days=self.REPLY_RELOAD_DAYS)
             self.save()
+
+            EventStreamSendNotification.delay(self.user.id, Notification.COUNT_RESET_TYPE)
+
         return self.reply_count
 
     def check_level(self):
@@ -285,8 +296,6 @@ class StudentProfile(BaseProfile):
         elif solved_tasks_count.count() <= 60:
             self.level_id = self.EXPERIENCE_LEVEL
         self.save()
-
-
 
 
 class CompanyProfile(BaseProfile):
