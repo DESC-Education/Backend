@@ -19,12 +19,35 @@ from Files.models import File
 StudentProfile = apps.get_model('Profiles', 'StudentProfile')
 
 
+class ProfileTaskSerializer(serializers.ModelSerializer):
+    companyName = serializers.CharField(source='company_name', read_only=True)
+    logoImg = serializers.SerializerMethodField()
+    id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = apps.get_model('Profiles', 'CompanyProfile')
+        fields = ('companyName', 'logoImg', 'id')
+
+    @staticmethod
+    def get_id(obj):
+        return str(obj.user.id)
+
+    @staticmethod
+    def get_logoImg(obj):
+        return obj.logo_img.url if obj.logo_img else None
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
+    companyProfile = serializers.SerializerMethodField()
 
     class Meta:
         model = Review
-        fields = ('id', 'rating', 'text', 'createdAt', 'solution')
+        fields = ('id', 'rating', 'text', 'createdAt', 'solution', 'companyProfile')
+
+    @staticmethod
+    def get_companyProfile(obj) -> ProfileTaskSerializer:
+        return ProfileTaskSerializer(obj.solution.task.user.get_profile()).data
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -93,22 +116,6 @@ class SolutionSerializer(serializers.ModelSerializer):
                 serializer.save(type=File.SOLUTION_FILE, content_object=instance)
 
         return instance
-
-
-class ProfileTaskSerializer(serializers.ModelSerializer):
-    companyName = serializers.CharField(source='company_name', read_only=True)
-    logoImg = serializers.SerializerMethodField()
-    id = serializers.SerializerMethodField()
-
-    class Meta:
-        model = apps.get_model('Profiles', 'CompanyProfile')
-        fields = ('companyName', 'logoImg', 'id')
-
-    def get_id(self, obj):
-        return str(obj.id)
-
-    def get_logoImg(self, obj):
-        return obj.logo_img.url if obj.logo_img else None
 
 
 class ReviewListSerializer(serializers.ModelSerializer):

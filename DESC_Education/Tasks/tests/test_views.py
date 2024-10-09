@@ -1080,12 +1080,17 @@ class CreateReviewViewTest(APITestCase):
                                           'text': 'Test Comment',
                                           'rating': 5,
                                           'createdAt': review.created_at.isoformat(),
-                                          'solution': self.solution.id})
+                                          'solution': self.solution.id,
+                                          'companyProfile': {
+                                              'companyName': '', 'logoImg': None,
+                                              'id': str(self.company.id)
+                                          }})
         self.assertEqual(res.status_code, 200)
 
 
 class ReviewListViewTest(APITestCase):
     def setUp(self):
+        self.maxDiff = None
         self.student = CustomUser.objects.create_user(
             email='example2@example.com',
             password='password',
@@ -1156,13 +1161,13 @@ class ReviewListViewTest(APITestCase):
         self.assertEqual(list(res.data.get('results')), [
             {'created_at': self.review_2.created_at.isoformat(),
              'id': str(self.review_2.id),
-             'profile': {'companyName': '', 'logoImg': None, 'id': str(self.company.get_profile().id)},
+             'profile': {'companyName': '', 'logoImg': None, 'id': str(self.company.id)},
              'rating': 5,
              'solution': self.review_2.solution.id,
              'text': 'Test Comment 2'},
             {'created_at': self.review_1.created_at.isoformat(),
              'id': str(self.review_1.id),
-             'profile': {'companyName': '', 'logoImg': None, 'id': str(self.company.get_profile().id)},
+             'profile': {'companyName': '', 'logoImg': None, 'id': str(self.company.id)},
              'rating': 4,
              'solution': self.review_1.solution.id,
              'text': 'Test Comment 1'}]
