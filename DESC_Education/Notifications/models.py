@@ -8,7 +8,7 @@ class Notification(models.Model):
     EVALUATION_TYPE = 'evaluation'
     LEVEL_TYPE = 'level'
     REVIEW_TYPE = 'review'
-    COUNT_RESET_TYPE = 'count_reset'
+    COUNT_RESET_TYPE = 'countReset'
     SOLUTION_TYPE = 'solution'
 
     TYPE_CHOICES = (

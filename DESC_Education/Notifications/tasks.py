@@ -19,9 +19,6 @@ from Users.models import CustomUser
 ProfileVerifyRequest = apps.get_model('Profiles', 'ProfileVerifyRequest')
 
 
-
-
-
 @shared_task
 def EventStreamSendNotification(instance_id, type):
     match type:
@@ -83,7 +80,6 @@ def EventStreamSendNotification(instance_id, type):
 
             send_event(f"user-{str(instance.task.user.id)}", 'notification', serializer.data)
 
-
         case Notification.REVIEW_TYPE:
             instance = Review.objects.get(id=instance_id)
             solution_serializer = dict(SolutionSerializer(instance.solution).data)
@@ -115,16 +111,19 @@ def EventStreamSendNotification(instance_id, type):
 
             send_event(f"user-{str(instance.id)}", 'notification', serializer.data)
 
-
         case Notification.LEVEL_TYPE:
             instance = CustomUser.objects.get(id=instance_id)
             profile = instance.get_profile()
 
             notification = Notification.objects.create(
                 user=instance,
-                message=f'Ваш уровень повышен до "{profile.get_level_id_display}"',
+                message=f'Ваш уровень повышен до "{profile.get_level_id_display()}"',
                 type=Notification.LEVEL_TYPE,
-                title="Ежемесячное пополнение откликов",
+                title="Повышение уровня",
+                payload={
+                    'value': profile.level_id,
+                    'name': profile.get_level_id_display(),
+                }
             )
 
             serializer = NotificationSerializer(notification)
@@ -132,20 +131,10 @@ def EventStreamSendNotification(instance_id, type):
             send_event(f"user-{str(instance.id)}", 'notification', serializer.data)
 
 
-
-
-
-
-
-
-
-
-
 @shared_task
 def EventStreamSendNotifyNewMessage(message_id):
     instance = Message.objects.get(id=message_id)
     count_messages = instance.chat.messages.count()
-
 
     chat_member = ChatMembers.objects.filter(~Q(user=instance.user) & Q(chat=instance.chat)).first()
     if not chat_member:
@@ -162,7 +151,3 @@ def EventStreamSendNotifyNewMessage(message_id):
         serializer = MessageNotificationSerializer(instance, data={'user': user.id})
         serializer.is_valid()
         send_event(f"user-{user.id}", 'newMessage', serializer.data)
-
-
-
-

@@ -80,12 +80,12 @@ class check_student_profile_levelTest(TestCase):
     def test_signal(self):
         profile = self.student.get_profile()
 
+        self.assertEqual(profile.level_id, 0)
+
+        self.create_tasks(self.company, self.student, 15)
+
         self.assertEqual(profile.level_id, 1)
 
         self.create_tasks(self.company, self.student, 15)
 
         self.assertEqual(profile.level_id, 2)
-
-        self.create_tasks(self.company, self.student, 15)
-
-        self.assertEqual(profile.level_id, 3)

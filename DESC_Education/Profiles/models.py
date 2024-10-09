@@ -221,11 +221,6 @@ class Specialty(models.Model):
         ordering = ['-id']
 
 
-class StudentProfileManager(models.Manager):
-    def create(self, *args, **kwargs):
-        instance = super().create(*args, **kwargs)
-        instance.get_reply_count()
-        return instance
 
 
 def get_default_reply_reload_date():
@@ -246,14 +241,14 @@ class StudentProfile(BaseProfile):
         (FULL_TIME_AND_PART_TIME_EDUCATION, "Очно-Заочная форма обучения")
     ]
 
-    BEGINNER_LEVEL = 1
-    ADVANCED_LEVEL = 2
-    EXPERIENCE_LEVEL = 3
+    FIRST_LEVEL = 0
+    SECOND_LEVEL = 1
+    THIRD_LEVEL = 2
 
     LEVEL_CHOICES = [
-        (BEGINNER_LEVEL, 'Начинающий'),
-        (ADVANCED_LEVEL, 'Продвинутый'),
-        (EXPERIENCE_LEVEL, 'Опытный')
+        (FIRST_LEVEL, 'Начинающий'),
+        (SECOND_LEVEL, 'Средний'),
+        (THIRD_LEVEL, 'Продвинутый')
     ]
     verification_requests = GenericRelation(ProfileVerifyRequest, related_name="v_requests",
                                             related_query_name="student_profile")
@@ -266,9 +261,8 @@ class StudentProfile(BaseProfile):
     reply_count = models.IntegerField(default=REPLY_MONTH_COUNT, editable=False, blank=True)
     reply_reload_date = models.DateTimeField(default=get_default_reply_reload_date, editable=False,
                                              blank=True)
-    level_id = models.PositiveSmallIntegerField(choices=LEVEL_CHOICES, default=BEGINNER_LEVEL, editable=False)
+    level_id = models.PositiveSmallIntegerField(choices=LEVEL_CHOICES, default=FIRST_LEVEL, editable=False)
 
-    objects = StudentProfileManager()
 
     def get_reply_count(self):
         now = tz.now()
@@ -288,11 +282,11 @@ class StudentProfile(BaseProfile):
                                                  solutions__status=Solution.COMPLETED)
         level_before = self.level_id
         if solved_tasks_count.count() < 15:
-            self.level_id = self.BEGINNER_LEVEL
+            self.level_id = self.FIRST_LEVEL
         elif solved_tasks_count.count() < 30:
-            self.level_id = self.ADVANCED_LEVEL
+            self.level_id = self.SECOND_LEVEL
         elif solved_tasks_count.count() <= 60:
-            self.level_id = self.EXPERIENCE_LEVEL
+            self.level_id = self.THIRD_LEVEL
 
         if level_before != self.level_id:
             from Notifications.tasks import EventStreamSendNotification
