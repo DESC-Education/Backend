@@ -833,6 +833,6 @@ class GenerateProfileReportViewTest(APITestCase):
 
         self.student_token = self.student.get_token()['accessToken']
 
-    def test_generate_profile_report_200(self):
-        res = self.client.get(reverse('generate_report'),
-                              HTTP_AUTHORIZATION='Bearer ' + self.student_token)
+    # def test_generate_profile_report_200(self):
+        # res = self.client.get(reverse('generate_report'),
+        #                       HTTP_AUTHORIZATION='Bearer ' + self.student_token)

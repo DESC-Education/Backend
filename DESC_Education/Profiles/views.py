@@ -1284,8 +1284,8 @@ class GenerateProfileReportView(generics.GenericAPIView):
 
         generate_pdf(context)
 
-        from django.shortcuts import render
-        return render(request, 'profile_report.html', context=context)
+        # from django.shortcuts import render
+        # return render(request, 'Profiles/profile_report.html', context=context)
 
 
 class TestVerifyView(generics.GenericAPIView):
