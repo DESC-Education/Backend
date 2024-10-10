@@ -297,7 +297,6 @@ class CreateProfileViewTest(APITestCase):
         expected_data['skills'] = expected_skill_names
         expected_data.pop("files")
 
-
         result = dict(res.data)
         res_skills_names = set()
         for i in result.get("skills"):
@@ -306,7 +305,6 @@ class CreateProfileViewTest(APITestCase):
 
         self.assertEqual(result, expected_data)
         self.assertEqual(res.status_code, 201)
-
 
     def test_company_not_verified_405(self, ):
         example_data = self.company_example_data.copy()
@@ -340,7 +338,6 @@ class CreateProfileViewTest(APITestCase):
                                headers={"Authorization": f"Bearer {self.admin_token}"})
 
         self.assertEqual(res.status_code, 403)
-
 
 
 class GetMyProfileTest(APITestCase):
@@ -436,8 +433,6 @@ class GetProfileTest(APITestCase):
         profile.save()
         res = self.client.get(reverse("profile_get", kwargs={"pk": str(self.user.id)}))
 
-
-
         expected_data = self.student_example_data.copy()
         expected_data["id"] = str(profile.id)
         expected_data["verification"] = {"status": "verified"}
@@ -461,8 +456,6 @@ class GetProfileTest(APITestCase):
         expected_data['city'] = dict(CitySerializer(self.city).data)
         expected_data['faculty'] = faculty
         expected_data['tasksCompleted'] = 0
-
-
 
         result = dict(res.data)
 
@@ -621,7 +614,8 @@ class ChangeLogoImgViewTest(APITestCase):
     def setUp(self):
         self.user = CustomUser.objects.create_user(password='testuser',
                                                    email='testuser@example.com',
-                                                   role=CustomUser.STUDENT_ROLE)
+                                                   role=CustomUser.STUDENT_ROLE,
+                                                   is_verified=True)
         self.token = self.user.get_token()['accessToken']
         self.image = self.create_test_image()
 
@@ -638,7 +632,8 @@ class SendPhoneCodeViewTest(APITestCase):
     def setUp(self):
         self.user = CustomUser.objects.create_user(password='testuser',
                                                    email='testuser@example.com',
-                                                   role=CustomUser.STUDENT_ROLE)
+                                                   role=CustomUser.STUDENT_ROLE,
+                                                   is_verified=True)
         self.token = self.user.get_token()['accessToken']
 
     def test_send_v_code_200(self):
@@ -685,7 +680,8 @@ class SetPhoneView(APITestCase):
     def setUp(self):
         self.user = CustomUser.objects.create_user(password='testuser',
                                                    email='testuser@example.com',
-                                                   role=CustomUser.STUDENT_ROLE)
+                                                   role=CustomUser.STUDENT_ROLE,
+                                                   is_verified=True)
         self.token = self.user.get_token()['accessToken']
 
         PhoneVerificationCode.objects.create(user=self.user, code=123456,
@@ -694,7 +690,8 @@ class SetPhoneView(APITestCase):
 
         self.company = CustomUser.objects.create_user(password='testuser',
                                                       email='testuser2@example.com',
-                                                      role=CustomUser.COMPANY_ROLE)
+                                                      role=CustomUser.COMPANY_ROLE,
+                                                      is_verified=True)
         self.company_token = self.company.get_token()['accessToken']
 
         PhoneVerificationCode.objects.create(user=self.company, code=123456,
@@ -771,13 +768,10 @@ class EditProfileViewTest(APITestCase):
                          False)
         self.assertEqual(res.status_code, 200)
 
-
     def test_edit_company_profile_200(self):
         res = self.client.post(reverse('profile_edit'),
                                {'vkLink': 'https://vk.com'},
                                HTTP_AUTHORIZATION='Bearer ' + self.company_token)
-
-
 
         self.assertEqual(res.data.get('vkLink'), 'https://vk.com')
         self.assertEqual(res.status_code, 200)
@@ -822,9 +816,23 @@ class EditProfileViewTest(APITestCase):
         self.assertEqual(res.status_code, 200)
 
 
+class GenerateProfileReportViewTest(APITestCase):
 
+    def setUp(self):
+        self.student = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        profile: StudentProfile = self.student.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.first_name = "Егор"
+        profile.last_name = "Петров"
+        profile.save()
 
+        self.student_token = self.student.get_token()['accessToken']
 
-
-
-
+    def test_generate_profile_report_200(self):
+        res = self.client.get(reverse('generate_report'),
+                              HTTP_AUTHORIZATION='Bearer ' + self.student_token)
