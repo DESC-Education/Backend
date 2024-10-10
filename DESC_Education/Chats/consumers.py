@@ -2,7 +2,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser
-from django.db.models import Q
+from django.db.models import Q, Count
 from Chats.models import Chat
 from Chats.serializers import (WebSocketSerializer)
 from Files.models import File
@@ -83,14 +83,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
                 if not (str(mes.user.id) != str(self.user) and str(mes.chat.id) == str(self.chat_id)):
                     return None
+                queryset = Message.objects.filter(~Q(user=self.user) & Q(is_readed=False))
 
-                messages = Message.objects.filter(Q(is_readed=False) &
-                                                  Q(created_at__lte=mes.created_at) &
-                                                  ~Q(user=self.user))
+                unread_chats_count = queryset.filter(Q(chat__members=self.user))\
+                    .aggregate(Count('chat', distinct=True)).get('chat__count')
+
+                messages = queryset.filter(Q(created_at__lte=mes.created_at))
                 messages.update(is_readed=True)
                 mes.is_readed = True
 
-                return MessageSerializer(instance=mes).data
+                data = MessageSerializer(instance=mes).data
+                data.update({'unreadChatsCount': unread_chats_count})
+
+                return data
+
 
     @database_sync_to_async
     def _check_permissions(self):

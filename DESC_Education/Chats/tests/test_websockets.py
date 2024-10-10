@@ -90,6 +90,7 @@ class MyTests(TransactionTestCase):
         message = json.loads(await communicator.receive_from())
         payload = json.loads(message.get('payload'))
 
+        self.assertEqual(payload.get('unreadChatsCount'), 1)
         self.assertTrue(payload.get('isRead'))
 
 
