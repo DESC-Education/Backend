@@ -25,6 +25,8 @@ daphne==4.1.2
 uvicorn[standard]==0.31.0
 django-eventstream==5.3.1
 pdfkit==1.0.0
+xhtml2pdf==0.2.16
+
 
 
 
