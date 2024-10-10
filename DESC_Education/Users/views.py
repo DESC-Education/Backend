@@ -1,5 +1,4 @@
 import random
-
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from Settings.permissions import IsAuthenticatedAndVerified
@@ -639,7 +638,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
                                                                 code=str(random.randint(1000, 9999)),
                                                                 type=VerificationCode.REGISTRATION_TYPE)
 
-                    send_auth_registration_code(email, Vcode_reg.code)
+                    tasks.MailVerifyRegistration.delay(email, Vcode_reg.code)
 
                     return Response({"message": "Код подтверждения отправлен на электронную почту"},
                                     status=status.HTTP_200_OK)
@@ -663,7 +662,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
                                                                   code=str(random.randint(1000, 9999)),
                                                                   type=VerificationCode.EMAIL_CHANGE_TYPE,
                                                                   new_email=email)
-                    send_mail_change_code(email, Vcode_email.code)
+                    tasks.MailChangeMail.delay(email, Vcode_email.code)
 
                     return Response({"message": "Код подтверждения отправлен на электронную почту"},
                                     status=status.HTTP_200_OK)
@@ -693,7 +692,7 @@ class SendVerifyCodeView(generics.GenericAPIView):
                                                                  code=random.randint(1000, 9999),
                                                                  type=VerificationCode.PASSWORD_CHANGE_TYPE)
 
-                    send_password_change_code(user.email, Vcode_pass.code)
+                    tasks.MailChangePassword.delay(user.email, Vcode_pass.code)
 
                     return Response({"message": "Код подтверждения отправлен на электронную почту"},
                                     status=status.HTTP_200_OK)

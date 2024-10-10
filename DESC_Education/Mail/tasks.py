@@ -13,11 +13,30 @@ from django.utils.html import strip_tags
 @shared_task
 def MailVerifyRegistration(email, code):
     html_content = render_to_string('reg_mail.html', {'code': code})
-    text_content = strip_tags(html_content)
 
     msg = EmailMessage(
         "Подтверждение регистрации", html_content, settings.DEFAULT_FROM_EMAIL, [email]
     )
     msg.content_subtype = 'html'
-    # msg.attach_alternative(html_content, "text/html")
+    msg.send()
+
+
+@shared_task
+def MailChangeMail(email, code):
+    html_content = render_to_string('mail_code.html', {'code': code})
+
+    msg = EmailMessage(
+        "Смена почты", html_content, settings.DEFAULT_FROM_EMAIL, [email]
+    )
+    msg.content_subtype = 'html'
+    msg.send()
+
+@shared_task
+def MailChangePassword(email, code):
+    html_content = render_to_string('pass_code.html', {'code': code})
+
+    msg = EmailMessage(
+        "Смена пароля", html_content, settings.DEFAULT_FROM_EMAIL, [email]
+    )
+    msg.content_subtype = 'html'
     msg.send()

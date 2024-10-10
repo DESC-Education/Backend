@@ -6,7 +6,11 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from Profiles.permissions import IsCompanyOrStudentRole
+from Settings.permissions import IsStudentRole
 from rest_framework.response import Response
+from django.shortcuts import render
+from Profiles.utils.generate_profile_report import generate_pdf
+from django.template.loader import render_to_string
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from django_filters.rest_framework import DjangoFilterBackend
@@ -886,7 +890,6 @@ class SendPhoneCodeView(generics.GenericAPIView):
             if PhoneVerificationCode.objects.filter(phone=phone, is_used=True).exists():
                 return Response({"message": "Данный номер телефона уже привязан!"}, status=status.HTTP_404_NOT_FOUND)
 
-
             p = PhoneVerificationCode.objects.filter(phone=phone, user=request.user, is_used=False)
             if len(p) != 0:
                 p = p.first()
@@ -894,7 +897,6 @@ class SendPhoneCodeView(generics.GenericAPIView):
                     return Response({
                         "message": "Код подтверждения уже был отправлен. Пожалуйста, повторите попытку позже."},
                         status=status.HTTP_409_CONFLICT)
-
 
             PhoneVerificationCode.objects.create(phone=phone,
                                                  code=PhoneVerificationCode.create_code(),
@@ -1108,10 +1110,10 @@ class EditProfileView(generics.GenericAPIView):
                                 {'id': 'uuid', 'name': 'str', 'percent': 0.1},
                                 {'id': 'uuid', 'name': 'str', 'percent': 0.2}
                             ],
-                           'level': {
-                               'value': 1,
-                               'name': 'str',
-                           }
+                            'level': {
+                                'value': 1,
+                                'name': 'str',
+                            }
                         }
 
                     ),
@@ -1262,6 +1264,28 @@ class FacultiesList(generics.ListAPIView):
     @method_decorator(cache_page(60 * 60))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+
+
+
+class GenerateProfileReportView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        # user = request.user
+        # profile = user.get_profile()
+        # profile_data = StudentProfileSerializer(profile).data
+
+        context = {
+            # '123': 100000
+            'firstName': "Ярослав",
+            'lastName': "Павленко"
+        }
+
+        generate_pdf(context)
+
+        from django.shortcuts import render
+        return render(request, 'profile_report.html', context=context)
 
 
 class TestVerifyView(generics.GenericAPIView):
