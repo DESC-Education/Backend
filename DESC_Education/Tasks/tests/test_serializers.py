@@ -13,7 +13,6 @@ from Users.models import CustomUser
 from Profiles.models import StudentProfile
 
 
-
 class SolutionSerializerTest(TestCase):
     def setUp(self):
         self.maxDiff = None
@@ -69,8 +68,6 @@ class SolutionSerializerTest(TestCase):
             text="Test Comment",
         )
 
-
-
     def test_serialize(self):
         serializer = SolutionSerializer(instance=self.solution)
         self.assertEqual(dict(serializer.data),
@@ -94,11 +91,10 @@ class SolutionSerializerTest(TestCase):
                                   'id': str(self.company.id)
                               }
                           },
-                          'userProfile': {'firstName': '',
-                                          'lastName': '',
-                                          'logoImg': None},
+                          'studentProfile': {'firstName': '',
+                                             'lastName': '',
+                                             'logoImg': None},
                           'companyComment': None,
                           'status': 'completed',
                           'task': str(self.task.id),
                           'createdAt': self.solution.created_at.isoformat()})
-

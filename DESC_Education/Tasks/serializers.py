@@ -80,7 +80,7 @@ class SolutionSerializer(serializers.ModelSerializer):
 
     # read_only
     files = FileSerializer(many=True, read_only=True)
-    userProfile = serializers.SerializerMethodField(read_only=True)
+    studentProfile = serializers.SerializerMethodField(read_only=True)
     status = serializers.ChoiceField(choices=Solution.STATUSES, read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     companyComment = serializers.CharField(source='company_comment', read_only=True)
@@ -91,7 +91,7 @@ class SolutionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Solution
-        fields = ('id', 'user', 'description', 'files', 'files_list', 'userProfile',
+        fields = ('id', 'user', 'description', 'files', 'files_list', 'studentProfile',
                   'companyComment', 'status', 'createdAt', 'taskId', 'task', 'review')
         read_only_fields = ['id', 'createdAt', 'companyComment', 'user', 'status']
 
@@ -100,7 +100,7 @@ class SolutionSerializer(serializers.ModelSerializer):
         return str(obj.task.id)
 
     @staticmethod
-    def get_userProfile(obj) -> UserProfileSerializer:
+    def get_studentProfile(obj) -> UserProfileSerializer:
         return UserProfileSerializer(obj.user.get_profile()).data
 
     def create(self, validated_data):
@@ -119,13 +119,14 @@ class SolutionSerializer(serializers.ModelSerializer):
 
 
 class ReviewListSerializer(serializers.ModelSerializer):
-    profile = serializers.SerializerMethodField()
+    companyProfile = serializers.SerializerMethodField()
+    createdAt = serializers.DateTimeField(source='created_at')
 
     class Meta:
         model = Review
-        fields = '__all__'
+        fields = ['id', 'solution', 'text', 'rating', 'createdAt', 'companyProfile']
 
-    def get_profile(self, obj) -> str:
+    def get_companyProfile(self, obj) -> str:
         try:
             profile = obj.solution.task.user.get_profile()
             return ProfileTaskSerializer(profile).data
@@ -207,7 +208,7 @@ class TaskSerializer(serializers.ModelSerializer):
     files = FileSerializer(many=True, read_only=True)
     category = TaskCategorySerializer(read_only=True)
     catFilters = serializers.SerializerMethodField(read_only=True)
-    profile = serializers.SerializerMethodField(read_only=True)
+    companyProfile = serializers.SerializerMethodField(read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     solutionsCount = serializers.SerializerMethodField(read_only=True)
     solutions = serializers.SerializerMethodField(read_only=True)
@@ -215,7 +216,7 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ('id', 'user', 'createdAt', 'title', 'description', 'deadline', 'files', 'files_list', 'category',
-                  'catFilters', 'profile', "categoryId", "filtersId", 'solutionsCount', 'solutions')
+                  'catFilters', 'companyProfile', "categoryId", "filtersId", 'solutionsCount', 'solutions')
         read_only_fields = ['id', 'user']
         extra_fields = {
             'files': {
@@ -236,14 +237,15 @@ class TaskSerializer(serializers.ModelSerializer):
         return solutions
 
     @staticmethod
-    def get_profile(obj) -> ProfileTaskSerializer:
+    def get_companyProfile(obj) -> ProfileTaskSerializer:
         try:
             profile = obj.user.get_profile()
             return ProfileTaskSerializer(profile).data
         except:
             return None
 
-    def get_catFilters(self, obj) -> FilterCategorySerializer:
+    @staticmethod
+    def get_catFilters(obj) -> FilterCategorySerializer:
         category_filters = {}
         filters = obj.filters.all()
 
@@ -265,7 +267,8 @@ class TaskSerializer(serializers.ModelSerializer):
 
         return category_filters
 
-    def get_solutionsCount(self, obj) -> int:
+    @staticmethod
+    def get_solutionsCount(obj) -> int:
         return obj.solutions.count()
 
     def __init__(self, *args, **kwargs):
