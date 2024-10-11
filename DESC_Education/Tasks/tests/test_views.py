@@ -1159,15 +1159,15 @@ class ReviewListViewTest(APITestCase):
                               HTTP_AUTHORIZATION=f'Bearer {self.student_token}')
 
         self.assertEqual(list(res.data.get('results')), [
-            {'created_at': self.review_2.created_at.isoformat(),
+            {'createdAt': self.review_2.created_at.isoformat(),
              'id': str(self.review_2.id),
-             'profile': {'companyName': '', 'logoImg': None, 'id': str(self.company.id)},
+             'companyProfile': {'companyName': '', 'logoImg': None, 'id': str(self.company.id)},
              'rating': 5,
              'solution': self.review_2.solution.id,
              'text': 'Test Comment 2'},
-            {'created_at': self.review_1.created_at.isoformat(),
+            {'createdAt': self.review_1.created_at.isoformat(),
              'id': str(self.review_1.id),
-             'profile': {'companyName': '', 'logoImg': None, 'id': str(self.company.id)},
+             'companyProfile': {'companyName': '', 'logoImg': None, 'id': str(self.company.id)},
              'rating': 4,
              'solution': self.review_1.solution.id,
              'text': 'Test Comment 1'}]
