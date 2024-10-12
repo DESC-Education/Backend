@@ -36,6 +36,9 @@ class MyTests(TransactionTestCase):
         ChatMembers.objects.create(chat=self.chat, user=self.company)
 
         Message.objects.create(chat=self.chat, user=self.company, message="123")
+        Message.objects.create(chat=self.chat, user=self.company, message="123")
+        Message.objects.create(chat=self.chat, user=self.company, message="123")
+        Message.objects.create(chat=self.chat, user=self.company, message="123")
         self.mes = Message.objects.create(chat=self.chat, user=self.company, message="123")
 
 
@@ -90,7 +93,7 @@ class MyTests(TransactionTestCase):
         message = json.loads(await communicator.receive_from())
         payload = json.loads(message.get('payload'))
 
-        self.assertEqual(payload.get('unreadChatsCount'), 1)
+        self.assertEqual(payload.get('unreadChatsCount'), 0)
         self.assertTrue(payload.get('isRead'))
 
 
