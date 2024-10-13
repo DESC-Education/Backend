@@ -20,6 +20,22 @@ def MailVerifyRegistration(email, code):
     msg.content_subtype = 'html'
     msg.send()
 
+@shared_task
+def MailProfileVerification(email, verified, comment):
+
+    if verified:
+        verified_text = "Ваш профиль был подтвержден!"
+        html_content = render_to_string('approved.html')
+    else:
+        verified_text = "Ваш профиль был отклонен!"
+        html_content = render_to_string('rejected.html', {'comment': comment})
+
+    msg = EmailMessage(
+        verified_text, html_content, settings.DEFAULT_FROM_EMAIL, [email]
+    )
+    msg.content_subtype = 'html'
+    msg.send()
+
 
 @shared_task
 def MailChangeMail(email, code):
