@@ -10,11 +10,15 @@ from django.db.models import Q
 from Notifications.tasks import EventStreamSendNotification, EventStreamSendNotifyNewMessage
 import time
 from django.core import serializers
+from Mail.tasks import MailProfileVerification
 
 
 @receiver(post_save, sender=ProfileVerifyRequest)
 def notify_student_profile_verification(sender, instance: ProfileVerifyRequest, **kwargs):
     EventStreamSendNotification.delay(instance.id, Notification.VERIFICATION_TYPE)
+    MailProfileVerification.delay(instance.profile.user.email,
+                                  True if instance.status == ProfileVerifyRequest.APPROVED else False,
+                                  instance.comment)
 
 
 @receiver(post_save, sender=Message)
