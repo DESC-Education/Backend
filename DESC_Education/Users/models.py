@@ -3,7 +3,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from django.utils import timezone
+from django.db.utils import IntegrityError
 # Create your models here.
+from django.db.models import Q
 from django.apps import apps
 
 
@@ -11,6 +13,12 @@ class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('The Email field must be set')
+        try:
+            deleted_user = self.get(Q(email=email) & ~Q(deleted_at=None))
+            deleted_user.email = f'deleted_user_{email}'
+            deleted_user.save(using=self._db)
+        except:
+            pass
 
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
@@ -26,12 +34,23 @@ class CustomUserManager(BaseUserManager):
 
         return user
 
+
     def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault("is_verified", True)
         extra_fields.setdefault('is_superuser', True)
 
         return self.create_user(email, password, **extra_fields)
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(deleted_at=None)
+        return queryset
+
+
+class AllUsersManager(BaseUserManager):
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset
 
 
 class CustomUser(AbstractBaseUser):
@@ -47,8 +66,6 @@ class CustomUser(AbstractBaseUser):
         (UNIVERSITY_ADMIN_ROLE, "University Admin Role")
     ]
 
-
-
     id = models.UUIDField(primary_key=True,
                           default=uuid.uuid4,
                           editable=False,
@@ -60,10 +77,12 @@ class CustomUser(AbstractBaseUser):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, default=None)
 
     USERNAME_FIELD = 'email'
 
     objects = CustomUserManager()
+    all_objects = AllUsersManager()
 
     class Meta:
         ordering = ['created_at']
@@ -71,12 +90,18 @@ class CustomUser(AbstractBaseUser):
     def __str__(self):
         return self.email
 
-    def has_perm(self, perm, obj=None):
+    def soft_delete(self):
+        self.deleted_at = timezone.now()
+        self.email = f"deleted_user_{self.email}"
+        self.save()
+
+    @staticmethod
+    def has_perm(perm, obj=None):
         return True
 
-    def has_module_perms(self, app_label):
+    @staticmethod
+    def has_module_perms(app_label):
         return True
-
 
     def get_token(self):
         access_token = AccessToken.for_user(self)
@@ -139,5 +164,3 @@ class VerificationCode(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-
-

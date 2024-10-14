@@ -10,7 +10,8 @@ from Users.views import (
     SendVerifyCodeView,
     ChangePasswordView,
     ChangeEmailView,
-    TestDeleteView
+    TestDeleteView,
+    UserDeleteView,
 
 )
 
@@ -27,9 +28,11 @@ urlpatterns = [
     path('send_verify_code', SendVerifyCodeView.as_view(), name='send_verify_code'),
     path('change_password', ChangePasswordView.as_view(), name='change_password'),
     path('change_email', ChangeEmailView.as_view(), name='change_email'),
+    path('delete', UserDeleteView.as_view(), name='safe_delete'),
+
+
+
     path('test_delete', TestDeleteView.as_view(), name='test_delete'),
-
-
-    # path('', HelloView.as_view(), name='hello'),
+        # path('', HelloView.as_view(), name='hello'),
 
 ]

@@ -472,7 +472,6 @@ class AuthView(generics.GenericAPIView):
         }
 
     )
-
     def get(self, request):
         try:
             user = request.user
@@ -896,6 +895,22 @@ class ChangeEmailView(generics.GenericAPIView):
 
         except Exception as e:
             return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserDeleteView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        tags=["Users"],
+        summary="Удаление пользователя",
+        description="Soft удаление пользователя"
+
+    )
+    def delete(self, request):
+        user: CustomUser = request.user
+        user.soft_delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TestDeleteView(generics.GenericAPIView):

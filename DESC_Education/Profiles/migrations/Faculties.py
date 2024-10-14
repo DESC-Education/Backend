@@ -17,8 +17,8 @@ def get_faculties(apps, schema_editor):
             university_id = row[2]
             faculties_data.append({"id": id, "name": name, "university_id": university_id})
 
-    faculties = [Faculty(**data) for data in faculties_data]
 
+    faculties = [Faculty(**data) for data in faculties_data]
 
     Faculty.objects.bulk_create(faculties)
 

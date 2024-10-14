@@ -41,6 +41,19 @@ class CustomUserTest(TestCase):
             CustomUser.objects.create_user(email=None, password="123")
 
 
+    def test_delete(self):
+        self.assertEqual(3, CustomUser.objects.all().count())
+
+        user: CustomUser = CustomUser.objects.get(email="testemail@example.com")
+        user.soft_delete()
+
+        self.assertEqual(2, CustomUser.objects.all().count())
+        self.assertEqual(3, CustomUser.all_objects.all().count())
+
+
+
+
+
 
 
 

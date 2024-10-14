@@ -20,6 +20,12 @@ class LoginViewTest(APITestCase):
             password="test123",
             is_verified=True)
 
+        cls.deleted_user: CustomUser = CustomUser.objects.create_user(
+            email="tes2t@mail.com",
+            password="test123",
+            is_verified=True,
+            deleted_at=timezone.now())
+
     def test_invalid_login_401(self):
         res = self.client.post(reverse('login'),
                                data=json.dumps({"email": "test@mail.com", "password": "wrong_password"}),
@@ -35,6 +41,14 @@ class LoginViewTest(APITestCase):
 
         self.assertEqual(res.status_code, 401)
         self.assertEqual(res.data.get("message"), "Неверный адрес электронной почты или пароль")
+
+    def test_deleted_401(self):
+        res = self.client.post(reverse('login'),
+                               data=json.dumps({"email": "tes2t@mail.com", "password": "test123"}),
+                               content_type="application/json")
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(res.data.get("message"), "Неверный адрес электронной почты или пароль")
+
 
     def test_invalid_auth_mail_406(self):
         self.user.is_verified = False
@@ -114,7 +128,6 @@ class RegistrationViewTest(APITestCase):
         self.assertEqual(res.data, {"message": 'Код подтверждения отправлен на электронную почту'})
         self.assertEqual(user.role, user.COMPANY_ROLE)
         self.assertEqual(user.is_verified, False)
-
 
 
 
@@ -238,6 +251,13 @@ class AuthViewTest(APITestCase):
             password="test123",
             is_verified=True,
         )
+        self.deleted_user = CustomUser.objects.create_user(
+            email="test2@mail.com",
+            password="test123",
+            is_verified=True,
+            deleted_at=timezone.now()
+        )
+
         self.company = CustomUser.objects.create_user(
             email="test_company@mail.com",
             password="test123",
@@ -261,20 +281,19 @@ class AuthViewTest(APITestCase):
         res = self.client.get(reverse('auth'), headers={"Authorization": f"Bearer {tokens.get('accessToken')}"},
                               content_type="application/json")
 
-
         self.assertEqual(dict(res.data), {
-                    "id": str(self.user.id),
-                    "email": self.user.email,
-                    "role": self.user.role,
-                    "isActive": self.user.is_active,
-                    "isStaff": self.user.is_staff,
-                    "isSuperuser": self.user.is_superuser,
-                    "isVerified": self.user.is_verified,
-                    'createdAt': self.user.created_at.isoformat(),
-                    'notifications': [],
-                    'unreadChatsCount': 2
-                }
-            )
+            "id": str(self.user.id),
+            "email": self.user.email,
+            "role": self.user.role,
+            "isActive": self.user.is_active,
+            "isStaff": self.user.is_staff,
+            "isSuperuser": self.user.is_superuser,
+            "isVerified": self.user.is_verified,
+            'createdAt': self.user.created_at.isoformat(),
+            'notifications': [],
+            'unreadChatsCount': 2
+        }
+                         )
         self.assertEqual(res.status_code, 200)
 
     def test_invalid_auth_401(self):
@@ -290,6 +309,13 @@ class AuthViewTest(APITestCase):
 
         self.assertEqual(res.status_code, 401)
         self.assertEqual(res.data.get("detail"), 'Данный токен недействителен для любого типа токена')
+
+    def test_auth_deleted(self):
+        res = self.client.get(reverse('auth'),
+                              headers={"Authorization": f"Bearer {self.deleted_user.get_token()['accessToken']}"})
+
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(str(res.data.get('detail')), 'Пользователь не найден')
 
 
 class SendVerifyCodeViewTest(APITestCase):
@@ -390,7 +416,6 @@ class SendVerifyCodeViewTest(APITestCase):
 
         self.assertEqual(res.data, {'message': 'Пользователь не найден'})
         self.assertEqual(res.status_code, 404)
-
 
     def test_incorrect_type_406(self):
         res = self.client.post(reverse('send_verify_code'),
@@ -565,3 +590,27 @@ class ChangeEmailViewTest(APITestCase):
         self.assertEqual(res.status_code, 406)
 
 
+class UserDeleteViewTest(APITestCase):
+    def setUp(self):
+        self.user: CustomUser = CustomUser.objects.create_user(
+            email="test@mail.com",
+            password="test123",
+            is_verified=True
+        )
+
+        tokens = self.user.get_token()
+        self.access_token = tokens.get("accessToken")
+
+    def test_soft_delete_200(self):
+        res = self.client.delete(reverse('safe_delete'),
+                                 headers={"Authorization": f"Bearer {self.access_token}"},
+                                 )
+
+        self.assertEqual(0, CustomUser.objects.all().count())
+        self.assertEqual(1, CustomUser.all_objects.all().count())
+
+    def test_soft_delete_401(self):
+        res = self.client.delete(reverse('safe_delete'))
+
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(str(res.data.get('detail')), "Учетные данные не были предоставлены.")
