@@ -10,6 +10,7 @@ class Notification(models.Model):
     REVIEW_TYPE = 'review'
     COUNT_RESET_TYPE = 'countReset'
     SOLUTION_TYPE = 'solution'
+    VIEWED_TYPE = 'viewed'
 
     TYPE_CHOICES = (
         (VERIFICATION_TYPE, 'Verification'),
@@ -18,6 +19,7 @@ class Notification(models.Model):
         (REVIEW_TYPE, 'Review'),
         (COUNT_RESET_TYPE, 'Count Reset'),
         (SOLUTION_TYPE, 'Solution'),
+        (VIEWED_TYPE, 'viewed'),
     )
 
 
