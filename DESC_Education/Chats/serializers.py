@@ -87,7 +87,8 @@ class MessageSerializer(serializers.ModelSerializer):
         model = Message
         fields = ['id', 'message', 'user', 'createdAt', 'isRead', 'files']
 
-    def get_files(self, obj) -> FileSerializer(many=True):
+    @staticmethod
+    def get_files(obj) -> FileSerializer(many=True):
         return FileSerializer(obj.files, many=True).data
 
 
