@@ -87,24 +87,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     return None
                 queryset = Message.objects.filter(~Q(user=self.user) & Q(is_readed=False) & Q(chat__members=self.user))
 
-                unread_chats_count = queryset.filter(Q(chat__members=self.user)) \
-                    .aggregate(Count('chat', distinct=True)).get('chat__count')
-
-                chats = queryset.values('chat')\
-                    .annotate(unread_count=Count('id'))
-
-
-                unreaded_message_count = chats.filter(Q(chat_id=self.chat_id))[0].get('unread_count')
-
                 messages = queryset.filter(Q(created_at__lte=mes.created_at))
-                readed_messages = messages.update(is_readed=True)
-                mes.is_readed = True
+                messages.update(is_readed=True)
 
-                if readed_messages == unreaded_message_count:
-                    unread_chats_count -= 1
+                # unread_chats_count = queryset.filter(Q(chat__members=self.user)) \
+                #     .aggregate(Count('chat', distinct=True)).get('chat__count')
+                #
+                # chats = queryset.values('chat')\
+                #     .annotate(unread_count=Count('id'))
+                #
+                #
+                # unreaded_message_count = chats.filter(Q(chat_id=self.chat_id))[0].get('unread_count')
 
-                data = MessageSerializer(instance=mes).data
-                data.update({'unreadChatsCount': unread_chats_count})
+
+                # mes.is_readed = True
+
+                # if readed_messages == unreaded_message_count:
+                #     unread_chats_count -= 1
 
                 return None
 
