@@ -50,4 +50,5 @@ class MessageNotificationSerializer(serializers.ModelSerializer):
         if user:
             res = queryset.aggregate(Count('chat', distinct=True)).get('chat__count')
             print(res)
+            return res
         return None
