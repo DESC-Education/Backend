@@ -133,11 +133,10 @@ def EventStreamSendNotification(instance_id, type):
         case Notification.VIEWED_TYPE:
             instance = Message.objects.get(id=instance_id)
 
-
             chat_members = ChatMembers.objects.filter(Q(chat=instance.chat))
             for member in chat_members:
                 user = member.user
-                serializer = MessageNotificationSerializer(instance, data={'user': user.id})
+                serializer = MessageNotificationSerializer(instance, data={'user': str(user.id)})
                 serializer.is_valid()
 
                 send_event(f"user-{user.id}", 'viewed', serializer.data)
