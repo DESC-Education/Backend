@@ -47,6 +47,7 @@ class MessageNotificationSerializerTest(TestCase):
         self.assertTrue(serializer.is_valid())
 
         self.assertEqual(dict(serializer.data), {'chat': self.chat.id,
+                                                 'id': str(self.mes.id),
                                                  'message': 'Первое',
                                                  'createdAt': self.mes.created_at.isoformat(),
                                                  'unreadChatsCount': 2,

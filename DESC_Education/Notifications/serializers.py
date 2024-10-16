@@ -25,9 +25,10 @@ class MessageNotificationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ['chat', 'message', 'createdAt', 'unreadChatsCount', 'unreadCount', 'user']
+        fields = ['id', 'chat', 'message', 'createdAt', 'unreadChatsCount', 'unreadCount', 'user']
 
-    def get_chat(self, obj):
+    @staticmethod
+    def get_chat(obj):
         return obj.chat.id
 
     def get_queryset(self):
