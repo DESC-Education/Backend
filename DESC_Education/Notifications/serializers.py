@@ -46,6 +46,8 @@ class MessageNotificationSerializer(serializers.ModelSerializer):
     def get_unreadChatsCount(self, obj) -> int:
         user = self.validated_data.get('user')
         queryset = self.get_queryset()
+        print(user)
         if user:
-            return queryset.aggregate(Count('chat', distinct=True)).get('chat__count')
+            res = queryset.aggregate(Count('chat', distinct=True)).get('chat__count')
+            print(res)
         return None
