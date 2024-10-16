@@ -37,6 +37,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         serializer.is_valid(raise_exception=True)
 
         payload = await self.create_message(serializer.data)
+        if payload is None:
+            return
         serializer.validated_data['payload'] = json.dumps(payload)
 
         await self.channel_layer.group_send(
@@ -104,7 +106,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 data = MessageSerializer(instance=mes).data
                 data.update({'unreadChatsCount': unread_chats_count})
 
-                return data
+                return None
 
 
     @database_sync_to_async
