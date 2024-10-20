@@ -11,9 +11,12 @@ import json
 from django.core.files.uploadedfile import SimpleUploadedFile
 from Chats.serializers import MessageSerializer
 from Files.models import File
+from django.test import SimpleTestCase
 
 
-class MyTests(TransactionTestCase):
+class MyTests(SimpleTestCase):
+    databases = '__all__'
+
     def setUp(self) -> None:
         self.student = CustomUser.objects.create_user(
             email='test@example.com',
@@ -67,6 +70,7 @@ class MyTests(TransactionTestCase):
         ]))
         communicator = WebsocketCommunicator(application, f"/ws/chat/{self.chat.id}/?token={self.student_token}")
         connected, subprotocol = await communicator.connect()
+
 
         await communicator.send_json_to({"payload": {"message": "hello"},
                                          "type": "message"})

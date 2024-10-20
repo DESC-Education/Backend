@@ -96,10 +96,11 @@ class ChatDetailSerializer(serializers.ModelSerializer):
     companion = serializers.SerializerMethodField()
     task = ChatTaskSerializer()
     messages = serializers.SerializerMethodField()
+    hasMoreMessages = serializers.SerializerMethodField()
 
     class Meta:
         model = Chat
-        fields = ['companion', 'task', 'messages', 'id']
+        fields = ['companion', 'task', 'messages', 'id', 'hasMoreMessages']
 
     def get_companion(self, obj) -> CompanionSerializer:
         members = obj.members.all()
@@ -109,13 +110,30 @@ class ChatDetailSerializer(serializers.ModelSerializer):
             return CompanionSerializer(companion).data if companion else None
         return None
 
+
+    def get_queryset(self, obj):
+        if not hasattr(self, '_queryset'):
+            self._queryset = Message.objects.filter(chat=obj).order_by('-created_at')
+        return self._queryset
+
+    def get_hasMoreMessages(self, obj):
+        request = self.context['request']
+        limit = int(request.query_params.get('page_size', 50))
+        message_count = self.get_queryset(obj).count()
+
+        res = True if message_count > limit else False
+        return res
+
+
+
+
     def get_messages(self, obj) -> MessageSerializer(many=True):
         request = self.context['request']
         message_id = request.query_params.get('messageId')
         limit = int(request.query_params.get('page_size', 50))  # значение по умолчанию 50
 
         if message_id is None:
-            messages = Message.objects.filter(chat=obj).order_by('-created_at')[:limit]
+            messages = self.get_queryset(obj)[:limit]
         else:
             try:
                 reference_message = Message.objects.get(id=message_id, chat=obj)
