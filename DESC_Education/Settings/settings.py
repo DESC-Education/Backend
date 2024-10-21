@@ -141,7 +141,7 @@ PROMETHEUS_METRICS_EXPORT_PORT_RANGE = range(4001, 4050)
 AUTH_USER_MODEL = "Users.CustomUser"
 
 SIMPLE_JWT = {
-    # "UPDATE_LAST_LOGIN": True,
+    "UPDATE_LAST_LOGIN": True,
     "ACCESS_TOKEN_LIFETIME": timezone.timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timezone.timedelta(days=15),
 }

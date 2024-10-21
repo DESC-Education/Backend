@@ -296,6 +296,8 @@ class AuthViewTest(APITestCase):
                          )
         self.assertEqual(res.status_code, 200)
 
+
+
     def test_invalid_auth_401(self):
         res = self.client.get(reverse('auth'), content_type="application/json")
 
