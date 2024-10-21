@@ -214,3 +214,60 @@ class AdminCustomUserDetailViewTest(APITestCase):
 
         self.assertEqual(dict(res.data), dict(CustomUserDetailSerializer(instance=self.student).data))
         self.assertEqual(res.status_code, 200)
+
+
+class StatisticsUserViewTest(APITestCase):
+
+    def setUp(self):
+        self.student = CustomUser.objects.create_user(
+            email="example@example.com",
+            password="test123",
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        self.student = CustomUser.objects.create_user(
+            email="example1@example.com",
+            password="test123",
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        self.company = CustomUser.objects.create_user(
+            email="example2@example.com",
+            password="test123",
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+        self.company = CustomUser.objects.create_user(
+            email="example3@example.com",
+            password="test123",
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True,
+        )
+        self.company.created_at = (timezone.now() - timezone.timedelta(days=2))
+        self.company.save()
+
+
+
+    def test_stats_users_200(self):
+
+        res = self.client.post(reverse('stats_users')) #{'toDate': timezone.now().date(),
+                                                        #'fromDate': (timezone.now().date() - timezone.timedelta(days=200))})
+
+        self.assertEqual(len(res.data), 7)
+        self.assertEqual(res.data[-1], {'companies': 1, 'date': timezone.now().date().strftime('%Y-%m-%d'), 'students': 2})
+        self.assertEqual(res.status_code, 200)
+
+
+    def test_stats_users_fromDate_toDate_200(self):
+        date_now = timezone.now().date()
+        res = self.client.post(reverse('stats_users'), {'toDate': date_now,
+                                                        'fromDate': (date_now - timezone.timedelta(days=2))})
+
+        self.assertEqual(len(res.data), 3)
+        self.assertEqual(res.data[0], {'companies': 1,
+                                       'date': (date_now - timezone.timedelta(days=2)).strftime('%Y-%m-%d'),
+                                       'students': 0})
+        self.assertEqual(res.status_code, 200)
+
+
+

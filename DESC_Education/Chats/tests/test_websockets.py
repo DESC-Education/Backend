@@ -71,6 +71,7 @@ class MyTests(SimpleTestCase):
         communicator = WebsocketCommunicator(application, f"/ws/chat/{self.chat.id}/?token={self.student_token}")
         connected, subprotocol = await communicator.connect()
 
+        self.assertTrue(connected)
 
         await communicator.send_json_to({"payload": {"message": "hello"},
                                          "type": "message"})

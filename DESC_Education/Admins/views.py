@@ -3,7 +3,10 @@ from rest_framework import generics, status
 from Settings.permissions import IsAdminRole
 from Users.models import CustomUser
 from rest_framework.response import Response
-from django.db.models import Q
+from django.utils import timezone
+from django.db.models import Q, Count
+from datetime import datetime
+from django.db.models.functions import TruncDate
 from Profiles.models import (
     BaseProfile,
     StudentProfile,
@@ -16,7 +19,8 @@ from Admins.serializers import (
     ProfileVerifyRequestsListSerializer,
     ProfileVerifyRequestDetailSerializer,
     CustomUserListSerializer,
-    CustomUserDetailSerializer
+    CustomUserDetailSerializer,
+    StatisticsUserSerializer
 )
 from drf_spectacular.utils import (
     extend_schema,
@@ -53,6 +57,7 @@ class AdminProfileVerifyRequestListView(generics.ListAPIView):
 
 class AdminProfileVerifyRequestDetailView(generics.GenericAPIView):
     serializer_class = ProfileVerifyRequestDetailSerializer
+
     # permission_classes = [IsAdminRole]
 
     def get_object(self, pk):
@@ -83,7 +88,7 @@ class AdminProfileVerifyRequestDetailView(generics.GenericAPIView):
 
 
 class AdminCustomUserListView(generics.ListAPIView):
-    queryset = CustomUser.objects.filter(Q(role=CustomUser.STUDENT_ROLE) | Q(role=CustomUser.COMPANY_ROLE))\
+    queryset = CustomUser.objects.filter(Q(role=CustomUser.STUDENT_ROLE) | Q(role=CustomUser.COMPANY_ROLE)) \
         .select_related('companyprofile').select_related('studentprofile')
     serializer_class = CustomUserListSerializer
     # permission_classes = [IsAdminRole]
@@ -109,8 +114,8 @@ class AdminCustomUserListView(generics.ListAPIView):
 
 class AdminCustomUserDetailView(generics.GenericAPIView):
     serializer_class = CustomUserDetailSerializer
-    # permission_classes = [IsAdminRole]
 
+    # permission_classes = [IsAdminRole]
 
     def get_object(self, pk):
         obj = get_object_or_404(CustomUser, pk=pk)
@@ -123,4 +128,53 @@ class AdminCustomUserDetailView(generics.GenericAPIView):
     def get(self, request, pk):
         instance = self.get_object(pk)
         serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class StatisticsUserView(generics.GenericAPIView):
+    serializer_class = StatisticsUserSerializer
+    queryset = CustomUser.objects.annotate(date=TruncDate('created_at')).values('date').annotate(
+        students=Count('id', filter=Q(role=CustomUser.STUDENT_ROLE)),
+        companies=Count('id', filter=Q(role=CustomUser.COMPANY_ROLE))
+    ).order_by('date')
+
+    def get_queryset(self):
+        results = []
+        req_data = self.request.data
+
+        fromDate = datetime.strptime(
+            req_data.get('fromDate', (timezone.now() - timezone.timedelta(days=6)).strftime('%Y-%m-%d')),
+            '%Y-%m-%d').date()
+
+        toDate = datetime.strptime(
+            req_data.get('toDate', timezone.now().strftime('%Y-%m-%d')), '%Y-%m-%d').date()
+
+        queryset = self.queryset.filter()
+
+        dates = [fromDate + timezone.timedelta(days=i) for i in range((toDate - fromDate).days + 1)]
+
+        for date in dates:
+            count_data = next((item for item in queryset if item['date'] == date), None)
+            if count_data:
+                results.append({
+                    'date': date,
+                    'students': count_data['students'],
+                    'companies': count_data['companies']
+                })
+            else:
+                results.append({
+                    'date': date,
+                    'students': 0,
+                    'companies': 0
+                })
+
+        return results
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Статистика регистраций пользователей"
+    )
+    def post(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

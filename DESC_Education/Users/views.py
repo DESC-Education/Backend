@@ -17,6 +17,7 @@ from Users.models import (
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
+from django.contrib.auth.models import update_last_login
 from drf_spectacular.utils import (
     extend_schema,
     OpenApiParameter,
@@ -56,13 +57,6 @@ class LoginView(generics.GenericAPIView):
     @extend_schema(
         tags=["Users"],
         summary="Авторизация пользователя",
-        # examples=[OpenApiExample(
-        #     "123",
-        #     value=[
-        #         {'title': 'A title'},
-        #         {'title': 'Another title'},
-        #     ],
-        # )],
         responses={
             200: OpenApiResponse(
                 serializer_class,
@@ -476,7 +470,7 @@ class AuthView(generics.GenericAPIView):
         try:
             user = request.user
             serializer = CustomUserSerializer(user)
-
+            update_last_login(None, user)
             return Response(serializer.data,
                             status=status.HTTP_200_OK)
 

@@ -18,6 +18,20 @@ from Users.models import CustomUser
 from Users.serializers import CustomUserSerializer
 
 
+
+
+
+class StatisticsUserSerializer(serializers.Serializer):
+    fromDate = serializers.DateField(required=False, write_only=True)
+    toDate = serializers.DateField(required=False, write_only=True)
+    date = serializers.DateField(read_only=True)
+    students = serializers.IntegerField(read_only=True)
+    companies = serializers.IntegerField(read_only=True)
+
+
+
+
+
 class ProfileVerifyRequestDetailSerializer(serializers.ModelSerializer):
     comment = serializers.CharField(required=False, max_length=255)
     status = serializers.ChoiceField(choices=ProfileVerifyRequest.STATUS_CHOICES, required=True)
