@@ -110,7 +110,6 @@ class ChatDetailSerializer(serializers.ModelSerializer):
             return CompanionSerializer(companion).data if companion else None
         return None
 
-
     def get_queryset(self, obj):
         if not hasattr(self, '_queryset'):
             self._queryset = Message.objects.filter(chat=obj).order_by('-created_at')
@@ -119,11 +118,21 @@ class ChatDetailSerializer(serializers.ModelSerializer):
     def get_hasMoreMessages(self, obj):
         request = self.context['request']
         limit = int(request.query_params.get('page_size', 50))
-        message_count = self.get_queryset(obj)[:limit+1].count()
+        message_id = request.query_params.get('messageId')
+
+        if message_id is None:
+            message_count = self.get_queryset(obj)[:limit + 1].count()
+        else:
+            try:
+                reference_message = Message.objects.get(id=message_id, chat=obj)
+                message_count = Message.objects.filter(chat=obj, created_at__lt=reference_message.created_at) \
+                               .order_by('-created_at')[:limit + 1].count()
+            except Message.DoesNotExist:
+                message_count = 0
+
 
         res = True if message_count > limit else False
         return res
-
 
     def get_messages(self, obj) -> MessageSerializer(many=True):
         request = self.context['request']
@@ -149,7 +158,6 @@ class ChatListSerializer(serializers.ModelSerializer):
     task = ChatTaskSerializer()
     isFavorite = serializers.SerializerMethodField()
     unreadCount = serializers.SerializerMethodField()
-
 
     class Meta:
         model = Chat
@@ -193,7 +201,6 @@ class ChatChangeFavoriteSerializer(ChatListSerializer):
         fields = ChatListSerializer.Meta.fields + ['chatId']
 
 
-
 class ChatSerializer(serializers.ModelSerializer):
     companionId = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(),
                                                      required=True, write_only=True)
@@ -212,21 +219,18 @@ class ChatSerializer(serializers.ModelSerializer):
         self.companion = validated_data.pop('companionId')
         task = validated_data.get('task')
 
-
-        queryset = Chat.objects.filter(Q(chatmembers__user=self.user) and Q(chatmembers__user=self.companion), task=task)
+        queryset = Chat.objects.filter(Q(chatmembers__user=self.user) and Q(chatmembers__user=self.companion),
+                                       task=task)
 
         if queryset.exists():
             return queryset.first()
-
 
         instance = Chat.objects.create(**validated_data)
 
         ChatMembers.objects.create(user=self.user, chat=instance)
         ChatMembers.objects.create(user=self.companion, chat=instance)
 
-
         return instance
-
 
     def validate(self, attrs):
         user = self.context['request'].user
