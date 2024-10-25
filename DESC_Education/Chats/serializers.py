@@ -119,7 +119,7 @@ class ChatDetailSerializer(serializers.ModelSerializer):
     def get_hasMoreMessages(self, obj):
         request = self.context['request']
         limit = int(request.query_params.get('page_size', 50))
-        message_count = self.get_queryset(obj)[:limit].count()
+        message_count = self.get_queryset(obj)[:limit+1].count()
 
         res = True if message_count > limit else False
         return res
