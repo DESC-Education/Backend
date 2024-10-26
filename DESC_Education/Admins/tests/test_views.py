@@ -217,7 +217,6 @@ class AdminCustomUserDetailViewTest(APITestCase):
 
 
 class StatisticsUserViewTest(APITestCase):
-
     def setUp(self):
         self.student = CustomUser.objects.create_user(
             email="example@example.com",
