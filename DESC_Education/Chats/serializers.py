@@ -126,10 +126,9 @@ class ChatDetailSerializer(serializers.ModelSerializer):
             try:
                 reference_message = Message.objects.get(id=message_id, chat=obj)
                 message_count = Message.objects.filter(chat=obj, created_at__lt=reference_message.created_at) \
-                               .order_by('-created_at')[:limit + 1].count()
+                                    .order_by('-created_at')[:limit + 1].count()
             except Message.DoesNotExist:
                 message_count = 0
-
 
         res = True if message_count > limit else False
         return res
