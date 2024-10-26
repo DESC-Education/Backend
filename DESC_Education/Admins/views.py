@@ -114,7 +114,6 @@ class AdminCustomUserListView(generics.ListAPIView):
 
 class AdminCustomUserDetailView(generics.GenericAPIView):
     serializer_class = CustomUserDetailSerializer
-
     # permission_classes = [IsAdminRole]
 
     def get_object(self, pk):
@@ -137,6 +136,9 @@ class StatisticsUserView(generics.GenericAPIView):
         students=Count('id', filter=Q(role=CustomUser.STUDENT_ROLE)),
         companies=Count('id', filter=Q(role=CustomUser.COMPANY_ROLE))
     ).order_by('date')
+
+    # permission_classes = [IsAdminRole]
+
 
     def get_queryset(self):
         results = []

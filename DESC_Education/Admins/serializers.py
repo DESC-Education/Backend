@@ -91,10 +91,16 @@ class CustomUserListSerializer(CustomUserSerializer):
     firstName = serializers.SerializerMethodField()
     lastName = serializers.SerializerMethodField()
     companyName = serializers.SerializerMethodField()
+    profileVerification = serializers.SerializerMethodField()
 
     class Meta(CustomUserSerializer.Meta):
         fields = CustomUserSerializer.Meta.fields + \
-                 ['firstName', 'lastName', 'companyName']
+                 ['firstName', 'lastName', 'companyName', 'profileVerification']
+
+
+    @staticmethod
+    def get_profileVerification(obj):
+        return obj.get_profile().verification
 
     @staticmethod
     def get_firstName(obj):

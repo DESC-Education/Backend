@@ -314,7 +314,7 @@ class ChatDetailSerializerTest(TestCase):
 
         self.assertEqual(res, {
             'id': str(self.chat.id),
-            'hasMoreMessages': True,
+            'hasMoreMessages': False,
             'companion': {'id': str(self.company.id), 'name': '', 'avatar': None},
             'messages': [{'createdAt': self.mes_1.created_at.isoformat(),
                           'isRead': False,
