@@ -7,6 +7,7 @@ from django.utils import timezone
 from rest_framework.test import APITestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
+from Tasks.models import Task, Solution, TaskCategory
 from Profiles.models import (
     ProfileVerifyRequest,
 )
@@ -41,11 +42,9 @@ class AdminProfileVerifyRequestsViewTest(APITestCase):
             is_verified=True
         )
 
-
         self.v_request = ProfileVerifyRequest.objects.create(
             profile=self.student.get_profile()
         )
-
 
     def test_get_list(self):
         res = self.client.get(reverse('admin_v_request_list'),
@@ -84,13 +83,9 @@ class AdminProfileVerifyRequestDetailViewTest(APITestCase):
         profile.reply_reload_date = timezone.now() + timezone.timedelta(minutes=10)
         profile.save()
 
-
-
-
         self.v_request = ProfileVerifyRequest.objects.create(
             profile=self.student.get_profile()
         )
-
 
     def test_get_detail(self):
         res = self.client.get(reverse('admin_v_request_detail', kwargs={'pk': str(self.v_request.id)}),
@@ -99,8 +94,6 @@ class AdminProfileVerifyRequestDetailViewTest(APITestCase):
         self.assertEqual(dict(res.data),
                          dict(ProfileVerifyRequestDetailSerializer(instance=self.v_request).data))
         self.assertEqual(res.status_code, 200)
-
-
 
     def test_post_v_request_detail_error(self):
         res = self.client.post(reverse('admin_v_request_detail', kwargs={'pk': str(self.v_request.id)}),
@@ -118,7 +111,6 @@ class AdminProfileVerifyRequestDetailViewTest(APITestCase):
                                content_type="application/json",
                                headers={"Authorization": f"Bearer {self.admin_token}"})
 
-
         self.assertEqual(dict(res.data).get('status'), ProfileVerifyRequest.APPROVED)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data.get('admin'), self.admin.id)
@@ -135,7 +127,6 @@ class AdminProfileVerifyRequestDetailViewTest(APITestCase):
         self.assertEqual(data.get('comment'), 'Причина')
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data.get('admin'), self.admin.id)
-
 
 
 class AdminCustomUserListViewTest(APITestCase):
@@ -163,15 +154,9 @@ class AdminCustomUserListViewTest(APITestCase):
             is_verified=True
         )
 
-
-
-
-
-
     def test_get_without_filters(self):
         res = self.client.get(reverse('admin_user_list'),
                               headers={"Authorization": f"Bearer {self.admin_token}"})
-
 
         self.assertEqual(len(res.data.get('results')), 2)
         self.assertEqual(res.status_code, 200)
@@ -202,15 +187,9 @@ class AdminCustomUserDetailViewTest(APITestCase):
             is_verified=True
         )
 
-
-
-
-
-
     def test_get_detail(self):
         res = self.client.get(reverse('admin_user_detail', args=(str(self.student.id),)),
                               headers={"Authorization": f"Bearer {self.admin_token}"})
-
 
         self.assertEqual(dict(res.data), dict(CustomUserDetailSerializer(instance=self.student).data))
         self.assertEqual(res.status_code, 200)
@@ -245,17 +224,14 @@ class StatisticsUserViewTest(APITestCase):
         self.company.created_at = (timezone.now() - timezone.timedelta(days=2))
         self.company.save()
 
-
-
     def test_stats_users_200(self):
-
-        res = self.client.post(reverse('stats_users')) #{'toDate': timezone.now().date(),
-                                                        #'fromDate': (timezone.now().date() - timezone.timedelta(days=200))})
+        res = self.client.post(reverse('stats_users'))  # {'toDate': timezone.now().date(),
+        # 'fromDate': (timezone.now().date() - timezone.timedelta(days=200))})
 
         self.assertEqual(len(res.data), 7)
-        self.assertEqual(res.data[-1], {'companies': 1, 'date': timezone.now().date().strftime('%Y-%m-%d'), 'students': 2})
+        self.assertEqual(res.data[-1],
+                         {'companies': 1, 'date': timezone.now().date().strftime('%Y-%m-%d'), 'students': 2})
         self.assertEqual(res.status_code, 200)
-
 
     def test_stats_users_fromDate_toDate_200(self):
         date_now = timezone.now().date()
@@ -269,4 +245,69 @@ class StatisticsUserViewTest(APITestCase):
         self.assertEqual(res.status_code, 200)
 
 
+class StatisticsTasksViewTest(APITestCase):
+    def setUp(self):
+        self.student = CustomUser.objects.create_user(
+            email="example@example.com",
+            password="test123",
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        self.student = CustomUser.objects.create_user(
+            email="example1@example.com",
+            password="test123",
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        self.company = CustomUser.objects.create_user(
+            email="example2@example.com",
+            password="test123",
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+        self.company = CustomUser.objects.create_user(
+            email="example3@example.com",
+            password="test123",
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True,
+        )
+        self.company.created_at = (timezone.now() - timezone.timedelta(days=2))
+        self.company.save()
 
+        self.task = Task.objects.create(
+            user=self.company,
+            title='Test task',
+            description='Test task description',
+            deadline=timezone.now() + timezone.timedelta(days=5),
+            category=TaskCategory.objects.first()
+        )
+
+        self.solution = Solution.objects.create(
+            user=self.student,
+            task=self.task
+        )
+        self.solution = Solution.objects.create(
+            user=self.student,
+            task=self.task
+        )
+        self.solution = Solution.objects.create(
+            user=self.student,
+            task=self.task,
+            status=Solution.COMPLETED
+        )
+        self.solution = Solution.objects.create(
+            user=self.student,
+            task=self.task,
+            status=Solution.FAILED
+        )
+
+
+    def test_stats_tasks_200(self):
+        res = self.client.post(reverse('stats_tasks'))  # {'toDate': timezone.now().date(),
+        # 'fromDate': (timezone.now().date() - timezone.timedelta(days=200))})
+
+        self.assertEqual(len(res.data), 7)
+        self.assertEqual(res.data[-1],
+                         {'date': timezone.now().date().strftime('%Y-%m-%d'),
+                         'created': 1, 'completed': 1, 'pending': 2, 'failed': 1})
+        self.assertEqual(res.status_code, 200)
