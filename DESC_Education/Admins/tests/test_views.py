@@ -386,3 +386,100 @@ class AdminUserChatsTest(APITestCase):
                           'unreadCount': 0}
                          )
         self.assertEqual(res.status_code, 200)
+
+
+class AdminCompanyTasksListViewTest(APITestCase):
+
+    def setUp(self):
+        self.maxDiff = None
+        self.student = CustomUser.objects.create_user(
+            email="example@example.com",
+            password="test123",
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        self.student = CustomUser.objects.create_user(
+            email="example1@example.com",
+            password="test123",
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True
+        )
+        self.company = CustomUser.objects.create_user(
+            email="example2@example.com",
+            password="test123",
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True
+        )
+        self.company = CustomUser.objects.create_user(
+            email="example3@example.com",
+            password="test123",
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True,
+        )
+        self.company.created_at = (timezone.now() - timezone.timedelta(days=2))
+        self.company.save()
+
+        self.task = Task.objects.create(
+            user=self.company,
+            title='Test task',
+            description='Test task description',
+            deadline=timezone.now() + timezone.timedelta(days=5),
+            category=TaskCategory.objects.first()
+        )
+        self.task = Task.objects.create(
+            user=self.company,
+            title='Test task',
+            description='Test task description',
+            deadline=timezone.now() + timezone.timedelta(days=5),
+            category=TaskCategory.objects.first()
+        )
+
+        self.solution = Solution.objects.create(
+            user=self.student,
+            task=self.task
+        )
+        self.solution1 = Solution.objects.create(
+            user=self.student,
+            task=self.task
+        )
+        self.solution = Solution.objects.create(
+            user=self.student,
+            task=self.task,
+            status=Solution.COMPLETED
+        )
+        self.solution = Solution.objects.create(
+            user=self.student,
+            task=self.task,
+            status=Solution.FAILED
+        )
+
+    def test_get_company_200(self):
+        res = self.client.get(reverse('admin_company_tasks', args=(str(self.company.id),)))
+
+        self.assertEqual(dict(res.data.get('results')[0]), {
+            'id': str(self.task.id),
+            'title': 'Test task', 'user': self.company.id,
+            'description': 'Test task description', 'deadline': self.task.deadline.isoformat(),
+            'createdAt': self.task.created_at.isoformat(),
+            'profile': {'companyName': '', 'logoImg': None, 'id': str(self.company.id)},
+            'category': TaskCategory.objects.first().id}
+                         )
+        self.assertEqual(res.status_code, 200)
+
+    def test_get_students_200(self):
+        res = self.client.get(reverse('admin_student_solutions', args=(str(self.student.id),)))
+
+        self.assertEqual(dict(res.data.get('results')[0]),
+                         {'companyComment': None,
+                          'createdAt': self.solution1.created_at.isoformat(),
+                          'description': None,
+                          'files': [],
+                          'id': str(self.solution1.id),
+                          'review': None,
+                          'status': 'pending',
+                          'studentProfile': {'firstName': '', 'lastName': '', 'logoImg': None},
+                          'task': str(self.task.id),
+                          'user': self.student.id}
+
+                         )
+        self.assertEqual(res.status_code, 200)

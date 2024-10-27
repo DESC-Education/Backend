@@ -8,6 +8,8 @@ from django.db.models import Q, Count, OuterRef, Subquery, F
 from datetime import datetime
 from django.db.models.functions import TruncDate
 from Tasks.models import Task, Solution
+from Tasks.serializers import TaskListSerializer, SolutionSerializer
+from Tasks.filters import MyTasksFilter, SolutionFilter
 from Chats.models import Chat, Message, ChatMembers
 from Chats.serializers import ChatListSerializer
 from Profiles.models import (
@@ -28,6 +30,7 @@ from Admins.serializers import (
 )
 from drf_spectacular.utils import (
     extend_schema,
+    OpenApiTypes,
     OpenApiParameter,
     OpenApiResponse,
     OpenApiExample,
@@ -292,3 +295,76 @@ class AdminUserChatsListView(generics.ListAPIView):
         request.user = user
         return Response(serializer.data)
 
+
+
+class AdminCompanyTasksListView(generics.ListAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskListSerializer
+    # permission_classes = [IsAdminRole]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = MyTasksFilter
+
+
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+
+        task_status = self.request.query_params.get('status', 'active')
+        now = timezone.now()
+        if task_status == 'active':
+            queryset = queryset.filter(deadline__gte=now)
+        elif task_status == 'archived':
+            queryset = queryset.filter(deadline__lt=now)
+
+        return queryset
+
+    def get_queryset(self):
+        user_id = self.kwargs.get('pk')  # Получаем ID чата из URL параметров
+        user = generics.get_object_or_404(CustomUser, pk=user_id)
+        return Task.objects.filter(user=user)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение экземпляров заданий для компании",
+        parameters=[
+            OpenApiParameter(name='status', type=OpenApiTypes.STR, enum=['active', 'archive']),
+        ]
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+
+
+class AdminStudentSolutionsListView(generics.ListAPIView):
+    queryset = Solution.objects.all()
+    serializer_class = SolutionSerializer
+    # permission_classes = [IsAdminRole]
+    filter_backends = (DjangoFilterBackend,)
+    # filterset_class = MyTasksFilter
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+
+        task_status = self.request.query_params.get('status', 'active')
+        if task_status == 'archived':
+            queryset = queryset.filter(~Q(status=Solution.PENDING))
+        elif task_status == 'active':
+            queryset = queryset.filter(status=Solution.PENDING)
+
+        return queryset
+
+    def get_queryset(self):
+        user_id = self.kwargs.get('pk')  # Получаем ID чата из URL параметров
+        user = generics.get_object_or_404(CustomUser, pk=user_id)
+        return Solution.objects.filter(user=user)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение экземпляров заданий для студента",
+        parameters=[
+            OpenApiParameter(name='status', type=OpenApiTypes.STR, enum=['active', 'archive']),
+        ]
+
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
