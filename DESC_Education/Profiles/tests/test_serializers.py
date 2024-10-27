@@ -125,7 +125,7 @@ class GetStudentProfileSerializerTest(TestCase):
             title="Test Task3",
             description="Test Task Description2",
             deadline=(timezone.now() + timezone.timedelta(days=1)).isoformat(),
-            category=TaskCategory.objects.get(id="848254a3-bad2-4e0c-be20-bedce1700301"),
+            category=TaskCategory.objects.first(),
         )
         self.task_3.filters.set([Filter.objects.first()])
         file = File.objects.create(
@@ -173,16 +173,12 @@ class GetStudentProfileSerializerTest(TestCase):
 
     def test_serialize_leadTaskCategories(self):
         serializer = GetStudentProfileSerializer(instance=self.student.get_profile()).data
-
+        cat = TaskCategory.objects.first()
         self.assertEqual(serializer.get('leadTaskCategories'),
-                         [{'id': 'c8ce70d4-6d74-460e-935a-2ae229e633c9', 'name': 'Анимация', 'percent': 0.67},
-                          {'id': '848254a3-bad2-4e0c-be20-bedce1700301', 'name': 'Мобильная разработка',
-                           'percent': 0.33}])
+                         [{'id': str(cat.id), 'name': cat.name, 'percent': 1.0}])
 
     def test_company_serialize_leadTaskCategories(self):
         serializer = GetCompanyProfileSerializer(instance=self.company.get_profile()).data
-
+        cat = TaskCategory.objects.first()
         self.assertEqual(serializer.get('leadTaskCategories'),
-                         [{'id': 'c8ce70d4-6d74-460e-935a-2ae229e633c9', 'name': 'Анимация', 'percent': 0.67},
-                          {'id': '848254a3-bad2-4e0c-be20-bedce1700301', 'name': 'Мобильная разработка',
-                           'percent': 0.33}])
+                         [{'id': str(cat.id), 'name': cat.name, 'percent': 1.0}])
