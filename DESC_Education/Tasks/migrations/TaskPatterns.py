@@ -13,11 +13,11 @@ def get_task_patterns(apps, schema_editor):
         },
         {"title": "Нейронная сеть",
          "description": "Создать и обучить нейронную сеть для следующей задачи:",
-         "category_id": "336eb2cb-a070-44d4-be55-dd1da7b683ad"
+         "category_id": "f84e15be-2f74-4524-b02b-53bbd52e9e68"
          },
         {"title": "Сервер для простых CRUD-ов",
          "description": "Создать сервер для простых CRUD-ов для следующей задачи:",
-         "category_id": "46059fc9-2243-4968-bb50-7a8f3e231b50"
+         "category_id": "ce5e11fd-f9c3-4a4d-8b4d-dc5e9b9a4c9d"
          },
     ]
 
@@ -26,17 +26,17 @@ def get_task_patterns(apps, schema_editor):
     TaskPattern.objects.bulk_create(task_patterns)
 
     Filter = apps.get_model('Tasks', 'Filter')
-    for task_pattern in task_patterns:
-        if task_pattern.title == "Лендинг":
-            task_pattern.filters.add(Filter.objects.get(name="Начинающий"))
-            task_pattern.filters.add(Filter.objects.get(name="Кейсы"))
-        elif task_pattern.title == "Нейронная сеть":
-            task_pattern.filters.add(Filter.objects.get(name="Продвинутый"))
-            task_pattern.filters.add(Filter.objects.get(name="Python"))
-        elif task_pattern.title == "Сервер для простых CRUD-ов":
-            task_pattern.filters.add(Filter.objects.get(name="Python"))
-            task_pattern.filters.add(Filter.objects.get(name="Начинающий"))
-            task_pattern.filters.add(Filter.objects.get(name="Cредний"))
+    # for task_pattern in task_patterns:
+    #     if task_pattern.title == "Лендинг":
+    #         task_pattern.filters.add(Filter.objects.get(name="Начинающий"))
+    #         task_pattern.filters.add(Filter.objects.get(name="Кейсы"))
+    #     elif task_pattern.title == "Нейронная сеть":
+    #         task_pattern.filters.add(Filter.objects.get(name="Продвинутый"))
+    #         task_pattern.filters.add(Filter.objects.get(name="Python"))
+    #     elif task_pattern.title == "Сервер для простых CRUD-ов":
+    #         task_pattern.filters.add(Filter.objects.get(name="Python"))
+    #         task_pattern.filters.add(Filter.objects.get(name="Начинающий"))
+    #         task_pattern.filters.add(Filter.objects.get(name="Cредний"))
 
 
 
