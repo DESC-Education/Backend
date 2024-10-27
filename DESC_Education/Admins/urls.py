@@ -5,7 +5,8 @@ from Admins.views import (
     AdminCustomUserListView,
     AdminCustomUserDetailView,
     StatisticsUserView,
-    StatisticsTasksView
+    StatisticsTasksView,
+    AdminUserChatsListView
 
 )
 
@@ -16,6 +17,8 @@ urlpatterns = [
     path('profile/request/<uuid:pk>', AdminProfileVerifyRequestDetailView.as_view(), name='admin_v_request_detail'),
     path('users/', AdminCustomUserListView.as_view(), name='admin_user_list'),
     path('user/<uuid:pk>', AdminCustomUserDetailView.as_view(), name='admin_user_detail'),
+    path('user/<uuid:pk>/chats', AdminUserChatsListView.as_view(), name='admin_user_chats'),
+
 
 
     path('stats/users', StatisticsUserView.as_view(), name='stats_users'),

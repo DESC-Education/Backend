@@ -8,8 +8,11 @@ from rest_framework.test import APITestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from Tasks.models import Task, Solution, TaskCategory
+from Chats.models import Chat, ChatMembers, Message
 from Profiles.models import (
     ProfileVerifyRequest,
+    StudentProfile,
+    CompanyProfile
 )
 from Files.models import (
     File
@@ -301,7 +304,6 @@ class StatisticsTasksViewTest(APITestCase):
             status=Solution.FAILED
         )
 
-
     def test_stats_tasks_200(self):
         res = self.client.post(reverse('stats_tasks'))  # {'toDate': timezone.now().date(),
         # 'fromDate': (timezone.now().date() - timezone.timedelta(days=200))})
@@ -309,5 +311,78 @@ class StatisticsTasksViewTest(APITestCase):
         self.assertEqual(len(res.data), 7)
         self.assertEqual(res.data[-1],
                          {'date': timezone.now().date().strftime('%Y-%m-%d'),
-                         'created': 1, 'completed': 1, 'pending': 2, 'failed': 1})
+                          'created': 1, 'completed': 1, 'pending': 2, 'failed': 1})
+        self.assertEqual(res.status_code, 200)
+
+
+class AdminUserChatsTest(APITestCase):
+    def setUp(self):
+        self.maxDiff = None
+
+        self.student = CustomUser.objects.create_user(
+            email='example@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True)
+        profile = self.student.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
+        self.student2 = CustomUser.objects.create_user(
+            email='example222@example.com',
+            password='password',
+            role=CustomUser.STUDENT_ROLE,
+            is_verified=True)
+        profile = self.student2.get_profile()
+        profile.verification = StudentProfile.VERIFIED
+        profile.save()
+
+        self.company = CustomUser.objects.create_user(
+            email='example123@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True)
+
+        self.chat = Chat.objects.create()
+        ChatMembers.objects.create(chat=self.chat, user=self.student2)
+        ChatMembers.objects.create(chat=self.chat, user=self.company)
+
+        self.chat = Chat.objects.create()
+        ChatMembers.objects.create(chat=self.chat, user=self.student)
+        ChatMembers.objects.create(chat=self.chat, user=self.company)
+        Message.objects.create(chat=self.chat, user=self.student, message='Первое')
+        Message.objects.create(chat=self.chat, user=self.company, message='Первое')
+        Message.objects.create(chat=self.chat, user=self.company, message='Первое')
+        Message.objects.create(chat=self.chat, user=self.company, message='Первое')
+        Message.objects.create(chat=self.chat, user=self.company, message='Первое')
+        self.mes1 = Message.objects.create(chat=self.chat, user=self.student, message='Последнее')
+
+        self.company2 = CustomUser.objects.create_user(
+            email='123@example.com',
+            password='password',
+            role=CustomUser.COMPANY_ROLE,
+            is_verified=True)
+
+        self.chat2 = Chat.objects.create()
+        ChatMembers.objects.create(chat=self.chat2, user=self.student)
+        ChatMembers.objects.create(chat=self.chat2, user=self.company2)
+        Message.objects.create(chat=self.chat2, user=self.student, message='Первое второе')
+        self.mes2 = Message.objects.create(chat=self.chat2, user=self.student, message='Последнее второе')
+
+    def test_get_chats_200(self):
+        res = self.client.get(reverse('admin_user_chats', args=(str(self.student.id),)))
+
+        self.assertEqual(dict(res.data.get('results')[0]),
+                         {'companion':
+                              {'id': str(self.company2.id), 'name': '', 'avatar': None},
+                          'id': str(self.chat2.id),
+                          'isFavorite': False,
+                          'lastMessage': {'id': str(self.mes2.id),
+                                          'message': 'Последнее второе',
+                                          'user': {'id': str(self.student.id), 'name': ' ',
+                                                   'avatar': None}, 'createdAt': self.mes2.created_at.isoformat(),
+                                          'isRead': False, 'files': []},
+                          'task': None,
+                          'unreadCount': 0}
+                         )
         self.assertEqual(res.status_code, 200)
