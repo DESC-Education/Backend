@@ -6,7 +6,9 @@ from Admins.views import (
     AdminCustomUserDetailView,
     StatisticsUserView,
     StatisticsTasksView,
-    AdminUserChatsListView
+    AdminUserChatsListView,
+    AdminCompanyTasksListView,
+    AdminStudentSolutionsListView
 
 )
 
@@ -18,6 +20,8 @@ urlpatterns = [
     path('users/', AdminCustomUserListView.as_view(), name='admin_user_list'),
     path('user/<uuid:pk>', AdminCustomUserDetailView.as_view(), name='admin_user_detail'),
     path('user/<uuid:pk>/chats', AdminUserChatsListView.as_view(), name='admin_user_chats'),
+    path('company/<uuid:pk>/tasks', AdminCompanyTasksListView.as_view(), name='admin_company_tasks'),
+    path('student/<uuid:pk>/solutions', AdminStudentSolutionsListView.as_view(), name='admin_student_solutions'),
 
 
 
