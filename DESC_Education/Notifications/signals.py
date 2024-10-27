@@ -16,7 +16,14 @@ from Mail.tasks import MailProfileVerification
 @receiver(post_save, sender=ProfileVerifyRequest)
 def notify_student_profile_verification(sender, instance: ProfileVerifyRequest, **kwargs):
     EventStreamSendNotification.delay(instance.id, Notification.VERIFICATION_TYPE)
-    verified = True if instance.status == ProfileVerifyRequest.APPROVED else False
+
+
+    if instance.status == ProfileVerifyRequest.APPROVED:
+        verified = True
+    elif instance.status == ProfileVerifyRequest.REJECTED:
+        verified = False
+    else:
+        return
     MailProfileVerification.delay(instance.profile.user.email, verified, instance.comment)
 
 
