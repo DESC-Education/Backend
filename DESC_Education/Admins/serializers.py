@@ -21,6 +21,17 @@ from Users.serializers import CustomUserSerializer
 
 
 
+
+class StatisticsTasksSerializer(serializers.Serializer):
+    fromDate = serializers.DateField(required=False, write_only=True)
+    toDate = serializers.DateField(required=False, write_only=True)
+    date = serializers.DateField(read_only=True)
+    created = serializers.IntegerField(read_only=True)
+    completed = serializers.IntegerField(read_only=True)
+    pending = serializers.IntegerField(read_only=True)
+    failed = serializers.IntegerField(read_only=True)
+
+
 class StatisticsUserSerializer(serializers.Serializer):
     fromDate = serializers.DateField(required=False, write_only=True)
     toDate = serializers.DateField(required=False, write_only=True)

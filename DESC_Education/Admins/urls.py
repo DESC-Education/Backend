@@ -4,7 +4,8 @@ from Admins.views import (
     AdminProfileVerifyRequestDetailView,
     AdminCustomUserListView,
     AdminCustomUserDetailView,
-    StatisticsUserView
+    StatisticsUserView,
+    StatisticsTasksView
 
 )
 
@@ -18,5 +19,6 @@ urlpatterns = [
 
 
     path('stats/users', StatisticsUserView.as_view(), name='stats_users'),
+    path('stats/tasks', StatisticsTasksView.as_view(), name='stats_tasks'),
 
 ]

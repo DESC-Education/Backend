@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.db.models import Q, Count
 from datetime import datetime
 from django.db.models.functions import TruncDate
+from Tasks.models import Task, Solution
 from Profiles.models import (
     BaseProfile,
     StudentProfile,
@@ -20,7 +21,8 @@ from Admins.serializers import (
     ProfileVerifyRequestDetailSerializer,
     CustomUserListSerializer,
     CustomUserDetailSerializer,
-    StatisticsUserSerializer
+    StatisticsUserSerializer,
+    StatisticsTasksSerializer
 )
 from drf_spectacular.utils import (
     extend_schema,
@@ -151,7 +153,7 @@ class StatisticsUserView(generics.GenericAPIView):
         toDate = datetime.strptime(
             req_data.get('toDate', timezone.now().strftime('%Y-%m-%d')), '%Y-%m-%d').date()
 
-        queryset = self.queryset.filter()
+        queryset = self.queryset.filter(date__gte=fromDate, date__lte=toDate)
 
         dates = [fromDate + timezone.timedelta(days=i) for i in range((toDate - fromDate).days + 1)]
 
@@ -180,3 +182,68 @@ class StatisticsUserView(generics.GenericAPIView):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+class StatisticsTasksView(generics.GenericAPIView):
+    serializer_class = StatisticsTasksSerializer
+    queryset = Task.objects.annotate(date=TruncDate('created_at')).values('date').annotate(
+        created=Count('id'),
+    ).order_by('date')
+    queryset2 = Solution.objects.annotate(date=TruncDate('created_at')).values('date').annotate(
+        completed=Count('id', filter=Q(status=Solution.COMPLETED)),
+        pending=Count('id', filter=Q(status=Solution.PENDING)),
+        failed=Count('id', filter=Q(status=Solution.FAILED)),
+    ).order_by('date')
+
+
+    def get_queryset(self):
+        results = []
+        req_data = self.request.data
+
+        fromDate = datetime.strptime(
+            req_data.get('fromDate', (timezone.now() - timezone.timedelta(days=6)).strftime('%Y-%m-%d')),
+            '%Y-%m-%d').date()
+
+        toDate = datetime.strptime(
+            req_data.get('toDate', timezone.now().strftime('%Y-%m-%d')), '%Y-%m-%d').date()
+
+        queryset = self.queryset.filter(date__gte=fromDate, date__lte=toDate)
+        queryset2 = self.queryset2.filter(date__gte=fromDate, date__lte=toDate)
+
+        dates = [fromDate + timezone.timedelta(days=i) for i in range((toDate - fromDate).days + 1)]
+
+        for date in dates:
+            count_data = next((item for item in queryset if item['date'] == date), None)
+            count_data2 = next((item for item in queryset2 if item['date'] == date), None)
+            if count_data and count_data2:
+                results.append({
+                    'date': date,
+                    'created': count_data['created'],
+                    'completed': count_data2['completed'],
+                    'pending': count_data2['pending'],
+                    'failed': count_data2['failed'],
+                })
+            else:
+                results.append({
+                    'date': date,
+                    'created': 0,
+                    'solved': 0,
+                    'pending': 0,
+                    'failed': 0,
+                })
+
+        return results
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Статистика заданий"
+    )
+    def post(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        # print(queryset)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
