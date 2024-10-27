@@ -4,10 +4,12 @@ from Settings.permissions import IsAdminRole
 from Users.models import CustomUser
 from rest_framework.response import Response
 from django.utils import timezone
-from django.db.models import Q, Count
+from django.db.models import Q, Count, OuterRef, Subquery, F
 from datetime import datetime
 from django.db.models.functions import TruncDate
 from Tasks.models import Task, Solution
+from Chats.models import Chat, Message, ChatMembers
+from Chats.serializers import ChatListSerializer
 from Profiles.models import (
     BaseProfile,
     StudentProfile,
@@ -246,4 +248,47 @@ class StatisticsTasksView(generics.GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class AdminUserChatsListView(generics.ListAPIView):
+    serializer_class = ChatListSerializer
+    # permission_classes = [IsAdminRole]
+    # filter_backends = [SearchFilter, DjangoFilterBackend]
+    # search_fields = ['companyprofile__last_name', ]
+
+
+    def get_queryset(self, user):
+        last_message_time = Message.objects.filter(chat=OuterRef('pk')).order_by('-created_at').values('created_at')[:1]
+        queryset = (Chat.objects.filter(
+            chatmembers__user=user)
+                .annotate(
+            num_messages=Count('messages'),
+            last_message_time=Subquery(last_message_time),
+            is_favorite=Subquery(ChatMembers.objects.filter(chat=OuterRef('pk'),
+                                                            user=user)
+                                 .values('is_favorite')[:1])).filter(num_messages__gte=1)
+                .order_by(F('is_favorite').desc(nulls_last=True), F('last_message_time').desc(nulls_last=True)))
+
+        return queryset
+
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение списка чатов пользователя"
+    )
+    def get(self, request, *args, **kwargs):
+        user_id = self.kwargs.get('pk')  # Получаем ID чата из URL параметров
+        user = generics.get_object_or_404(CustomUser, pk=user_id)
+        queryset = self.filter_queryset(self.get_queryset(user))
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            request = serializer.context['request']
+            request.user = user
+
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        request = serializer.context['request']
+        request.user = user
+        return Response(serializer.data)
 
