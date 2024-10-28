@@ -7,6 +7,7 @@ from Tasks.models import (
     Solution,
     Review,
     FilterCategory,
+    TaskPattern,
     Filter
 )
 from Profiles.serializers import (
@@ -156,4 +157,11 @@ class AdminFilterCategorySerializer(serializers.ModelSerializer):
 class AdminFilterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Filter
+        fields = '__all__'
+
+
+
+class AdminTaskPatternSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskPattern
         fields = '__all__'
