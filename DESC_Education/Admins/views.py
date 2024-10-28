@@ -6,12 +6,13 @@ from rest_framework.response import Response
 from django.utils import timezone
 from django.db.models import Q, Count, OuterRef, Subquery, F
 from datetime import datetime
+from django.http.request import HttpRequest
 from django.db.models.functions import TruncDate
 from Tasks.models import Task, Solution, TaskCategory, FilterCategory, Filter, TaskPattern
 from Tasks.serializers import TaskListSerializer, SolutionSerializer
 from Tasks.filters import MyTasksFilter, SolutionFilter
 from Chats.models import Chat, Message, ChatMembers
-from Chats.serializers import ChatListSerializer
+from Chats.serializers import ChatListSerializer, ChatDetailSerializer
 from Profiles.models import (
     BaseProfile,
     StudentProfile,
@@ -584,3 +585,36 @@ class AdminTaskPatternDetailView(generics.RetrieveUpdateDestroyAPIView):
     )
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+
+
+
+
+class AdminChatMessages(generics.RetrieveAPIView):
+    serializer_class = ChatDetailSerializer
+
+
+    def get_object(self):
+        chat_id = self.kwargs.get('chat_id')  # Получаем ID чата из URL параметров
+        chat = generics.get_object_or_404(Chat, pk=chat_id)
+        user_id = self.kwargs.get('user_id')
+        user = generics.get_object_or_404(CustomUser, pk=user_id)
+
+        return {"chat": chat, "user": user}
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение detail экземпляра чата",
+        parameters=[
+            OpenApiParameter(name='messageId', type=OpenApiTypes.UUID,
+                             description='Для получения предыдущих '
+                                         'сообщений необходимо указать '
+                                         'последний известный id сообщения '),
+        ]
+    )
+    def get(self, request, *args, **kwargs):
+        objects = self.get_object()
+        serializer = self.get_serializer(objects.get('chat'))
+        request = serializer.context.get('request')
+        request.user = objects.get('user')
+
+        return Response(serializer.data)
