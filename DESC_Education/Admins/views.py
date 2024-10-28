@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.db.models import Q, Count, OuterRef, Subquery, F
 from datetime import datetime
 from django.db.models.functions import TruncDate
-from Tasks.models import Task, Solution
+from Tasks.models import Task, Solution, TaskCategory
 from Tasks.serializers import TaskListSerializer, SolutionSerializer
 from Tasks.filters import MyTasksFilter, SolutionFilter
 from Chats.models import Chat, Message, ChatMembers
@@ -26,7 +26,8 @@ from Admins.serializers import (
     CustomUserListSerializer,
     CustomUserDetailSerializer,
     StatisticsUserSerializer,
-    StatisticsTasksSerializer
+    StatisticsTasksSerializer,
+    AdminTaskCategorySerializer
 )
 from drf_spectacular.utils import (
     extend_schema,
@@ -121,6 +122,7 @@ class AdminCustomUserListView(generics.ListAPIView):
 
 class AdminCustomUserDetailView(generics.GenericAPIView):
     serializer_class = CustomUserDetailSerializer
+
     # permission_classes = [IsAdminRole]
 
     def get_object(self, pk):
@@ -145,7 +147,6 @@ class StatisticsUserView(generics.GenericAPIView):
     ).order_by('date')
 
     # permission_classes = [IsAdminRole]
-
 
     def get_queryset(self):
         results = []
@@ -189,7 +190,6 @@ class StatisticsUserView(generics.GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
 class StatisticsTasksView(generics.GenericAPIView):
     serializer_class = StatisticsTasksSerializer
     queryset = Task.objects.annotate(date=TruncDate('created_at')).values('date').annotate(
@@ -200,7 +200,6 @@ class StatisticsTasksView(generics.GenericAPIView):
         pending=Count('id', filter=Q(status=Solution.PENDING)),
         failed=Count('id', filter=Q(status=Solution.FAILED)),
     ).order_by('date')
-
 
     def get_queryset(self):
         results = []
@@ -253,25 +252,24 @@ class StatisticsTasksView(generics.GenericAPIView):
 
 class AdminUserChatsListView(generics.ListAPIView):
     serializer_class = ChatListSerializer
+
     # permission_classes = [IsAdminRole]
     # filter_backends = [SearchFilter, DjangoFilterBackend]
     # search_fields = ['companyprofile__last_name', ]
-
 
     def get_queryset(self, user):
         last_message_time = Message.objects.filter(chat=OuterRef('pk')).order_by('-created_at').values('created_at')[:1]
         queryset = (Chat.objects.filter(
             chatmembers__user=user)
-                .annotate(
+                    .annotate(
             num_messages=Count('messages'),
             last_message_time=Subquery(last_message_time),
             is_favorite=Subquery(ChatMembers.objects.filter(chat=OuterRef('pk'),
                                                             user=user)
                                  .values('is_favorite')[:1])).filter(num_messages__gte=1)
-                .order_by(F('is_favorite').desc(nulls_last=True), F('last_message_time').desc(nulls_last=True)))
+                    .order_by(F('is_favorite').desc(nulls_last=True), F('last_message_time').desc(nulls_last=True)))
 
         return queryset
-
 
     @extend_schema(
         tags=["Admins"],
@@ -296,15 +294,12 @@ class AdminUserChatsListView(generics.ListAPIView):
         return Response(serializer.data)
 
 
-
 class AdminCompanyTasksListView(generics.ListAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskListSerializer
     # permission_classes = [IsAdminRole]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = MyTasksFilter
-
-
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
@@ -334,12 +329,12 @@ class AdminCompanyTasksListView(generics.ListAPIView):
         return super().get(request, *args, **kwargs)
 
 
-
 class AdminStudentSolutionsListView(generics.ListAPIView):
     queryset = Solution.objects.all()
     serializer_class = SolutionSerializer
     # permission_classes = [IsAdminRole]
     filter_backends = (DjangoFilterBackend,)
+
     # filterset_class = MyTasksFilter
 
     def filter_queryset(self, queryset):
@@ -368,3 +363,55 @@ class AdminStudentSolutionsListView(generics.ListAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+
+class AdminTaskCategoryListView(generics.ListCreateAPIView):
+    queryset = TaskCategory.objects.all()
+    serializer_class = AdminTaskCategorySerializer
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение списка TaskCatogory"
+    )
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Создание нового TaskCategory"
+    )
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+class AdminTaskCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = TaskCategory.objects.all()
+    serializer_class = AdminTaskCategorySerializer
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение TaskCategory по его id"
+    )
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Полное обновление TaskCategory"
+    )
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Частичное Обновление TaskCategory"
+    )
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Удаление TaskCategory"
+    )
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
