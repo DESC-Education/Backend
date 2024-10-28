@@ -1,6 +1,11 @@
 import random
 from django.db.models import Count, Q
 from rest_framework import serializers
+from Tasks.models import (
+    TaskCategory,
+    Task,
+    Solution,
+    Review,)
 from Profiles.serializers import (
     GetStudentProfileSerializer,
     GetCompanyProfileSerializer
@@ -141,3 +146,9 @@ class CustomUserDetailSerializer(CustomUserListSerializer):
             return GetCompanyProfileSerializer(profile).data
         elif obj.role == CustomUser.STUDENT_ROLE:
             return GetStudentProfileSerializer(profile).data
+
+
+class AdminTaskCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskCategory
+        fields = '__all__'
