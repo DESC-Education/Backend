@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.db.models import Q, Count, OuterRef, Subquery, F
 from datetime import datetime
 from django.db.models.functions import TruncDate
-from Tasks.models import Task, Solution, TaskCategory
+from Tasks.models import Task, Solution, TaskCategory, FilterCategory, Filter, TaskPattern
 from Tasks.serializers import TaskListSerializer, SolutionSerializer
 from Tasks.filters import MyTasksFilter, SolutionFilter
 from Chats.models import Chat, Message, ChatMembers
@@ -27,7 +27,9 @@ from Admins.serializers import (
     CustomUserDetailSerializer,
     StatisticsUserSerializer,
     StatisticsTasksSerializer,
-    AdminTaskCategorySerializer
+    AdminTaskCategorySerializer,
+    AdminFilterSerializer,
+    AdminFilterCategorySerializer
 )
 from drf_spectacular.utils import (
     extend_schema,
@@ -415,3 +417,26 @@ class AdminTaskCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     )
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+
+
+
+
+class AdminFilterCategoryListView(generics.ListCreateAPIView):
+    queryset = FilterCategory.objects.all()
+    serializer_class = AdminFilterCategorySerializer
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение списка FilterCategory"
+    )
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Создание нового FilterCategory"
+    )
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+

@@ -638,6 +638,7 @@ class TestSolutionView(APITestCase):
 
 class TaskCategoryListViewTest(APITestCase):
     def setUp(self):
+        self.maxDiff = None
         TaskCategory.objects.all().delete()
         self.category1: TaskCategory = TaskCategory.objects.create(name='Web')
         self.category2 = TaskCategory.objects.create(name='Phone')
@@ -656,7 +657,7 @@ class TaskCategoryListViewTest(APITestCase):
 
         categories = TaskCategory.objects.all().prefetch_related('filter_categories__filters')
         expected_data = TaskCategoryWithFiltersSerializer(categories, many=True)
-        self.assertEqual(dict(res.data).get('results'), expected_data.data)
+        self.assertEqual(list(dict(res.data).get('results')), list(expected_data.data))
         self.assertEqual(res.status_code, 200)
 
     def get_category_by_name(self):

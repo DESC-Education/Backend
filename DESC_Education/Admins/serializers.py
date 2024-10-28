@@ -5,7 +5,10 @@ from Tasks.models import (
     TaskCategory,
     Task,
     Solution,
-    Review,)
+    Review,
+    FilterCategory,
+    Filter
+)
 from Profiles.serializers import (
     GetStudentProfileSerializer,
     GetCompanyProfileSerializer
@@ -21,10 +24,6 @@ from Profiles.serializers import (
 )
 from Users.models import CustomUser
 from Users.serializers import CustomUserSerializer
-
-
-
-
 
 
 class StatisticsTasksSerializer(serializers.Serializer):
@@ -43,9 +42,6 @@ class StatisticsUserSerializer(serializers.Serializer):
     date = serializers.DateField(read_only=True)
     students = serializers.IntegerField(read_only=True)
     companies = serializers.IntegerField(read_only=True)
-
-
-
 
 
 class ProfileVerifyRequestDetailSerializer(serializers.ModelSerializer):
@@ -101,8 +97,6 @@ class ProfileVerifyRequestsListSerializer(serializers.ModelSerializer):
         fields = ['id', 'createdAt', 'requestStatus', 'comment', 'admin', "userType", "firstName", "lastName", "email"]
 
 
-
-
 class CustomUserListSerializer(CustomUserSerializer):
     firstName = serializers.SerializerMethodField()
     lastName = serializers.SerializerMethodField()
@@ -112,7 +106,6 @@ class CustomUserListSerializer(CustomUserSerializer):
     class Meta(CustomUserSerializer.Meta):
         fields = CustomUserSerializer.Meta.fields + \
                  ['firstName', 'lastName', 'companyName', 'profileVerification']
-
 
     @staticmethod
     def get_profileVerification(obj):
@@ -138,7 +131,7 @@ class CustomUserDetailSerializer(CustomUserListSerializer):
 
     class Meta(CustomUserListSerializer.Meta):
         fields = CustomUserListSerializer.Meta.fields + \
-                 ['profile',]
+                 ['profile', ]
 
     def get_profile(self, obj):
         profile = obj.get_profile()
@@ -151,4 +144,16 @@ class CustomUserDetailSerializer(CustomUserListSerializer):
 class AdminTaskCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskCategory
+        fields = '__all__'
+
+
+class AdminFilterCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FilterCategory
+        fields = '__all__'
+
+
+class AdminFilterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Filter
         fields = '__all__'

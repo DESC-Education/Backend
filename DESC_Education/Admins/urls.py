@@ -26,8 +26,8 @@ urlpatterns = [
     path('student/<uuid:pk>/solutions', AdminStudentSolutionsListView.as_view(), name='admin_student_solutions'),
 
 
-    path('taskCategory/list', AdminTaskCategoryListView.as_view(), name='task_category_list'),
-    path('taskCategory/<uuid:pk>', AdminTaskCategoryDetailView.as_view(), name='task_category_list'),
+    path('taskCategory/list', AdminTaskCategoryListView.as_view(), name='admin_task_category_list'),
+    path('taskCategory/<uuid:pk>', AdminTaskCategoryDetailView.as_view(), name='admin_task_category_list'),
 
 
 
