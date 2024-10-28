@@ -440,3 +440,34 @@ class AdminFilterCategoryListView(generics.ListCreateAPIView):
         return self.create(request, *args, **kwargs)
 
 
+class AdminFilterCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = FilterCategory.objects.all()
+    serializer_class = AdminFilterCategorySerializer
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение FilterCategory по его id"
+    )
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Полное обновление FilterCategory"
+    )
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Частичное Обновление FilterCategory"
+    )
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Удаление FilterCategory"
+    )
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
