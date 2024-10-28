@@ -14,7 +14,9 @@ from Admins.views import (
     AdminFilterCategoryDetailView,
     AdminFilterCategoryListView,
     AdminFilterListView,
-    AdminFilterDetailView
+    AdminFilterDetailView,
+    AdminTaskPatternListView,
+    AdminTaskPatternDetailView
 
 )
 
@@ -38,6 +40,9 @@ urlpatterns = [
 
     path('filter/list', AdminFilterListView.as_view(), name='admin_filter_list'),
     path('filter/<uuid:pk>', AdminFilterDetailView.as_view(), name='admin_filter_detail'),
+
+    path('taskPattern/list', AdminTaskPatternListView.as_view(), name='admin_task_pattern_list'),
+    path('taskPattern/<uuid:pk>', AdminTaskPatternDetailView.as_view(), name='admin_task_pattern_detail'),
 
 
 

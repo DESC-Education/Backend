@@ -29,7 +29,8 @@ from Admins.serializers import (
     StatisticsTasksSerializer,
     AdminTaskCategorySerializer,
     AdminFilterSerializer,
-    AdminFilterCategorySerializer
+    AdminFilterCategorySerializer,
+    AdminTaskPatternSerializer
 )
 from drf_spectacular.utils import (
     extend_schema,
@@ -524,6 +525,62 @@ class AdminFilterDetailView(generics.RetrieveUpdateDestroyAPIView):
     @extend_schema(
         tags=["Admins"],
         summary="Удаление Filter"
+    )
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
+
+
+class AdminTaskPatternListView(generics.ListCreateAPIView):
+    queryset = TaskPattern.objects.all()
+    serializer_class = AdminTaskPatternSerializer
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение списка TaskPattern"
+    )
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Создание нового TaskPattern"
+    )
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+
+
+class AdminTaskPatternDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = TaskPattern.objects.all()
+    serializer_class = AdminTaskPatternSerializer
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение TaskPattern по его id"
+    )
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Полное обновление TaskPattern"
+    )
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Частичное Обновление TaskPattern"
+    )
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Удаление TaskPattern"
     )
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
