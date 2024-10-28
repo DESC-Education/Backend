@@ -471,3 +471,59 @@ class AdminFilterCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     )
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+
+
+
+class AdminFilterListView(generics.ListCreateAPIView):
+    queryset = Filter.objects.all()
+    serializer_class = AdminFilterSerializer
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение списка Filter"
+    )
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Создание нового Filter"
+    )
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+
+
+
+class AdminFilterDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Filter.objects.all()
+    serializer_class = AdminFilterSerializer
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Получение Filter по его id"
+    )
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Полное обновление Filter"
+    )
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Частичное Обновление Filter"
+    )
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Admins"],
+        summary="Удаление Filter"
+    )
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
