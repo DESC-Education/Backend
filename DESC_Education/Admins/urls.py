@@ -16,7 +16,8 @@ from Admins.views import (
     AdminFilterListView,
     AdminFilterDetailView,
     AdminTaskPatternListView,
-    AdminTaskPatternDetailView
+    AdminTaskPatternDetailView,
+    AdminChatMessages
 
 )
 
@@ -28,6 +29,7 @@ urlpatterns = [
     path('users/', AdminCustomUserListView.as_view(), name='admin_user_list'),
     path('user/<uuid:pk>', AdminCustomUserDetailView.as_view(), name='admin_user_detail'),
     path('user/<uuid:pk>/chats', AdminUserChatsListView.as_view(), name='admin_user_chats'),
+    path('user/<uuid:user_id>/chat/<uuid:chat_id>/', AdminChatMessages.as_view(), name='admin_chat_detail'),
     path('company/<uuid:pk>/tasks', AdminCompanyTasksListView.as_view(), name='admin_company_tasks'),
     path('student/<uuid:pk>/solutions', AdminStudentSolutionsListView.as_view(), name='admin_student_solutions'),
 
