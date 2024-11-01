@@ -1,5 +1,5 @@
 from rest_framework import generics, status
-from Settings.permissions import IsCompanyRole, IsStudentRole, EvaluateCompanyRole, IsCompanyOrStudentRole
+from Settings.permissions import IsCompanyRole, IsStudentRole, EvaluateCompanyRole, IsCompanyOrStudentRole, IsAdminRole
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
@@ -9,6 +9,7 @@ from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from rest_framework import filters
 from django.db.models import Q
+from Users.models import CustomUser
 from django.utils import timezone
 from Notifications.tasks import EventStreamSendNotification
 from Notifications.models import Notification
@@ -143,12 +144,16 @@ class SolutionListView(generics.ListAPIView):
     serializer_class = SolutionSerializer
     pagination_class = CustomPageNumberPagination
     filter_backends = (DjangoFilterBackend,)
-    permission_classes = [IsCompanyRole]
+    permission_classes = (IsCompanyRole | IsAdminRole)
     filterset_class = SolutionFilter
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
-        queryset = queryset.filter(task__user=self.request.user, task__pk=self.pk)
+        queryset = queryset.filter(task__pk=self.pk)
+
+        user: CustomUser = self.request.user
+        if user.role == IsCompanyRole:
+            queryset = queryset.filter(task__user=self.request.user)
         return queryset
 
     @extend_schema(
