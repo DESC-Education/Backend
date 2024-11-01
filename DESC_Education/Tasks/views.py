@@ -144,7 +144,7 @@ class SolutionListView(generics.ListAPIView):
     serializer_class = SolutionSerializer
     pagination_class = CustomPageNumberPagination
     filter_backends = (DjangoFilterBackend,)
-    permission_classes = (IsCompanyRole | IsAdminRole)
+    permission_classes = [IsCompanyRole | IsAdminRole]
     filterset_class = SolutionFilter
 
     def filter_queryset(self, queryset):
