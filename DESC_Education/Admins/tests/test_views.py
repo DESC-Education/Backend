@@ -485,8 +485,8 @@ class AdminCompanyTasksListViewTest(APITestCase):
         )
 
     def test_get_company_200(self):
-        res = self.client.get(reverse('admin_company_tasks', headers={"Authorization": f"Bearer {self.admin_token}"},
-                              args=(str(self.company.id),)))
+        res = self.client.get(reverse('admin_company_tasks', args=(str(self.company.id),)),
+                              headers={"Authorization": f"Bearer {self.admin_token}"},)
 
         self.assertEqual(dict(res.data.get('results')[0]), {
             'id': str(self.task.id),
@@ -499,8 +499,8 @@ class AdminCompanyTasksListViewTest(APITestCase):
         self.assertEqual(res.status_code, 200)
 
     def test_get_students_200(self):
-        res = self.client.get(reverse('admin_student_solutions', headers={"Authorization": f"Bearer {self.admin_token}"},
-                                      args=(str(self.student.id),)))
+        res = self.client.get(reverse('admin_student_solutions', args=(str(self.student.id),)),
+                              headers={"Authorization": f"Bearer {self.admin_token}"},)
 
         self.assertEqual(dict(res.data.get('results')[0]),
                          {'companyComment': None,
