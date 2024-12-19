@@ -201,7 +201,7 @@ class AdminCustomUserDetailViewTest(APITestCase):
 class StatisticsUserViewTest(APITestCase):
     def setUp(self):
         self.admin = CustomUser.objects.create_user(
-            email="example@example.com",
+            email="adminexample@example.com",
             password="test123",
             role=CustomUser.ADMIN_ROLE,
             is_verified=True,
@@ -261,7 +261,7 @@ class StatisticsUserViewTest(APITestCase):
 class StatisticsTasksViewTest(APITestCase):
     def setUp(self):
         self.admin = CustomUser.objects.create_user(
-            email="example@example.com",
+            email="adminexample@example.com",
             password="test123",
             role=CustomUser.ADMIN_ROLE,
             is_verified=True,
@@ -336,7 +336,7 @@ class AdminUserChatsTest(APITestCase):
     def setUp(self):
         self.maxDiff = None
         self.admin = CustomUser.objects.create_user(
-            email="example@example.com",
+            email="adminexample@example.com",
             password="test123",
             role=CustomUser.ADMIN_ROLE,
             is_verified=True,
@@ -417,7 +417,7 @@ class AdminCompanyTasksListViewTest(APITestCase):
     def setUp(self):
         self.maxDiff = None
         self.admin = CustomUser.objects.create_user(
-            email="example@example.com",
+            email="adminexample@example.com",
             password="test123",
             role=CustomUser.ADMIN_ROLE,
             is_verified=True,
