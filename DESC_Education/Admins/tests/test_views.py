@@ -200,6 +200,13 @@ class AdminCustomUserDetailViewTest(APITestCase):
 
 class StatisticsUserViewTest(APITestCase):
     def setUp(self):
+        self.admin = CustomUser.objects.create_user(
+            email="example@example.com",
+            password="test123",
+            role=CustomUser.ADMIN_ROLE,
+            is_verified=True,
+        )
+        self.admin_token = self.admin.get_token()['accessToken']
         self.student = CustomUser.objects.create_user(
             email="example@example.com",
             password="test123",
@@ -228,7 +235,8 @@ class StatisticsUserViewTest(APITestCase):
         self.company.save()
 
     def test_stats_users_200(self):
-        res = self.client.post(reverse('stats_users'))  # {'toDate': timezone.now().date(),
+        res = self.client.post(reverse('stats_users'), headers={
+            "Authorization": f"Bearer {self.admin_token}"})  # {'toDate': timezone.now().date(),
         # 'fromDate': (timezone.now().date() - timezone.timedelta(days=200))})
 
         self.assertEqual(len(res.data), 7)
@@ -238,8 +246,10 @@ class StatisticsUserViewTest(APITestCase):
 
     def test_stats_users_fromDate_toDate_200(self):
         date_now = timezone.now().date()
-        res = self.client.post(reverse('stats_users'), {'toDate': date_now,
-                                                        'fromDate': (date_now - timezone.timedelta(days=2))})
+        res = self.client.post(reverse('stats_users'), {
+            'toDate': date_now,
+            'fromDate': (date_now - timezone.timedelta(days=2))
+        }, headers={"Authorization": f"Bearer {self.admin_token}"})
 
         self.assertEqual(len(res.data), 3)
         self.assertEqual(res.data[0], {'companies': 1,
@@ -250,6 +260,13 @@ class StatisticsUserViewTest(APITestCase):
 
 class StatisticsTasksViewTest(APITestCase):
     def setUp(self):
+        self.admin = CustomUser.objects.create_user(
+            email="example@example.com",
+            password="test123",
+            role=CustomUser.ADMIN_ROLE,
+            is_verified=True,
+        )
+        self.admin_token = self.admin.get_token()['accessToken']
         self.student = CustomUser.objects.create_user(
             email="example@example.com",
             password="test123",
@@ -305,7 +322,7 @@ class StatisticsTasksViewTest(APITestCase):
         )
 
     def test_stats_tasks_200(self):
-        res = self.client.post(reverse('stats_tasks'))  # {'toDate': timezone.now().date(),
+        res = self.client.post(reverse('stats_tasks'), headers={"Authorization": f"Bearer {self.admin_token}"})  # {'toDate': timezone.now().date(),
         # 'fromDate': (timezone.now().date() - timezone.timedelta(days=200))})
 
         self.assertEqual(len(res.data), 7)
@@ -318,6 +335,13 @@ class StatisticsTasksViewTest(APITestCase):
 class AdminUserChatsTest(APITestCase):
     def setUp(self):
         self.maxDiff = None
+        self.admin = CustomUser.objects.create_user(
+            email="example@example.com",
+            password="test123",
+            role=CustomUser.ADMIN_ROLE,
+            is_verified=True,
+        )
+        self.admin_token = self.admin.get_token()['accessToken']
 
         self.student = CustomUser.objects.create_user(
             email='example@example.com',
@@ -370,7 +394,7 @@ class AdminUserChatsTest(APITestCase):
         self.mes2 = Message.objects.create(chat=self.chat2, user=self.student, message='Последнее второе')
 
     def test_get_chats_200(self):
-        res = self.client.get(reverse('admin_user_chats', args=(str(self.student.id),)))
+        res = self.client.get(reverse('admin_user_chats', args=(str(self.student.id),)),  headers={"Authorization": f"Bearer {self.admin_token}"})
 
         self.assertEqual(dict(res.data.get('results')[0]),
                          {'companion':
@@ -392,6 +416,13 @@ class AdminCompanyTasksListViewTest(APITestCase):
 
     def setUp(self):
         self.maxDiff = None
+        self.admin = CustomUser.objects.create_user(
+            email="example@example.com",
+            password="test123",
+            role=CustomUser.ADMIN_ROLE,
+            is_verified=True,
+        )
+        self.admin_token = self.admin.get_token()['accessToken']
         self.student = CustomUser.objects.create_user(
             email="example@example.com",
             password="test123",
@@ -454,7 +485,8 @@ class AdminCompanyTasksListViewTest(APITestCase):
         )
 
     def test_get_company_200(self):
-        res = self.client.get(reverse('admin_company_tasks', args=(str(self.company.id),)))
+        res = self.client.get(reverse('admin_company_tasks', headers={"Authorization": f"Bearer {self.admin_token}"},
+                              args=(str(self.company.id),)))
 
         self.assertEqual(dict(res.data.get('results')[0]), {
             'id': str(self.task.id),
@@ -467,7 +499,8 @@ class AdminCompanyTasksListViewTest(APITestCase):
         self.assertEqual(res.status_code, 200)
 
     def test_get_students_200(self):
-        res = self.client.get(reverse('admin_student_solutions', args=(str(self.student.id),)))
+        res = self.client.get(reverse('admin_student_solutions', headers={"Authorization": f"Bearer {self.admin_token}"},
+                                      args=(str(self.student.id),)))
 
         self.assertEqual(dict(res.data.get('results')[0]),
                          {'companyComment': None,
