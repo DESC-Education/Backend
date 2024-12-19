@@ -53,7 +53,7 @@ from Users.models import CustomUser
 class AdminProfileVerifyRequestListView(generics.ListAPIView):
     queryset = ProfileVerifyRequest.objects.all().prefetch_related('profile__user')
     serializer_class = ProfileVerifyRequestsListSerializer
-    # permission_classes = [IsAdminRole]
+    permission_classes = [IsAdminRole]
     filter_backends = [DjangoFilterBackend, SearchFilter]
     search_fields = ['student_profile__first_name', 'student_profile__last_name',
                      'company_profile__first_name', 'company_profile__last_name']
@@ -69,8 +69,7 @@ class AdminProfileVerifyRequestListView(generics.ListAPIView):
 
 class AdminProfileVerifyRequestDetailView(generics.GenericAPIView):
     serializer_class = ProfileVerifyRequestDetailSerializer
-
-    # permission_classes = [IsAdminRole]
+    permission_classes = [IsAdminRole]
 
     def get_object(self, pk):
         obj = get_object_or_404(ProfileVerifyRequest, pk=pk)
@@ -103,7 +102,7 @@ class AdminCustomUserListView(generics.ListAPIView):
     queryset = CustomUser.objects.filter(Q(role=CustomUser.STUDENT_ROLE) | Q(role=CustomUser.COMPANY_ROLE)) \
         .select_related('companyprofile').select_related('studentprofile')
     serializer_class = CustomUserListSerializer
-    # permission_classes = [IsAdminRole]
+    permission_classes = [IsAdminRole]
     filter_backends = [SearchFilter, DjangoFilterBackend]
     search_fields = ['companyprofile__first_name', 'companyprofile__last_name', 'companyprofile__company_name',
                      'studentprofile__first_name', 'studentprofile__last_name',
@@ -126,8 +125,7 @@ class AdminCustomUserListView(generics.ListAPIView):
 
 class AdminCustomUserDetailView(generics.GenericAPIView):
     serializer_class = CustomUserDetailSerializer
-
-    # permission_classes = [IsAdminRole]
+    permission_classes = [IsAdminRole]
 
     def get_object(self, pk):
         obj = get_object_or_404(CustomUser, pk=pk)
@@ -150,7 +148,7 @@ class StatisticsUserView(generics.GenericAPIView):
         companies=Count('id', filter=Q(role=CustomUser.COMPANY_ROLE))
     ).order_by('date')
 
-    # permission_classes = [IsAdminRole]
+    permission_classes = [IsAdminRole]
 
     def get_queryset(self):
         results = []
@@ -204,6 +202,7 @@ class StatisticsTasksView(generics.GenericAPIView):
         pending=Count('id', filter=Q(status=Solution.PENDING)),
         failed=Count('id', filter=Q(status=Solution.FAILED)),
     ).order_by('date')
+    permission_classes = [IsAdminRole]
 
     def get_queryset(self):
         results = []
@@ -257,7 +256,7 @@ class StatisticsTasksView(generics.GenericAPIView):
 class AdminUserChatsListView(generics.ListAPIView):
     serializer_class = ChatListSerializer
 
-    # permission_classes = [IsAdminRole]
+    permission_classes = [IsAdminRole]
     # filter_backends = [SearchFilter, DjangoFilterBackend]
     # search_fields = ['companyprofile__last_name', ]
 
@@ -301,7 +300,7 @@ class AdminUserChatsListView(generics.ListAPIView):
 class AdminCompanyTasksListView(generics.ListAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskListSerializer
-    # permission_classes = [IsAdminRole]
+    permission_classes = [IsAdminRole]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = MyTasksFilter
 
@@ -336,7 +335,7 @@ class AdminCompanyTasksListView(generics.ListAPIView):
 class AdminStudentSolutionsListView(generics.ListAPIView):
     queryset = Solution.objects.all()
     serializer_class = SolutionSerializer
-    # permission_classes = [IsAdminRole]
+    permission_classes = [IsAdminRole]
     filter_backends = (DjangoFilterBackend,)
 
     # filterset_class = MyTasksFilter
@@ -372,6 +371,7 @@ class AdminStudentSolutionsListView(generics.ListAPIView):
 class AdminTaskCategoryListView(generics.ListCreateAPIView):
     queryset = TaskCategory.objects.all()
     serializer_class = AdminTaskCategorySerializer
+    permission_classes = [IsAdminRole]
 
     @extend_schema(
         tags=["Admins"],
@@ -391,6 +391,7 @@ class AdminTaskCategoryListView(generics.ListCreateAPIView):
 class AdminTaskCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = TaskCategory.objects.all()
     serializer_class = AdminTaskCategorySerializer
+    permission_classes = [IsAdminRole]
 
     @extend_schema(
         tags=["Admins"],
@@ -426,6 +427,7 @@ class AdminTaskCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
 class AdminFilterCategoryListView(generics.ListCreateAPIView):
     queryset = FilterCategory.objects.all()
     serializer_class = AdminFilterCategorySerializer
+    permission_classes = [IsAdminRole]
 
     @extend_schema(
         tags=["Admins"],
@@ -445,6 +447,7 @@ class AdminFilterCategoryListView(generics.ListCreateAPIView):
 class AdminFilterCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = FilterCategory.objects.all()
     serializer_class = AdminFilterCategorySerializer
+    permission_classes = [IsAdminRole]
 
     @extend_schema(
         tags=["Admins"],
@@ -479,6 +482,7 @@ class AdminFilterCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
 class AdminFilterListView(generics.ListCreateAPIView):
     queryset = Filter.objects.all()
     serializer_class = AdminFilterSerializer
+    permission_classes = [IsAdminRole]
 
     @extend_schema(
         tags=["Admins"],
@@ -501,6 +505,7 @@ class AdminFilterListView(generics.ListCreateAPIView):
 class AdminFilterDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Filter.objects.all()
     serializer_class = AdminFilterSerializer
+    permission_classes = [IsAdminRole]
 
     @extend_schema(
         tags=["Admins"],
@@ -536,6 +541,7 @@ class AdminFilterDetailView(generics.RetrieveUpdateDestroyAPIView):
 class AdminTaskPatternListView(generics.ListCreateAPIView):
     queryset = TaskPattern.objects.all()
     serializer_class = AdminTaskPatternSerializer
+    permission_classes = [IsAdminRole]
 
     @extend_schema(
         tags=["Admins"],
@@ -557,6 +563,7 @@ class AdminTaskPatternListView(generics.ListCreateAPIView):
 class AdminTaskPatternDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = TaskPattern.objects.all()
     serializer_class = AdminTaskPatternSerializer
+    permission_classes = [IsAdminRole]
 
     @extend_schema(
         tags=["Admins"],
@@ -591,6 +598,7 @@ class AdminTaskPatternDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class AdminChatMessages(generics.RetrieveAPIView):
     serializer_class = ChatDetailSerializer
+    permission_classes = [IsAdminRole]
 
 
     def get_object(self):
