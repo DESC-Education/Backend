@@ -146,11 +146,16 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timezone.timedelta(days=15),
 }
 
+
 SPECTACULAR_SETTINGS = {
     'TITLE': 'DESC Education API',
     'DESCRIPTION': '',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    "SERVE_PERMISSIONS": ["Settings.permissions.IsAdminRole"],
+    "SERVE_AUTHENTICATION": [
+        "rest_framework.authentication.BasicAuthentication"
+    ],
 
     # OTHER SETTINGS
 }

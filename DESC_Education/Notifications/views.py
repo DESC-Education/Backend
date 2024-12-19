@@ -55,7 +55,7 @@ class ReadNotificationView(generics.GenericAPIView):
     def get_object(self) -> Notification:
         instance = generics.get_object_or_404(Notification, pk=self.kwargs.get('pk'))
         if self.request.user != instance.user:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return None
 
         return instance
 
@@ -65,6 +65,8 @@ class ReadNotificationView(generics.GenericAPIView):
     )
     def get(self, request, pk, *args, **kwargs):
         instance = self.get_object()
+        if instance is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         instance.is_read = True
         instance.save()
         serializer = NotificationSerializer(instance)
