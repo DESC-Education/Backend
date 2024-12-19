@@ -32,7 +32,7 @@ urlpatterns = [
 
 
 
-    path('test_delete', TestDeleteView.as_view(), name='test_delete'),
-        # path('', HelloView.as_view(), name='hello'),
+    # path('test_delete', TestDeleteView.as_view(), name='test_delete'),
+    # path('', HelloView.as_view(), name='hello'),
 
 ]

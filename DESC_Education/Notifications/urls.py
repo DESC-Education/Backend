@@ -8,5 +8,5 @@ urlpatterns = [
     path('notification/read/<uuid:pk>', ReadNotificationView.as_view(), name='read_notification'),
 
     # path('events', include(urls), {"channels": ["test"]}, name='events'),
-    path('test/<uuid:user_id>', Test.as_view(), name='test')
+    # path('test/<uuid:user_id>', Test.as_view(), name='test')
 ]

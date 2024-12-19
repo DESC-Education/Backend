@@ -45,8 +45,10 @@ urlpatterns = [
     path('logo', ChangeLogoImgView.as_view(), name='logo_change'),
     path('phone/code', SendPhoneCodeView.as_view(), name='send_phone_code'),
     path('phone', SetPhoneView.as_view(), name='set_phone'),
-    path('report', GenerateProfileReportView.as_view(), name='generate_report'),
 
-    path('test_profile_verify', TestVerifyView.as_view(), name='test_verify')
+
+    # path('report', GenerateProfileReportView.as_view(), name='generate_report'),
+
+    # path('test_profile_verify', TestVerifyView.as_view(), name='test_verify')
 
 ]
