@@ -5,6 +5,7 @@ from Tasks.models import Task, TaskPattern, TaskCategory, FilterCategory, Filter
 
 admin.site.register(Task)
 admin.site.register(TaskPattern)
+admin.site.register(TaskCategory)
 admin.site.register(FilterCategory)
 admin.site.register(Filter)
 admin.site.register(Solution)
