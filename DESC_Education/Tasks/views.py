@@ -195,7 +195,7 @@ class TaskCategoryListView(generics.ListAPIView):
         tags=["Tasks"],
         summary="Получение экземпляров Task Category"
     )
-    @method_decorator(cache_page(60 * 60))
+    @method_decorator(cache_page(60 * 15))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
@@ -276,7 +276,7 @@ class TaskPatternPatternListView(generics.ListAPIView):
         tags=["Tasks"],
         summary="Получение экземпляров TaskPattern"
     )
-    @method_decorator(cache_page(60 * 60))
+    @method_decorator(cache_page(60 * 15))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
