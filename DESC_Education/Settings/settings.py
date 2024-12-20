@@ -32,6 +32,10 @@ DEBUG = config.DEBUG
 
 ALLOWED_HOSTS = ["*"]
 CORS_ALLOW_ALL_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = [
+    'https://desc-education.ru',
+    # Другие доверенные домены
+]
 # CORS_ALLOWED_ORIGINS = [
 #     'http://localhost:3000',
 #     'http://193.233.20.226:3000'
