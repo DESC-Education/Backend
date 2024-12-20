@@ -9,6 +9,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.apps import apps
 from Files.models import File
 
+
 class FilterCategory(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=100)
@@ -86,7 +87,6 @@ class TaskPattern(models.Model):
         ordering = ['-title']
 
 
-
 class Solution(models.Model):
     COMPLETED = "completed"
     FAILED = "failed"
@@ -130,7 +130,6 @@ class Review(models.Model):
     text = models.CharField(max_length=250)
     rating = models.IntegerField(choices=RATING, default=1)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
-
 
     class Meta:
         ordering = ['-created_at']
