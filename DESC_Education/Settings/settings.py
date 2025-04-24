@@ -257,8 +257,8 @@ ADMINS = (
     # ('admin', 'yaroslavpavlenko2@gmail.com'),
 )
 
-EMAIL_HOST = 'smtp.yandex.ru'
-EMAIL_PORT = 465
+EMAIL_HOST = 'mail.hosting.reg.ru'
+EMAIL_PORT = 587
 EMAIL_HOST_USER = config.EMAIL_USER.get_secret_value()
 EMAIL_HOST_PASSWORD = config.EMAIL_PASSWORD.get_secret_value()
 EMAIL_USE_SSL = False
