@@ -259,11 +259,9 @@ ADMINS = (
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'mail.hosting.reg.ru'
-EMAIL_PORT = 587
+EMAIL_PORT = 25
 EMAIL_HOST_USER = config.EMAIL_USER.get_secret_value()
 EMAIL_HOST_PASSWORD = config.EMAIL_PASSWORD.get_secret_value()
-EMAIL_USE_SSL = False
-EMAIL_USE_TLS = True
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
