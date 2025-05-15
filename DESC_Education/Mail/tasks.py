@@ -18,7 +18,8 @@ def MailVerifyRegistration(email, code):
         "Подтверждение регистрации", html_content, settings.DEFAULT_FROM_EMAIL, [email]
     )
     msg.content_subtype = 'html'
-    msg.send()
+    res = msg.send()
+    print(res)
 
 @shared_task
 def MailProfileVerification(email, verified, comment):
