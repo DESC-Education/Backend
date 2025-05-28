@@ -258,7 +258,7 @@ ADMINS = (
 )
 
 EMAIL_HOST = 'smtp.yandex.ru'
-EMAIL_PORT = 465
+EMAIL_PORT = 25
 EMAIL_HOST_USER = config.EMAIL_USER.get_secret_value()
 EMAIL_HOST_PASSWORD = config.EMAIL_PASSWORD.get_secret_value()
 EMAIL_USE_SSL = True
